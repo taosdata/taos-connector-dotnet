@@ -173,7 +173,17 @@ namespace TDengineDriver
         static extern public int ErrorNo(IntPtr res);
 
         [DllImport("taos", EntryPoint = "taos_query", CallingConvention = CallingConvention.Cdecl)]
-        static extern public IntPtr Query(IntPtr conn, string sqlstr);
+        // static extern public IntPtr Query(IntPtr conn, string sqlstr);
+        static extern private IntPtr Query(IntPtr conn, IntPtr byteArr);
+
+        static public IntPtr Query(IntPtr conn,string command)
+        {   
+            IntPtr res = IntPtr.Zero;        
+                
+            IntPtr commandBuffer = Marshal.StringToCoTaskMemUTF8(command);
+            res = Query(conn,commandBuffer);
+            return res;
+        }
 
         [DllImport("taos", EntryPoint = "taos_affected_rows", CallingConvention = CallingConvention.Cdecl)]
         static extern public int AffectRows(IntPtr res);
