@@ -24,23 +24,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential cmake
         
-    - name: Build TDengine
-      run: |
-          cd TDengine
-          echo `pwd`
-          mkdir debug
-          cd debug
-          cmake .. -DBUILD_JDBC=false -DBUILD_TOOLS=false
-          make -j
-          sudo make install
-          cd ../../
-          echo `pwd`
-
-          
-    - name: start taosd
-      run: |
-        nohup sudo taosd &
-        taos -V
         
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
@@ -50,11 +33,11 @@ jobs:
     - name: checkout taos-connector-dotnet 
       uses: actions/checkout@v3
       with:
-        path: 'taos-connector-dotnet'
+        path: 'csharp-driver'
 
     - name: Restore dependencies
       run: |
-        cd taos-connector-dotnet
+        cd csharp-driver
         dotnet restore
 
     - name: Build C# Driver
