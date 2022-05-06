@@ -1,14 +1,13 @@
 
-# this workflow will be trigger whenever call a pull request on develop or push a commit to develop.
-name: test on push&pull
+# In order to test compatibility with latest TDegnine, this workflow will be triggered everyday at mid night.
+name: compatibility test 
+
 
 on:
-  push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
+  schedule:
+    - cron: '0 2,14 * * *'
 jobs:
-  test_develop:
+  schedule_test:
     runs-on: ubuntu-20.04
 
     steps:
@@ -74,5 +73,4 @@ jobs:
       run: |
        cd csharp-driver
        sudo dotnet test --no-build --logger "console;verbosity=detailed"
-       echo `date`
        
