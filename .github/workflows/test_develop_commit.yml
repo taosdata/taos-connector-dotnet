@@ -30,15 +30,11 @@ jobs:
     - name: Build TDengine
       run: |
           cd TDengine
-          echo `pwd`
           mkdir debug
           cd debug
           cmake .. -DBUILD_JDBC=false -DBUILD_TOOLS=false
           make -j
           sudo make install
-          cd ../../
-          echo `pwd`
-
           
     - name: start taosd
       run: |
@@ -74,5 +70,5 @@ jobs:
       run: |
        cd csharp-driver
        sudo dotnet test --no-build --logger "console;verbosity=detailed"
-       echo `date`
+
        

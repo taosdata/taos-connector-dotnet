@@ -2,10 +2,10 @@
 # In order to test compatibility with latest TDegnine, this workflow will be triggered everyday at mid night.
 name: compatibility test 
 
-
 on:
   schedule:
     - cron: '0 2,14 * * *'
+    # runner timezone is utc-0
 jobs:
   schedule_test:
     runs-on: ubuntu-20.04
