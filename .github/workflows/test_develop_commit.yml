@@ -10,6 +10,11 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
+      
+    - name: Build Tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
     
     - name: Checkout TDengine
       uses: actions/checkout@v3
@@ -18,12 +23,25 @@ jobs:
           repository: 'taosdata/TDengine'
           path: 'TDengine'
           ref: 'develop'
-    
-    - name: Build Tools
+          submodules: 'recursive'
+
+    - name: Build TDengine
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake
-        
+          cd TDengine
+          echo `pwd`
+          mkdir debug
+          cd debug
+          cmake .. -DBUILD_JDBC=false -DBUILD_TOOLS=false
+          make -j
+          sudo make install
+          cd ../../
+          echo `pwd`
+
+          
+    - name: start taosd
+      run: |
+        nohup sudo taosd &
+        taos -V    
         
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
