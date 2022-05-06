@@ -44,9 +44,12 @@ jobs:
 
     - name: Build C# Driver
       run: |
+       cd csharp-driver
        dotnet build --no-restore
-        echo `pwd`
-        ls -al
+       echo `pwd`
+       ls -al
 
     - name: Test C# Driver
-      run: dotnet test --no-build --verbosity normal
+      run: |
+       cd csharp-driver
+       dotnet test --no-build --verbosity normal
