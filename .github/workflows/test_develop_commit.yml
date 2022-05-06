@@ -10,10 +10,6 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - name: checkout taos-connector-dotnet 
-      uses: actions/checkout@v3
-      with:
-        path: 'taos-connector-dotnet'
     
     - name: Checkout TDengine
       uses: actions/checkout@v3
@@ -36,6 +32,7 @@ jobs:
           cmake .. -DBUILD_HTTP=false -DBUILD_JDBC=false -DBUILD_TOOLS=false
           make -j
           sudo make install
+          cd ../../
 
           
     - name: start taosd
@@ -47,9 +44,16 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 5.0.x
+    
+    - name: checkout taos-connector-dotnet 
+      uses: actions/checkout@v3
+      with:
+        path: 'taos-connector-dotnet'
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: |
+        cd taos-connector-dotnet
+        dotnet restore
 
     - name: Build C# Driver
       run: dotnet build --no-restore
