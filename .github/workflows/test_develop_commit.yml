@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [ develop ]
 jobs:
-  build:
+  test_develop:
     runs-on: ubuntu-20.04
 
     steps:
@@ -72,5 +72,6 @@ jobs:
     - name: Test C# Driver
       run: |
        cd csharp-driver
-       dotnet test --filter FullyQualifiedName~SubscribeAsyncCases --logger "console;verbosity=detailed"
-      #  dotnet test --no-build --verbosity normal
+       dotnet test --no-build --logger "console;verbosity=detailed"
+      #  dotnet test --filter FullyQualifiedName~SubscribeAsyncCases --logger "console;verbosity=detailed"
+       
