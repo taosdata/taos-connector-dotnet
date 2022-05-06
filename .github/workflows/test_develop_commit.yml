@@ -18,7 +18,6 @@ jobs:
           repository: 'taosdata/TDengine'
           path: 'TDengine'
           ref: 'develop'
-          submodules: 'recursive'
     
     - name: Build Tools
       run: |
@@ -31,7 +30,7 @@ jobs:
           echo `pwd`
           mkdir debug
           cd debug
-          cmake .. -DBUILD_HTTP=false -DBUILD_JDBC=false -DBUILD_TOOLS=false
+          cmake .. -DBUILD_JDBC=false -DBUILD_TOOLS=false
           make -j
           sudo make install
           cd ../../
