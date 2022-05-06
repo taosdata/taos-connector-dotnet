@@ -27,12 +27,14 @@ jobs:
     - name: Build TDengine
       run: |
           cd TDengine
+          echo `pwd`
           mkdir build
           cd build
           cmake .. -DBUILD_HTTP=false -DBUILD_JDBC=false -DBUILD_TOOLS=false
           make -j
           sudo make install
           cd ../../
+          echo `pwd`
 
           
     - name: start taosd
