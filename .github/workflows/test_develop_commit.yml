@@ -43,7 +43,10 @@ jobs:
         dotnet restore
 
     - name: Build C# Driver
-      run: dotnet build --no-restore
+      run: |
+       dotnet build --no-restore
+        echo `pwd`
+        ls -al
 
     - name: Test C# Driver
       run: dotnet test --no-build --verbosity normal
