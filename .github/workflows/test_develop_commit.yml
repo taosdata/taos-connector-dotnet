@@ -1,0 +1,53 @@
+name: test on push&pull
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: checkout taos-connector-dotnet 
+      uses: actions/checkout@v3
+    
+    - name: Build Tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+        
+    - name: Checkout TDengine
+      uses: actions/checkout@v3
+      with:
+          fetch-depth: 1
+          submodules: recursive
+          repository: taosdata/TDengine
+
+   - name: Build TDengine
+     run: |
+          cd TDengine
+          mkdir build
+          cd build
+          cmake ../ -DBUILD_HTTP=false -DBUILD_JDBC=false -DCMAKE_INSTALL_PREFIX:PATH=`realpath ../../local/`
+          make -j
+          cd ../../
+          
+      - name: start taosd
+        run: |
+        nohup sudo taosd &
+        taos -V
+        
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 5.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
