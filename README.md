@@ -1,16 +1,16 @@
-## CSharp Connector
+# CSharp Connector
 
 * This C# connector supports: Linux 64/Windows x64/Windows x86.
 * This C# connector can be downloaded and included as a normal package from [Nuget.org](https://www.nuget.org/packages/TDengine.Connector/).
 
-### Installation preparations
+## Installation preparations
 
 * Install TDengine client.
-* .NET interface file TDengineDriver.cs and reference samples both 
+* .NET interface file TDengineDriver.cs and reference samples both
   are located under Windows client's installation path:install_directory/examples/C#.
 * Install [.NET SDK](https://dotnet.microsoft.com/download)
 
-### Installation verification
+## Installation verification
 
 Run {client_installation_directory}/examples/C#/C#Checker/C#Checker.cs
 
@@ -20,7 +20,7 @@ cd {client_install_directory}/examples/C\#/C#Checker
 dotnet run -- -h <FQDN>
 ```
 
-### Example Source Code
+## Example Source Code
 
 You can find examples under follow directories:
 
@@ -31,9 +31,9 @@ You can find examples under follow directories:
 "TDengineTest" is an example that includes some basic sample code like
 connect, query and so on.
 
-### Use C# connector
+## Use C# connector
 
-#### **prepare**
+### **prepare**
 
 **tips:** Need to install .NET SDK first.
 
@@ -51,7 +51,7 @@ dotnet new console
 dotnet add package TDengine.Connector
 ```
 
-#### **Connection**
+### **Connection**
 
 ``` C#
 using TDengineDriver;
@@ -93,7 +93,7 @@ if (conn != IntPtr.Zero)
 TDengine.Cleanup();
 ```
 
-#### **Execute SQL**
+### **Execute SQL**
 
 ```C#
 // Suppose conn is a valid tdengine connection from previous Connection sample
@@ -130,7 +130,7 @@ ExecuteSQL(conn," INSERT INTO d1001 USING meters TAGS('Beijing.Chaoyang', 2) VAL
 ExecuteSQL(conn,$"drop database if exists {db};");
 ```
 
-#### **Get Query Result**
+### **Get Query Result**
 
 ```C#
 // Following code is a sample that traverses retrieve data from TDengine.
@@ -260,7 +260,7 @@ public void ExecuteQuery(IntPtr conn,string sql)
 }
 ```
 
-#### **Stmt Bind Sample**
+### **Stmt Bind Sample**
 
 * Bind different types of data.
 
@@ -279,7 +279,7 @@ long?[] longArr = new long?[5] { long.MinValue + 1, -2000, null,
 1000, long.MaxValue };
 string[] binaryArr = new string[5] { "/TDengine/src/client/src/tscPrepare.c",
  String.Empty, null, "doBindBatchParam",
- "string.Jion:1234567890123456789012345" };
+ "string.Join:1234567890123456789012345" };
 
 // TAOS_MULTI_BIND can bind a column of data.
 TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[5];
@@ -373,7 +373,7 @@ TaosMultiBind.FreeBind(qparams);
 TDengine.StmtClose(stmt);
 ```
 
-* Assert (samples about how to assert every step of stmt is successed or failed)
+* Assert (samples about how to assert every step of stmt is succeed or failed)
 
 ```C#
 // Special  StmtInit().
@@ -401,7 +401,7 @@ else
      // ... do something ...
 }
 
-// Estimate wether StmtUseResult() is successful or failed.
+// Estimate weather StmtUseResult() is successful or failed.
 // If failed, get the error message by TDengine.Error(res)
 IntPtr res = TDengine.StmtUseResult(stmt);
 if ((res == IntPtr.Zero) || (TDengine.ErrorNo(res) != 0))
