@@ -1,16 +1,16 @@
-## CSharp Connector
+# CSharp Connector
 
 * This C# connector supports: Linux 64/Windows x64/Windows x86.
 * This C# connector can be downloaded and included as a normal package from [Nuget.org](https://www.nuget.org/packages/TDengine.Connector/).
 
-### Installation preparations
+## Installation preparations
 
 * Install TDengine client.
-* .NET interface file TDengineDriver.cs and reference samples both 
+* .NET interface file TDengineDriver.cs and reference samples both
   are located under Windows client's installation path:install_directory/examples/C#.
 * Install [.NET SDK](https://dotnet.microsoft.com/download)
 
-### Installation verification
+## Installation verification
 
 Run {client_installation_directory}/examples/C#/C#Checker/C#Checker.cs
 
@@ -20,7 +20,7 @@ cd {client_install_directory}/examples/C\#/C#Checker
 dotnet run -- -h <FQDN>
 ```
 
-### Example Source Code
+## Example Source Code
 
 You can find examples under follow directories:
 
@@ -31,9 +31,9 @@ You can find examples under follow directories:
 "TDengineTest" is an example that includes some basic sample code like
 connect, query and so on.
 
-### Use C# connector
+## Use C# connector
 
-#### **prepare**
+### **prepare**
 
 **tips:** Need to install .NET SDK first.
 
@@ -51,7 +51,7 @@ dotnet new console
 dotnet add package TDengine.Connector
 ```
 
-#### **Connection**
+### **Connection**
 
 ``` C#
 using TDengineDriver;
@@ -93,7 +93,7 @@ if (conn != IntPtr.Zero)
 TDengine.Cleanup();
 ```
 
-#### **Execute SQL**
+### **Execute SQL**
 
 ```C#
 // Suppose conn is a valid tdengine connection from previous Connection sample
@@ -130,7 +130,7 @@ ExecuteSQL(conn," INSERT INTO d1001 USING meters TAGS('Beijing.Chaoyang', 2) VAL
 ExecuteSQL(conn,$"drop database if exists {db};");
 ```
 
-#### **Get Query Result**
+### **Get Query Result**
 
 ```C#
 // Following code is a sample that traverses retrieve data from TDengine.
@@ -260,7 +260,7 @@ public void ExecuteQuery(IntPtr conn,string sql)
 }
 ```
 
-#### **Stmt Bind Sample**
+### **Stmt Bind Sample**
 
 * Bind different types of data.
 
