@@ -279,7 +279,7 @@ long?[] longArr = new long?[5] { long.MinValue + 1, -2000, null,
 1000, long.MaxValue };
 string[] binaryArr = new string[5] { "/TDengine/src/client/src/tscPrepare.c",
  String.Empty, null, "doBindBatchParam",
- "string.Jion:1234567890123456789012345" };
+ "string.Join:1234567890123456789012345" };
 
 // TAOS_MULTI_BIND can bind a column of data.
 TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[5];
@@ -373,7 +373,7 @@ TaosMultiBind.FreeBind(qparams);
 TDengine.StmtClose(stmt);
 ```
 
-* Assert (samples about how to assert every step of stmt is successed or failed)
+* Assert (samples about how to assert every step of stmt is succeed or failed)
 
 ```C#
 // Special  StmtInit().
@@ -401,7 +401,7 @@ else
      // ... do something ...
 }
 
-// Estimate wether StmtUseResult() is successful or failed.
+// Estimate weather StmtUseResult() is successful or failed.
 // If failed, get the error message by TDengine.Error(res)
 IntPtr res = TDengine.StmtUseResult(stmt);
 if ((res == IntPtr.Zero) || (TDengine.ErrorNo(res) != 0))
