@@ -53,10 +53,10 @@ namespace TDengineDriver
     }
     enum TaosField
     {
-        STRUCT_SIZE = 68,
+        STRUCT_SIZE = 72,
         NAME_LENGTH = 65,
         TYPE_OFFSET = 65,
-        BYTES_OFFSET = 66,
+        BYTES_OFFSET = 68,
 
     }
     public class TDengineMeta
@@ -188,8 +188,8 @@ namespace TDengineDriver
     {
         public const int TSDB_CODE_SUCCESS = 0;
 
-        [DllImport("taos", EntryPoint = "taos_init", CallingConvention = CallingConvention.Cdecl)]
-        static extern public void Init();
+        // [DllImport("taos", EntryPoint = "taos_init", CallingConvention = CallingConvention.Cdecl)]
+        // static extern public void Init();
 
         [DllImport("taos", EntryPoint = "taos_cleanup", CallingConvention = CallingConvention.Cdecl)]
         static extern public void Cleanup();
@@ -235,7 +235,6 @@ namespace TDengineDriver
         static extern private IntPtr taos_fetch_fields(IntPtr res);
         static public List<TDengineMeta> FetchFields(IntPtr res)
         {
-            // const int fieldSize = 68;
 
             List<TDengineMeta> metaList = new List<TDengineMeta>();
             if (res == IntPtr.Zero)
@@ -249,13 +248,16 @@ namespace TDengineDriver
             for (int i = 0; i < fieldCount; ++i)
             {
                 int offset = i * (int)TaosField.STRUCT_SIZE;
+                // Console.WriteLine("offset:{0}",offset);
                 TDengineMeta meta = new TDengineMeta();
-                meta.name = Marshal.PtrToStringAnsi(fieldsPtr + offset);
+                meta.name = Marshal.PtrToStringAnsi(fieldsPtr + offset, (int)TaosField.NAME_LENGTH);
+                // Console.WriteLine("fetchFeilds().name:{0}",meta.name);
                 meta.type = Marshal.ReadByte(fieldsPtr + offset + (int)TaosField.TYPE_OFFSET);
+                // Console.WriteLine("fetchFeilds().type:{0}",meta.type);
                 meta.size = Marshal.ReadInt16(fieldsPtr + offset + (int)TaosField.BYTES_OFFSET);
+                // Console.WriteLine("fetchFeilds().size:{0}",meta.size);
                 metaList.Add(meta);
             }
-
 
             return metaList;
         }
@@ -566,5 +568,139 @@ namespace TDengineDriver
             }
 
         }
+
+        // ================================add =========================
+        //int taos_select_db(TAOS *taos, const char *db);
+        [DllImport("taos", EntryPoint = "taos_select_db", CallingConvention = CallingConvention.Cdecl)]
+        static extern public int SelectDatabase(IntPtr taos, string database);
+
+        //int taos_print_row(char *str, TAOS_ROW row, TAOS_FIELD *fields, int num_fields);
+
+        //void  taos_stop_query(TAOS_RES *res);
+        [DllImport("taos", EntryPoint = "taos_stop_query", CallingConvention = CallingConvention.Cdecl)]
+        static extern public void StopQuery(IntPtr res);
+
+        //bool taos_is_update_query(TAOS_RES *res);
+        [DllImport("taos", EntryPoint = "taos_is_update_query", CallingConvention = CallingConvention.Cdecl)]
+        static extern public bool IsUpdateQuery(IntPtr res);
+
+        //int taos_validate_sql(TAOS *taos, const char *sql);
+        [DllImport("taos", EntryPoint = "taos_validate_sql", CallingConvention = CallingConvention.Cdecl)]
+        static extern public int ValidateSQL(IntPtr taos, string sql);
+
+        // void taos_reset_current_db(TAOS *taos);
+        [DllImport("taos", EntryPoint = "taos_reset_current_db", CallingConvention = CallingConvention.Cdecl)]
+        static extern public void ResetCurrentDatabase(IntPtr taos);
+
+        // TAOS_ROW *taos_result_block(TAOS_RES *res);
+
+        // char *taos_get_server_info(TAOS *taos);
+        [DllImport("taos", EntryPoint = "taos_get_server_info", CallingConvention = CallingConvention.Cdecl)]
+        static extern public string GetServerInfo(IntPtr taos);
+
+        // char *taos_get_client_info();
+        [DllImport("taos", EntryPoint = "taos_get_client_info", CallingConvention = CallingConvention.Cdecl)]
+        static extern public string GetClinetInfo();
+        // ====================== 3.0 =====================
+        //bool taos_is_null(TAOS_RES *res, int32_t row, int32_t col);
+        [DllImport("taos", EntryPoint = "taos_is_null", CallingConvention = CallingConvention.Cdecl)]
+        static extern public bool IsNull(IntPtr res, Int32 row, Int32 col);
+
+        //int taos_fetch_block(TAOS_RES *res, TAOS_ROW *rows)
+        [DllImport("taos", EntryPoint = "taos_fetch_block", CallingConvention = CallingConvention.Cdecl)]
+        static extern public int taos_fetch_block(IntPtr res, IntPtr rows);
+
+        //int taos_fetch_raw_block(TAOS_RES *res, int* numOfRows, void** pData);
+        [DllImport("taos", EntryPoint = "taos_fetch_raw_block", CallingConvention = CallingConvention.Cdecl)]
+        static extern public int FetchRawBlock(IntPtr res, IntPtr numOfRows, IntPtr pData);
+
+        //int* taos_get_column_data_offset(TAOS_RES *res, int columnIndex);
+        [DllImport("taos", EntryPoint = "taos_get_column_data_offset", CallingConvention = CallingConvention.Cdecl)]
+        static extern public IntPtr GetColDataOffset(IntPtr res, int columnIndex);
+
+        
+
+        /* ------------------------TMQ CONSUMER INTERFACE------------------------ */
+        [DllImport("taos", EntryPoint = "tmq_subscribe", CallingConvention = CallingConvention.Cdecl)]
+        // tmq_resp_err_t tmq_subscribe(tmq_t *tmq, const tmq_list_t *topic_list);
+        static extern public sbyte TMQSubscribe(IntPtr tmq, IntPtr topicList);
+
+        [DllImport("taos", EntryPoint = "tmq_unsubscribe", CallingConvention = CallingConvention.Cdecl)]
+        // tmq_resp_err_t tmq_unsubscribe(tmq_t *tmq);;
+        static extern public sbyte TMQUnsubscribe(IntPtr tmq);
+
+        [DllImport("taos", EntryPoint = "tmq_subscription", CallingConvention = CallingConvention.Cdecl)]
+        // tmq_resp_err_t tmq_subscription(tmq_t *tmq, tmq_list_t **topics);
+        static extern public sbyte TMQSubscription(IntPtr tmq, IntPtr topics);
+
+        [DllImport("taos", EntryPoint = "tmq_consumer_poll", CallingConvention = CallingConvention.Cdecl)]
+        // TAOS_RES *tmq_consumer_poll(tmq_t *tmq, int64_t wait_time);
+        static extern public IntPtr TMQConsumerPoll(IntPtr tmq, Int64 wait_time);
+
+        [DllImport("taos", EntryPoint = "tmq_consumer_close", CallingConvention = CallingConvention.Cdecl)]
+        //tmq_resp_err_t tmq_consumer_close(tmq_t *tmq);
+        static extern public sbyte TMQConsumerClose(IntPtr tmq);
+
+        [DllImport("taos", EntryPoint = "tmq_commit", CallingConvention = CallingConvention.Cdecl)]
+
+        //tmq_resp_err_t tmq_commit(tmq_t *tmq, const tmq_topic_vgroup_list_t *offsets, int32_t async);
+        static extern public sbyte TMQCommit(IntPtr tmq, IntPtr offsets, Int32 async);
+
+        /* ----------------------TMQ CONFIGURATION INTERFACE---------------------- */
+        [DllImport("taos", EntryPoint = "tmq_conf_new", CallingConvention = CallingConvention.Cdecl)]
+        // tmq_conf_t *tmq_conf_new();
+        static extern public IntPtr TMQConfNew();
+
+        [DllImport("taos", EntryPoint = "tmq_conf_set", CallingConvention = CallingConvention.Cdecl)]
+        // tmq_conf_res_t tmq_conf_set(tmq_conf_t *conf, const char *key, const char *value);
+        static extern public IntPtr TMQConfSet(IntPtr tmqConf, string key, string value);
+
+        [DllImport("taos", EntryPoint = "tmq_conf_destroy", CallingConvention = CallingConvention.Cdecl)]
+        // void tmq_conf_destroy(tmq_conf_t *conf);
+        static extern public void TMQConfDestroy(IntPtr tmqConf);
+
+        // void tmq_conf_set_offset_commit_cb(tmq_conf_t *conf, tmq_commit_cb *cb);
+
+        /* -------------------------TMQ MSG HANDLE INTERFACE---------------------- */
+        [DllImport("taos", EntryPoint = "taos_unsubscribe", CallingConvention = CallingConvention.Cdecl)]
+        // char   *tmq_get_topic_name(TAOS_RES *res)
+        static extern public string TMQGetTopicName(IntPtr taosRes);
+        [DllImport("taos", EntryPoint = "tmq_get_vgroup_id", CallingConvention = CallingConvention.Cdecl)]
+        // int32_t tmq_get_vgroup_id(TAOS_RES *res);
+        static extern public int TMQGetVGroupId(IntPtr taosRes);
+
+
+        // calling step
+        // create_topic ==> build_consumer ==>build_topic_list
+        // perf_loop
+        // basic_consume_loop
+        // sync_consume_loop
+        /* ------------------------------ TMQ END -------------------------------- */
+        // TSDB_SERVER_STATUS taos_check_server_status(const char *fqdn, int port, char *details, int maxlen);
+        [DllImport("taos", EntryPoint = "taos_check_server_status", CallingConvention = CallingConvention.Cdecl)]
+        static extern public int CheckServerStatus(string fqdn, int port, string detail, int maxlength);
+    }
+
+ // NEW ENUM 3.0 FOR TMQ   
+    public enum TMQRespErr
+    {
+        TMQ_RESP_ERR__FAIL = -1,
+        TMQ_RESP_ERR__SUCCESS = 0,
+    }
+
+    public enum TMQConfRes
+    {
+        TMQ_CONF_UNKNOWN = -2,
+        TMQ_CONF_INVALID = -1,
+        TMQ_CONF_OK = 0,
+    }
+
+    public enum TsdbServerStatus
+    {
+        TSDB_SRV_STATUS_UNAVAILABLE = 0,
+        TSDB_SRV_STATUS_NETWORK_OK = 1,
+        TSDB_SRV_STATUS_SERVICE_OK = 2,
+        TSDB_SRV_STATUS_SERVICE_DEGRADED = 3,
+        TSDB_SRV_STATUS_EXTING = 4,
     }
 }
