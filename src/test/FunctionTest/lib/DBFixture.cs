@@ -12,20 +12,20 @@ namespace Test.Fixture
         string db = "xunit_test_fixture";
         public DatabaseFixture()
         {
-        
-        string user = "root";
-        string password = "taosdata";
-        string ip = "";
-        short port = 0;
-        
 
-          // TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
+            string user = "root";
+            string password = "taosdata";
+            string ip = "";
+            short port = 0;
+
+
+            // TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "90");
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_LOCALE, "C");
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CHARSET, "UTF-8");
             TDengine.Init();
             string ENV_HOST = Environment.GetEnvironmentVariable("TEST_HOST");
-            ip = string.IsNullOrEmpty(ENV_HOST)== true ? "127.0.0.1" : ENV_HOST;
+            ip = string.IsNullOrEmpty(ENV_HOST) == true ? "127.0.0.1" : ENV_HOST;
             this.conn = TDengine.Connect(ip, user, password, "", port);
             IntPtr res;
             if (conn != IntPtr.Zero)

@@ -17,7 +17,7 @@ namespace Example
             string topic = $"{table}_topic";
             string sql = $"select * from {table}";
             SubscribeCallback subscribeCallback = new SubscribeCallback(SubCallback);
-            
+
             // Subscribe from earliest timestamp in the table.
             IntPtr subscribe = TDengine.Subscribe(conn, true, topic, sql, subscribeCallback, IntPtr.Zero, 1000);
 
@@ -28,7 +28,7 @@ namespace Example
             }
             Console.WriteLine("Unsubscribe and keep the subscribe progress ");
             TDengine.Unsubscribe(subscribe, true);
-            
+
             Console.WriteLine("Subscribe from last subscribe progress");
             subscribe = TDengine.Subscribe(conn, false, topic, sql, subscribeCallback, IntPtr.Zero, 1000);
             for (int i = 0; i < 4; i++)
@@ -41,7 +41,7 @@ namespace Example
 
         public void RunSubscribeWithoutCallback(IntPtr conn, string table)
         {
-            
+
             PrepareData(conn, table);
             string topic = $"{table}_topic";
             string sql = $"select * from {table}";
@@ -61,11 +61,11 @@ namespace Example
             TDengine.Unsubscribe(subscribe, true);
 
             // Subscribe from last subscribe progress. 
-            subscribe = TDengine.Subscribe(conn, false, topic, sql, null, IntPtr.Zero, 1000);           
+            subscribe = TDengine.Subscribe(conn, false, topic, sql, null, IntPtr.Zero, 1000);
             for (int i = 0; i < 3; i++)
             {
                 InsertData(conn, table);
-                Console.WriteLine($"Consume {i+1} time");
+                Console.WriteLine($"Consume {i + 1} time");
                 taosRes = TDengine.Consume(subscribe);
                 // The interval between two consume should greater than "interval" pass in Subscribe().
                 // Otherwise consume will be blocked.

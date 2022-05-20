@@ -33,7 +33,7 @@ namespace Cases
         public void TestFetchFieldJsonTag()
         {
             IntPtr conn = _database.conn;
-            Assert.NotEqual(conn,IntPtr.Zero);
+            Assert.NotEqual(conn, IntPtr.Zero);
             IntPtr _res = IntPtr.Zero;
             string tableName = "fetch_fields";
             var expectResMeta = new List<TDengineMeta> {
