@@ -9,3 +9,6 @@ NugetPackTest/
 examples/bin/
 examples/obj/
 .vs
+src/test/FunctionTest/FunctionTest.sln
+src/test/FunctionTest/Properties/
+src/test/FunctionTest/TestResults/

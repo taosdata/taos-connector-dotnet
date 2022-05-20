@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Test.UtilsTools.ResultSet;
 using Test.Fixture;
 using Test.Case.Attributes;
+using Xunit.Abstractions;
 
 namespace Cases
 {
@@ -15,17 +16,18 @@ namespace Cases
     public class NormalTableStmtCases
     {
         DatabaseFixture database;
-
-        public NormalTableStmtCases(DatabaseFixture fixture)
+        private readonly ITestOutputHelper _output;
+        public NormalTableStmtCases(DatabaseFixture fixture, ITestOutputHelper output)
         {
             this.database = fixture;
+            this._output = output;
         }
         /// <author>xiaolei</author>
         /// <Name>NormalTableStmtCases.TestBindSingleLineCN</Name>
-        /// <describe>Test stmt insert single line of chinese character into normal table by column after column </describe>
+        /// <describe>Test stmt insert single line of Chinese character into normal table by column after column </describe>
         /// <filename>StmtNormalTable.cs</filename>
         /// <result>pass or failed </result>  
-        [Fact(DisplayName = "NormalTableStmtCases.TestBindSingleLineCN()"),TestExeOrder(2),Trait("Category", "bindParamCN")]
+        [Fact(DisplayName = "NormalTableStmtCases.TestBindSingleLineCN()"), TestExeOrder(2), Trait("Category", "bindParamCN")]
         public void TestBindSingleLineCN()
         {
             string tableName = "ntb_stmt_cases_test_bind_single_line_cn";
@@ -54,8 +56,8 @@ namespace Cases
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createTb);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createTb, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -66,32 +68,40 @@ namespace Cases
             StmtUtilTools.StmtClose(stmt);
             DataSource.FreeTaosBind(_valuesRow);
 
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
             List<string> actualResData = actualResult.GetResultData();
 
-            // Assert retrieve data
-            for (int i = 0; i < actualResData.Count; i++)
-            {
-                Assert.Equal(expectResData[i], actualResData[i]);
-            }
-            // Assert metadata
+            // Assert meta data
+            _output.WriteLine("Assert meta data");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
                 Assert.Equal(expectResMeta[i].type, actualResMeta[i].type);
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
             }
+
+            // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
+            for (int i = 0; i < actualResData.Count; i++)
+            {
+                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
+                Assert.Equal(expectResData[i], actualResData[i]);
+            }
+            _output.WriteLine("NormalTableStmtCases.TestBindSingleLineCN() pass");
+
         }
 
         /// <author>xiaolei</author>
         /// <Name>NormalTableStmtCases.TestBindColumnCN</Name>
-        /// <describe>Test stmt insert single line of chinese character into normal table by column after column </describe>
+        /// <describe>Test stmt insert single line of Chinese character into normal table by column after column </describe>
         /// <filename>StmtNormalTable.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "NormalTableStmtCases.TestBindColumnCN()"),TestExeOrder(4),Trait("Category", "bindSingleColumnCN")]
+        [Fact(DisplayName = "NormalTableStmtCases.TestBindColumnCN()"), TestExeOrder(4), Trait("Category", "bindSingleColumnCN")]
         public void TestBindColumnCN()
         {
             string tableName = "ntb_stmt_cases_test_bind_column_cn";
@@ -119,8 +129,8 @@ namespace Cases
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createTb);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createTb, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -148,17 +158,15 @@ namespace Cases
             DataSource.FreeTaosMBind(mBind);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql,_output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
             List<string> actualResData = actualResult.GetResultData();
-            // Assert retrieve data
-            for (int i = 0; i < actualResData.Count; i++)
-            {
-                Assert.Equal(expectResData[i], actualResData[i]);
-            }
-            // Assert metadata
+
+            // Assert meta data
+            _output.WriteLine("Assert meta data");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
@@ -166,14 +174,26 @@ namespace Cases
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
 
             }
+
+            // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
+            for (int i = 0; i < actualResData.Count; i++)
+            {
+                //_output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
+                Assert.Equal(expectResData[i], actualResData[i]);
+            }
+
+            _output.WriteLine("NormalTableStmtCases.TestBindColumnCN pass");
+
         }
 
         /// <author>xiaolei</author>
         /// <Name>NormalTableStmtCases.TestBindMultiLineCN</Name>
-        /// <describe>Test stmt insert single line of chinese character into normal table by column after column </describe>
+        /// <describe>Test stmt insert single line of Chinese character into normal table by column after column </describe>
         /// <filename>StmtNormalTable.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "NormalTableStmtCases.TestBindMultiLineCN()"),TestExeOrder(6),Trait("Category", "bindParamBatchCN")]
+        [Fact(DisplayName = "NormalTableStmtCases.TestBindMultiLineCN()"), TestExeOrder(6), Trait("Category", "bindParamBatchCN")]
         public void TestBindMultiLineCN()
         {
             string tableName = "ntb_stmt_cases_test_bind_multi_lines_cn";
@@ -201,8 +221,8 @@ namespace Cases
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
 
             IntPtr conn = database.conn; ;
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createTb);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createTb, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -215,7 +235,7 @@ namespace Cases
             DataSource.FreeTaosMBind(mBind);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
@@ -223,18 +243,26 @@ namespace Cases
             Assert.Equal(expectResMeta.Count, actualResMeta.Count);
             Assert.Equal(expectResData.Count, actualResData.Count);
 
-            // Assert retrieve data
-            for (int i = 0; i < actualResData.Count; i++)
-            {
-                Assert.Equal(expectResData[i], actualResData[i]);
-            }
-            // Assert metadata
+            // Assert meta data
+            _output.WriteLine("NormalTableStmtCases.TestBindMultiLineCN() pass");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
                 Assert.Equal(expectResMeta[i].type, actualResMeta[i].type);
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
             }
+
+            // Assert retrieve data
+            _output.WriteLine("NormalTableStmtCases.TestBindMultiLineCN() pass");
+
+            for (int i = 0; i < actualResData.Count; i++)
+            {
+                //_output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
+                Assert.Equal(expectResData[i], actualResData[i]);
+            }
+            _output.WriteLine("NormalTableStmtCases.TestBindMultiLineCN() pass");
+
         }
 
         /// <author>xiaolei</author>
@@ -242,7 +270,7 @@ namespace Cases
         /// <describe>Test stmt insert single line data into normal table</describe>
         /// <filename>StmtNormalTable.cs</filename>
         /// <result>pass or failed </result>
-        [Fact(DisplayName = "NormalTableStmtCases.TestBindSingleLine"),TestExeOrder(3),Trait("Category", "BindSingleColumn")]
+        [Fact(DisplayName = "NormalTableStmtCases.TestBindSingleLine"), TestExeOrder(3), Trait("Category", "BindSingleColumn")]
         public void TestBindSingleLine()
         {
             string tableName = "ntb_stmt_cases_test_bind_single_line";
@@ -271,8 +299,8 @@ namespace Cases
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteQuery(conn, dropSql);
-            UtilsTools.ExecuteQuery(conn, createTb);
+            UtilsTools.ExecuteQuery(conn, dropSql, _output);
+            UtilsTools.ExecuteQuery(conn, createTb, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -283,7 +311,7 @@ namespace Cases
             StmtUtilTools.StmtClose(stmt);
             DataSource.FreeTaosBind(valuesRow);
 
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
@@ -291,12 +319,9 @@ namespace Cases
             Assert.Equal(expectResMeta.Count, actualResMeta.Count);
             Assert.Equal(expectResData.Count, actualResData.Count);
 
-            // Assert retrieve data
-            for (int i = 0; i < actualResData.Count; i++)
-            {
-                Assert.Equal(expectResData[i], actualResData[i]);
-            }
-            // Assert metadata
+            // Assert meta data
+            _output.WriteLine("Assert meta data");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
@@ -304,6 +329,15 @@ namespace Cases
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
             }
 
+            // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
+            for (int i = 0; i < actualResData.Count; i++)
+            {
+                //_output.WriteLine("expect:{0} actual:{1}",expectResData[i], actualResData[i]);
+                Assert.Equal(expectResData[i], actualResData[i]);
+            }
+            _output.WriteLine("NormalTableStmtCases.TestBindSingleLine() pass");
         }
 
         /// <author>xiaolei</author>
@@ -311,7 +345,7 @@ namespace Cases
         /// <describe>Test stmt insert multiple rows of data into normal table</describe>
         /// <filename>StmtNormalTable.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "NormalTableStmtCases.TestBindMultiLine()"),TestExeOrder(5),Trait("Category", "bindParamBatch")]
+        [Fact(DisplayName = "NormalTableStmtCases.TestBindMultiLine()"), TestExeOrder(5), Trait("Category", "bindParamBatch")]
         public void TestBindMultiLine()
         {
             string tableName = "ntb_stmt_case_test_bind_multi_lines";
@@ -339,8 +373,8 @@ namespace Cases
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createTb);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createTb, _output);
 
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
@@ -353,7 +387,7 @@ namespace Cases
             DataSource.FreeTaosMBind(mBind);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
@@ -361,18 +395,26 @@ namespace Cases
             Assert.Equal(expectResMeta.Count, actualResMeta.Count);
             Assert.Equal(expectResData.Count, actualResData.Count);
 
-            // Assert retrieve data
-            for (int i = 0; i < actualResData.Count; i++)
-            {
-                Assert.Equal(expectResData[i], actualResData[i]);
-            }
-            // Assert metadata
+            // Assert meta data
+            _output.WriteLine("Assert meta data");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
                 Assert.Equal(expectResMeta[i].type, actualResMeta[i].type);
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
             }
+
+            // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
+            for (int i = 0; i < actualResData.Count; i++)
+            {
+                //_output.WriteLine("expect:{0},actual:{1}",expectResData[i], actualResData[i]);
+                Assert.Equal(expectResData[i], actualResData[i]);
+            }
+
+            _output.WriteLine("NormalTableStmtCases.TestBindMultiLine() pass");
         }
 
         /// <author>xiaolei</author>
@@ -380,7 +422,7 @@ namespace Cases
         /// <describe>Test stmt insert multiple rows of data into normal table by column after column </describe>
         /// <filename>StmtNormalTable.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "NormalTableStmtCases.TestBindColumn()"),TestExeOrder(1),Trait("Category", "bindParam")]
+        [Fact(DisplayName = "NormalTableStmtCases.TestBindColumn()"), TestExeOrder(1), Trait("Category", "bindParam")]
         public void TestBindColumn()
         {
             string tableName = "ntb_stmt_cases_test_bind_column";
@@ -410,8 +452,8 @@ namespace Cases
 
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createTb);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createTb, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -439,7 +481,7 @@ namespace Cases
             DataSource.FreeTaosMBind(mBinds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
@@ -447,12 +489,9 @@ namespace Cases
             Assert.Equal(expectResMeta.Count, actualResMeta.Count);
             Assert.Equal(expectResData.Count, actualResData.Count);
 
-            // Assert retrieve data
-            for (int i = 0; i < actualResData.Count; i++)
-            {
-                Assert.Equal(expectResData[i], actualResData[i]);
-            }
-            // Assert metadata
+            // Assert meta data
+            _output.WriteLine("Assert meta data");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
@@ -460,6 +499,15 @@ namespace Cases
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
             }
 
+            // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
+            for (int i = 0; i < actualResData.Count; i++)
+            {
+                //_output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
+                Assert.Equal(expectResData[i], actualResData[i]);
+            }
+            _output.WriteLine("NormalTableStmtCases.TestBindColumn() pass");
         }
 
     }

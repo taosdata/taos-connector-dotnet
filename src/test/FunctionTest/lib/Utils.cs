@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Collections.Generic;
 using Xunit.Abstractions;
+
 namespace Test.UtilsTools
 {
     public class UtilsTools
@@ -19,11 +20,14 @@ namespace Test.UtilsTools
         {
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "60");
+            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CHARSET, "UFT-8");
             TDengine.Init();
             IntPtr conn = TDengine.Connect(ip, user, password, db, port);
-            // UtilsTools.ExecuteUpdate(conn, "drop database if  exists csharp");
-            UtilsTools.ExecuteUpdate(conn, "create database if not exists csharp keep 3650");
-            UtilsTools.ExecuteUpdate(conn, "use csharp");
+            IntPtr _res;
+            _res = TDengine.Query(conn, "create database if not exists csharp keep 3650");
+            TDengine.FreeResult(_res);
+            _res = TDengine.Query(conn, "use csharp");
+            TDengine.FreeResult(_res);
             return conn;
         }
         //get taos.cfg file based on different os
@@ -45,17 +49,16 @@ namespace Test.UtilsTools
             return configDir;
         }
 
-        public static IntPtr ExecuteQuery(IntPtr conn, String sql)
+        public static IntPtr ExecuteQuery(IntPtr conn, String sql, ITestOutputHelper output)
         {
             IntPtr res = TDengine.Query(conn, sql);
             if (!IsValidResult(res))
             {
-                Console.Write(sql.ToString() + " failure, ");
-                ExitProgram();
+                output.WriteLine(sql.ToString() + " failure, ");
             }
             else
             {
-                Console.WriteLine(sql.ToString() + " success");
+                output.WriteLine(sql.ToString() + " success");
             }
             return res;
         }
@@ -76,17 +79,17 @@ namespace Test.UtilsTools
             return res;
         }
 
-        public static void ExecuteUpdate(IntPtr conn, String sql)
+        public static void ExecuteUpdate(IntPtr conn, String sql, ITestOutputHelper output)
         {
+            output.WriteLine("ExecuteUpdate sql:{0}", sql);
             IntPtr res = TDengine.Query(conn, sql);
             if (!IsValidResult(res))
             {
-                Console.Write(sql.ToString() + " failure, ");
-                ExitProgram();
+                throw new Exception(TDengine.Error(res));
             }
             else
             {
-                Console.WriteLine(sql.ToString() + " success");
+                output.WriteLine(sql.ToString() + " success");
 
             }
             TDengine.FreeResult(res);
@@ -153,17 +156,17 @@ namespace Test.UtilsTools
             }
             return true;
         }
-        public static void CloseConnection(IntPtr conn)
+        public static void CloseConnection(IntPtr conn, ITestOutputHelper output)
         {
-            ExecuteUpdate(conn, "drop database if  exists csharp");
+            TDengine.FreeResult(TDengine.Query(conn, "drop database if  exists csharp"));
             if (conn != IntPtr.Zero)
             {
                 TDengine.Close(conn);
-                Console.WriteLine("close connection success");
+                output.WriteLine("close connection success");
             }
             else
             {
-                 throw new Exception("connection if already null");
+                throw new Exception("connection if already null");
             }
         }
         public static List<TDengineMeta> GetResField(IntPtr res)

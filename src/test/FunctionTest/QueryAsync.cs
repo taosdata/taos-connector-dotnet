@@ -8,6 +8,7 @@ using Test.UtilsTools.ResultSet;
 using Xunit.Abstractions;
 using Test.Fixture;
 using Test.Case.Attributes;
+using System.Threading;
 
 namespace Cases
 {
@@ -18,19 +19,19 @@ namespace Cases
     {
         DatabaseFixture database;
 
-        private readonly ITestOutputHelper output;
+        private readonly ITestOutputHelper _output;
 
         public QueryAsyncCases(DatabaseFixture fixture, ITestOutputHelper output)
         {
             this.database = fixture;
-            this.output = output;
+            this._output = output;
         }
         /// <author>xiaolei</author>
         /// <Name>QueryAsyncCases.QueryAsyncCases</Name>
         /// <describe>Test query without condition</describe>
         /// <filename>QueryAsync.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "QueryAsyncCases.QueryWithoutCondition()"),TestExeOrder(1),Trait("Category", "QueryAWithoutCondition")]
+        [Fact(DisplayName = "QueryAsyncCases.QueryWithoutCondition()"), TestExeOrder(1), Trait("Category", "QueryAWithoutCondition")]
         public void QueryWithoutCondition()
         {
             IntPtr conn = database.conn;
@@ -50,13 +51,13 @@ namespace Cases
             List<Object> expectResData = UtilsTools.CombineColAndTagData(colData, tagData, 3);
 
             var querySql = $"select * from {tableName}";
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createSql);
-            UtilsTools.ExecuteUpdate(conn, insertSql);
+            UtilsTools.ExecuteUpdate(conn, dropSql,_output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
 
             QueryAsyncCallback fq = new QueryAsyncCallback(QueryCallback);
             TDengine.QueryAsync(conn, querySql, fq, IntPtr.Zero);
-
+            Thread.Sleep(2000);
             void QueryCallback(IntPtr param, IntPtr taosRes, int code)
             {
                 if (code == 0 && taosRes != IntPtr.Zero)
@@ -66,7 +67,7 @@ namespace Cases
                 }
                 else
                 {
-                    Console.WriteLine($"async query data failed, failed code {code}");
+                    _output.WriteLine($"async query data failed, failed code {code}");
                 }
 
             }
@@ -79,6 +80,7 @@ namespace Cases
                     List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
                     List<String> actualResData = actualResult.GetResultData();
                     //Assert Meta data
+                    _output.WriteLine("Assert Meta data");
                     for (int i = 0; i < actualMeta.Count; i++)
                     {
                         Assert.Equal(expectResMeta[i].name, actualMeta[i].name);
@@ -86,9 +88,11 @@ namespace Cases
                         Assert.Equal(expectResMeta[i].size, actualMeta[i].size);
                     }
                     // Assert retrieve data
+                    _output.WriteLine("Assert retrieve data");
+
                     for (int i = 0; i < actualResData.Count; i++)
                     {
-                        // Console.WriteLine("{0},{1},{2}", i, expectResData[i], actualResData[i]);
+                        //_output.WriteLine("{0},{1},{2}", i, expectResData[i], actualResData[i]);
                         Assert.Equal(expectResData[i].ToString(), actualResData[i]);
                     }
 
@@ -98,16 +102,18 @@ namespace Cases
                 {
                     if (numOfRows == 0)
                     {
-                        Console.WriteLine("async retrieve complete.");
+                        _output.WriteLine("async retrieve complete.");
 
                     }
                     else
                     {
-                        Console.WriteLine($"FetchRowAsync callback error, error code {numOfRows}");
+                        _output.WriteLine($"FetchRowAsync callback error, error code {numOfRows}");
                     }
                     TDengine.FreeResult(taosRes);
                 }
             }
+                    _output.WriteLine("QueryAsyncCases.QueryWithoutCondition() pass");
+
         }
 
         /// <author>xiaolei</author>
@@ -115,7 +121,7 @@ namespace Cases
         /// <describe>Test query with condition</describe>
         /// <filename>QueryAsync.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "QueryAsyncCases.QueryWithCondition()"),TestExeOrder(2),Trait("Category", "QueryAWithCondition")]
+        [Fact(DisplayName  = "QueryAsyncCases.QueryWithCondition()"), TestExeOrder(2), Trait("Category", "QueryAWithCondition")]
         public void QueryWithCondition()
         {
             IntPtr conn = database.conn;
@@ -124,6 +130,7 @@ namespace Cases
             var tableName = "query_a_with_condition";
             var createSql = $"create table if not exists {tableName}(ts timestamp,bl bool,i8 tinyint,i16 smallint,i32 int,i64 bigint,bnr binary(50),nchr nchar(50))tags(t_i32 int,t_bnr binary(50),t_nchr nchar(50))";
             var dropSql = $"drop table if exists {tableName}";
+            var querySql = $"select * from {tableName} where bl=true and t_bnr='tag_one' and i8>1 and i8>1 and t_nchr = '标签壹' ";
 
             var colData = new List<Object>{1646150410100,true,1,11,1111,11111111,"value one","值壹",
             1646150410200,true,2,22,2222,22222222,"value two","值贰",
@@ -134,17 +141,17 @@ namespace Cases
             String insertSql = UtilsTools.ConstructInsertSql(tableName + "_s01", tableName, colData, tagData, 3);
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createSql);
             List<Object> expectResData = UtilsTools.CombineColAndTagData(colDataActual, tagData, 1);
-            colDataActual.ForEach((item) => { Console.Write("{0}\t", item); });
 
-            var querySql = $"select * from {tableName} where bl=true and t_bnr='tag_one' and i8>1 and t_nchr = '标签壹'";
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createSql);
-            UtilsTools.ExecuteUpdate(conn, insertSql);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
+
             QueryAsyncCallback fq = new QueryAsyncCallback(QueryCallback);
             TDengine.QueryAsync(conn, querySql, fq, IntPtr.Zero);
-
+            Thread.Sleep(2000);
             void QueryCallback(IntPtr param, IntPtr taosRes, int code)
             {
+                _output.WriteLine("code:{0}", querySql);
                 if (code == 0 && taosRes != IntPtr.Zero)
                 {
                     FetchRowAsyncCallback fetchRowAsyncCallback = new FetchRowAsyncCallback(FetchCallback);
@@ -152,7 +159,7 @@ namespace Cases
                 }
                 else
                 {
-                    Console.WriteLine($"async query data failed, failed code {code}");
+                    throw new Exception($"async query data failed, failed reason:{TDengine.Error(taosRes)} {code}");
                 }
 
             }
@@ -164,7 +171,10 @@ namespace Cases
                     ResultSet actualResult = new ResultSet(taosRes);
                     List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
                     List<String> actualResData = actualResult.GetResultData();
+
                     //Assert Meta data
+                    _output.WriteLine("Assert Meta data");
+
                     for (int i = 0; i < actualMeta.Count; i++)
                     {
                         Assert.Equal(expectResMeta[i].name, actualMeta[i].name);
@@ -172,29 +182,30 @@ namespace Cases
                         Assert.Equal(expectResMeta[i].size, actualMeta[i].size);
                     }
                     // Assert retrieve data
+                    _output.WriteLine("Assert retrieve data");
+
                     for (int i = 0; i < actualResData.Count; i++)
                     {
-                        // Console.WriteLine("{0},{1},{2}", i, expectResData[i], actualResData[i]);
+                        _output.WriteLine("{0},{1}", expectResData[i].ToString(), actualResData[i]);
                         Assert.Equal(expectResData[i].ToString(), actualResData[i]);
                     }
-
                     TDengine.FetchRowAsync(taosRes, FetchCallback, param);
                 }
                 else
                 {
                     if (numOfRows == 0)
                     {
-                        Console.WriteLine("async retrieve complete.");
+                        _output.WriteLine("async retrieve complete.");
 
                     }
                     else
                     {
-                        Console.WriteLine($"FetchRowAsync callback error, error code {numOfRows}");
+                        throw new Exception($"FetchRowAsync callback error, failed reason:{TDengine.Error(taosRes)}");
                     }
                     TDengine.FreeResult(taosRes);
                 }
             }
-
+            _output.WriteLine("QueryAsyncCases.QueryWithoutCondition() pass");
         }
 
         /// <author>xiaolei</author>
@@ -202,7 +213,7 @@ namespace Cases
         /// <describe>Test query with condition</describe>
         /// <filename>QueryAsync.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "QueryAsyncCases.QueryWithJsonCondition()"),TestExeOrder(3),Trait("Category", "QueryAWithJsonCondition")]
+        [Fact(DisplayName = "QueryAsyncCases.QueryWithJsonCondition()"), TestExeOrder(3), Trait("Category", "QueryAWithJsonCondition")]
         public void QueryWithJsonCondition()
         {
             IntPtr conn = database.conn;
@@ -230,13 +241,13 @@ namespace Cases
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createSql);
             List<Object> expectResData = UtilsTools.CombineColAndTagData(colData1, tagData1, 3);
 
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createSql);
-            UtilsTools.ExecuteUpdate(conn, insertSql1);
-            UtilsTools.ExecuteUpdate(conn, insertSql2);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql1, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql2, _output);
             QueryAsyncCallback fq = new QueryAsyncCallback(QueryCallback);
             TDengine.QueryAsync(conn, querySql, fq, IntPtr.Zero);
-
+            Thread.Sleep(2000);
             void QueryCallback(IntPtr param, IntPtr taosRes, int code)
             {
                 if (code == 0 && taosRes != IntPtr.Zero)
@@ -246,7 +257,7 @@ namespace Cases
                 }
                 else
                 {
-                    Console.WriteLine($"async query data failed, failed code {code}");
+                    _output.WriteLine($"async query data failed, failed code {code}");
                 }
 
             }
@@ -259,6 +270,8 @@ namespace Cases
                     List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
                     List<String> actualResData = actualResult.GetResultData();
                     //Assert Meta data
+                    _output.WriteLine("Assert Meta data");
+
                     for (int i = 0; i < actualMeta.Count; i++)
                     {
                         Assert.Equal(expectResMeta[i].name, actualMeta[i].name);
@@ -266,9 +279,11 @@ namespace Cases
                         Assert.Equal(expectResMeta[i].size, actualMeta[i].size);
                     }
                     // Assert retrieve data
+                    _output.WriteLine("Assert retrieve data");
+
                     for (int i = 0; i < actualResData.Count; i++)
                     {
-                        // Console.WriteLine("{0},{1},{2}", i, expectResData[i], actualResData[i]);
+                        // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                         Assert.Equal(expectResData[i].ToString(), actualResData[i]);
                     }
 
@@ -278,18 +293,17 @@ namespace Cases
                 {
                     if (numOfRows == 0)
                     {
-                        Console.WriteLine("async retrieve complete.");
+                        _output.WriteLine("async retrieve complete.");
 
                     }
                     else
                     {
-                        Console.WriteLine($"FetchRowAsync callback error, error code {numOfRows}");
+                        _output.WriteLine($"FetchRowAsync callback error, error code {numOfRows}");
                     }
                     TDengine.FreeResult(taosRes);
                 }
             }
-
-
+            _output.WriteLine("QueryAsyncCases.QueryWithJsonCondition() pass");
         }
     }
 }

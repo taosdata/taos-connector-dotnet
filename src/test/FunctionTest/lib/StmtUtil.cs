@@ -12,7 +12,7 @@ namespace Test.UtilsTools
             if (stmt == IntPtr.Zero)
             {
                 Console.WriteLine("Init stmt failed");
-                UtilsTools.CloseConnection(conn);
+                TDengine.Close(conn);
                 UtilsTools.ExitProgram();
             }
             else

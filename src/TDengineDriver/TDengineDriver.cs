@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace TDengineDriver
 {
@@ -217,10 +218,8 @@ namespace TDengineDriver
 
         static public IntPtr Query(IntPtr conn, string command)
         {
-            IntPtr res = IntPtr.Zero;
-
             IntPtr commandBuffer = Marshal.StringToCoTaskMemUTF8(command);
-            res = Query(conn, commandBuffer);
+            IntPtr res = Query(conn, commandBuffer);
             Marshal.FreeCoTaskMem(commandBuffer);
             return res;
         }
@@ -466,7 +465,15 @@ namespace TDengineDriver
         /// <param name="fq">User-defined callback function. <see cref="QueryAsyncCallback"/></param>
         /// <param name="param">the parameter for callback</param>       
         [DllImport("taos", EntryPoint = "taos_query_a", CallingConvention = CallingConvention.Cdecl)]
-        static extern public void QueryAsync(IntPtr taos, string sql, QueryAsyncCallback fq, IntPtr param);
+        static extern private void QueryAsync(IntPtr taos, IntPtr sql, QueryAsyncCallback fq, IntPtr param);
+        static public void QueryAsync(IntPtr taos, string sql, QueryAsyncCallback fq, IntPtr param)
+        {
+            byte[] sqlUTF8Byte = Encoding.UTF8.GetBytes(sql);
+            IntPtr sqlPtr = Marshal.AllocHGlobal(sqlUTF8Byte.Length);
+            Marshal.Copy(sqlUTF8Byte,0, sqlPtr, sqlUTF8Byte.Length);
+            QueryAsync(taos, sqlPtr, fq, param);
+            Marshal.FreeHGlobal(sqlPtr);
+        }
 
         /// <summary>
         /// Get the result set of asynchronous queries in batch, 
