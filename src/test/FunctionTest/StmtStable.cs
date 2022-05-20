@@ -21,7 +21,7 @@ namespace Cases
         private readonly ITestOutputHelper _output;
 
 
-        public StableStmtCases(DatabaseFixture fixture,ITestOutputHelper output)
+        public StableStmtCases(DatabaseFixture fixture, ITestOutputHelper output)
         {
             this.database = fixture;
             this._output = output;
@@ -74,8 +74,8 @@ namespace Cases
             TAOS_BIND[] binds = DataSource.GetNTableCNRow();
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql,_output);
-            UtilsTools.ExecuteUpdate(conn, createSql,_output);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -89,7 +89,7 @@ namespace Cases
             DataSource.FreeTaosBind(binds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql,_output);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
@@ -164,8 +164,8 @@ namespace Cases
             List<String> expectResData = DataSource.GetMultiBindStableCNRowData();
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql,_output);
-            UtilsTools.ExecuteUpdate(conn, createSql,_output);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -194,7 +194,7 @@ namespace Cases
             DataSource.FreeTaosMBind(mBinds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql,_output);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
@@ -269,8 +269,8 @@ namespace Cases
             List<String> expectResData = DataSource.GetMultiBindStableCNRowData();
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql,_output);
-            UtilsTools.ExecuteUpdate(conn, createSql,_output);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -284,7 +284,7 @@ namespace Cases
             DataSource.FreeTaosMBind(mBinds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql,_output);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
@@ -358,8 +358,8 @@ namespace Cases
             List<String> expectResData = DataSource.GetMultiBindStableRowData();
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql,_output);
-            UtilsTools.ExecuteUpdate(conn, createSql,_output);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -373,7 +373,7 @@ namespace Cases
             DataSource.FreeTaosMBind(mBinds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql,_output);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
@@ -447,8 +447,8 @@ namespace Cases
             List<String> expectResData = DataSource.GetMultiBindStableRowData();
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql,_output);
-            UtilsTools.ExecuteUpdate(conn, createSql,_output);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -477,7 +477,7 @@ namespace Cases
             DataSource.FreeTaosMBind(mBinds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql,_output);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();

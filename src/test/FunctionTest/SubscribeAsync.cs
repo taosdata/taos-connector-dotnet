@@ -61,7 +61,7 @@ namespace Cases
             expectResData.AddRange(expectResData2);
             var querySql = $"select * from {tableName}";
 
-            UtilsTools.ExecuteUpdate(conn, dropSql,_output);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
             UtilsTools.ExecuteUpdate(conn, createSql, _output);
             UtilsTools.ExecuteUpdate(conn, insertSql, _output);
 

@@ -51,7 +51,7 @@ namespace Cases
             List<Object> expectResData = UtilsTools.CombineColAndTagData(colData, tagData, 3);
 
             var querySql = $"select * from {tableName}";
-            UtilsTools.ExecuteUpdate(conn, dropSql,_output);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
             UtilsTools.ExecuteUpdate(conn, createSql, _output);
             UtilsTools.ExecuteUpdate(conn, insertSql, _output);
 
@@ -112,7 +112,7 @@ namespace Cases
                     TDengine.FreeResult(taosRes);
                 }
             }
-                    _output.WriteLine("QueryAsyncCases.QueryWithoutCondition() pass");
+            _output.WriteLine("QueryAsyncCases.QueryWithoutCondition() pass");
 
         }
 
@@ -121,7 +121,7 @@ namespace Cases
         /// <describe>Test query with condition</describe>
         /// <filename>QueryAsync.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName  = "QueryAsyncCases.QueryWithCondition()"), TestExeOrder(2), Trait("Category", "QueryAWithCondition")]
+        [Fact(DisplayName = "QueryAsyncCases.QueryWithCondition()"), TestExeOrder(2), Trait("Category", "QueryAWithCondition")]
         public void QueryWithCondition()
         {
             IntPtr conn = database.conn;

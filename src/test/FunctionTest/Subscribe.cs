@@ -62,7 +62,7 @@ namespace Cases
             expectResData.AddRange(expectResData2);
 
             var querySql = $"select * from {tableName}";
-            UtilsTools.ExecuteUpdate(conn, dropSql,_output);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
             UtilsTools.ExecuteUpdate(conn, createSql, _output);
             UtilsTools.ExecuteUpdate(conn, insertSql, _output);
 
@@ -73,7 +73,7 @@ namespace Cases
             UtilsTools.GetResDataWithoutFree(_res);
             TDengine.Unsubscribe(subscribe, true);
 
-            UtilsTools.ExecuteUpdate(conn, insertSql2,_output);
+            UtilsTools.ExecuteUpdate(conn, insertSql2, _output);
             Thread.Sleep(100);
 
 
@@ -88,7 +88,7 @@ namespace Cases
 
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
-   
+
             for (int i = 0; i < actualMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualMeta[i].name);
@@ -97,7 +97,7 @@ namespace Cases
             }
             // Assert retrieve data
             _output.WriteLine("Assert retrieve data");
-            
+
             for (int i = 0; i < actualResData.Count; i++)
             {
                 // output.WriteLine("{0},{1},{2}", i, expectResData[i], actualResData[i]);
@@ -156,7 +156,7 @@ namespace Cases
             TDengine.Unsubscribe(subscribe, true);
 
             // Insert new data.
-            UtilsTools.ExecuteUpdate(conn, insertSql2,_output);
+            UtilsTools.ExecuteUpdate(conn, insertSql2, _output);
             Thread.Sleep(1000);
 
             subscribe = TDengine.Subscribe(conn, false, tableName, querySql, null, IntPtr.Zero, 20);
@@ -168,7 +168,7 @@ namespace Cases
 
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
-            
+
             for (int i = 0; i < actualMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualMeta[i].name);
@@ -178,7 +178,7 @@ namespace Cases
 
             // Assert retrieve data
             _output.WriteLine("Assert retrieve data");
-            
+
             for (int i = 0; i < actualResData.Count; i++)
             {
                 // output.WriteLine("{0},{1},{2}", i, expectResData[i], actualResData[i]);

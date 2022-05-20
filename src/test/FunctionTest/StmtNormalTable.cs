@@ -158,7 +158,7 @@ namespace Cases
             DataSource.FreeTaosMBind(mBind);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql,_output);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();

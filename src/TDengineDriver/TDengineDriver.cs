@@ -470,7 +470,7 @@ namespace TDengineDriver
         {
             byte[] sqlUTF8Byte = Encoding.UTF8.GetBytes(sql);
             IntPtr sqlPtr = Marshal.AllocHGlobal(sqlUTF8Byte.Length);
-            Marshal.Copy(sqlUTF8Byte,0, sqlPtr, sqlUTF8Byte.Length);
+            Marshal.Copy(sqlUTF8Byte, 0, sqlPtr, sqlUTF8Byte.Length);
             QueryAsync(taos, sqlPtr, fq, param);
             Marshal.FreeHGlobal(sqlPtr);
         }

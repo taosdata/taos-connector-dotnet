@@ -19,8 +19,8 @@ namespace Test.Fixture
         public DatabaseFixture()
         {
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
-            //TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "60");
-            //TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CHARSET, "UTF-8");
+            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "90");
+            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CHARSET, "UTF-8");
             TDengine.Init();
             conn = TDengine.Connect(ip, user, password, "", port);
             IntPtr res;

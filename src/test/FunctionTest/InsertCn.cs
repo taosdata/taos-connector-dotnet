@@ -172,7 +172,7 @@ namespace Cases
             String dropSql = "drop table " + tableName;
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
 
-            UtilsTools.ExecuteUpdate(conn, dropTb,_output);
+            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
             UtilsTools.ExecuteUpdate(conn, createTb, _output);
             UtilsTools.ExecuteUpdate(conn, insertSql, _output);
             _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
@@ -180,7 +180,7 @@ namespace Cases
             ResultSet actualResult = new ResultSet(_res);
             List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
             List<String> actualResData = actualResult.GetResultData();
-            
+
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
 
@@ -244,7 +244,7 @@ namespace Cases
 
             List<Object> expectResData = UtilsTools.CombineColAndTagData(colData, tagData, 9);
 
-            UtilsTools.ExecuteUpdate(conn, dropTb,_output);
+            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
             UtilsTools.ExecuteUpdate(conn, createTb, _output);
             UtilsTools.ExecuteUpdate(conn, insertSql, _output);
             _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
