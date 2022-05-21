@@ -19,7 +19,7 @@ namespace Test.Fixture
             short port = 0;
 
 
-            // TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
+            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "90");
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_LOCALE, "C");
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CHARSET, "UTF-8");
@@ -59,24 +59,24 @@ namespace Test.Fixture
         {
             TDengine.Close(conn);
 
-            IntPtr res;
-            if (conn != IntPtr.Zero)
-            {
-                if ((res = TDengine.Query(conn, $"drop database if exists {db}")) != IntPtr.Zero)
-                {
-                    TDengine.Close(conn);
-                    Console.WriteLine("close connection success");
+            // IntPtr res;
+            // if (conn != IntPtr.Zero)
+            // {
+            //     if ((res = TDengine.Query(conn, $"drop database if exists {db}")) != IntPtr.Zero)
+            //     {
+            //         TDengine.Close(conn);
+            //         Console.WriteLine("close connection success");
 
-                }
-                else
-                {
-                    throw new Exception(TDengine.Error(res));
-                }
-            }
-            else
-            {
-                throw new Exception("connection if already null");
-            }
+            //     }
+            //     else
+            //     {
+            //         throw new Exception(TDengine.Error(res));
+            //     }
+            // }
+            // else
+            // {
+            //     throw new Exception("connection if already null");
+            // }
 
         }
         private string GetConfigPath()

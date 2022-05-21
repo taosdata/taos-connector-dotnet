@@ -468,11 +468,17 @@ namespace TDengineDriver
         static extern private void QueryAsync(IntPtr taos, IntPtr sql, QueryAsyncCallback fq, IntPtr param);
         static public void QueryAsync(IntPtr taos, string sql, QueryAsyncCallback fq, IntPtr param)
         {
-            byte[] sqlUTF8Byte = Encoding.UTF8.GetBytes(sql);
-            IntPtr sqlPtr = Marshal.AllocHGlobal(sqlUTF8Byte.Length);
-            Marshal.Copy(sqlUTF8Byte, 0, sqlPtr, sqlUTF8Byte.Length);
+            
+            // byte[] sqlUTF8Byte = Encoding.UTF8.GetBytes(sql);
+            // IntPtr sqlPtr = Marshal.AllocHGlobal(sqlUTF8Byte.Length);
+            // Marshal.Copy(sqlUTF8Byte, 0, sqlPtr, sqlUTF8Byte.Length);
+            // QueryAsync(taos, sqlPtr, fq, param);
+            // Marshal.FreeHGlobal(sqlPtr);
+
+            IntPtr sqlPtr = Marshal.StringToCoTaskMemUTF8(sql);
             QueryAsync(taos, sqlPtr, fq, param);
-            Marshal.FreeHGlobal(sqlPtr);
+            Marshal.FreeCoTaskMem(sqlPtr);
+
         }
 
         /// <summary>
