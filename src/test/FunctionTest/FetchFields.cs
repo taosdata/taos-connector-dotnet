@@ -6,6 +6,7 @@ using Xunit;
 using Test.UtilsTools.ResultSet;
 using Test.Fixture;
 using Test.Case.Attributes;
+using Xunit.Abstractions;
 
 namespace Cases
 {
@@ -14,22 +15,25 @@ namespace Cases
     public class FetchFieldCases
     {
 
-         DatabaseFixture database;
+        DatabaseFixture _database;
+        private readonly ITestOutputHelper _output;
 
-
-        public FetchFieldCases(DatabaseFixture fixture)
+        public FetchFieldCases(DatabaseFixture fixture, ITestOutputHelper output)
         {
-            this.database = fixture;
+            this._database = fixture;
+            this._output = output;
+
         }
         /// <author>xiaolei</author>
         /// <Name>FetchFieldsCases.TestFetchFieldsJsonTag</Name>
         /// <describe>test taos_fetch_fields(), check the meta data</describe>
         /// <filename>FetchFields.cs</filename>
         /// <result>pass or failed </result>  
-        [Fact(DisplayName = "FetchFieldsCases.TestFetchFieldJsonTag()"),TestExeOrder(1),Trait("Category", "FetchFieldJsonTag")]
+        [Fact(DisplayName = "FetchFieldsCases.TestFetchFieldJsonTag()"), TestExeOrder(1), Trait("Category", "FetchFieldJsonTag")]
         public void TestFetchFieldJsonTag()
         {
-            IntPtr conn = database.conn;
+            IntPtr conn = _database.conn;
+            Assert.NotEqual(conn, IntPtr.Zero);
             IntPtr _res = IntPtr.Zero;
             string tableName = "fetch_fields";
             var expectResMeta = new List<TDengineMeta> {
@@ -75,10 +79,10 @@ namespace Cases
             String selectSql = "select * from " + tableName;
             String dropSql = "drop table " + tableName;
 
-            UtilsTools.ExecuteUpdate(conn, dropTb);
-            UtilsTools.ExecuteUpdate(conn, createTb);
-            UtilsTools.ExecuteUpdate(conn, insertSql);
-            _res = UtilsTools.ExecuteQuery(conn, selectSql);
+            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
+            UtilsTools.ExecuteUpdate(conn, createTb, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
+            _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
 
             ResultSet actualResult = new ResultSet(_res);
             List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
@@ -88,6 +92,7 @@ namespace Cases
                 Assert.Equal(expectResMeta[i].type, actualMeta[i].type);
                 Assert.Equal(expectResMeta[i].size, actualMeta[i].size);
             }
+            _output.WriteLine("FetchFieldsCases.TestFetchFieldJsonTag() pass");
         }
     }
 }

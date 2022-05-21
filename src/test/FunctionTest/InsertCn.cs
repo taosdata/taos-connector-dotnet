@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using Test.UtilsTools.ResultSet;
 using Test.Case.Attributes;
 using Test.Fixture;
+using Xunit.Abstractions;
+
 namespace Cases
 {
     [TestCaseOrderer("XUnit.Case.Orderers.TestExeOrderer", "Cases.ExeOrder")]
@@ -14,9 +16,11 @@ namespace Cases
     public class InsertCNCases
     {
         DatabaseFixture database;
-        public InsertCNCases(DatabaseFixture fixture)
+        private readonly ITestOutputHelper _output;
+        public InsertCNCases(DatabaseFixture fixture, ITestOutputHelper output)
         {
             this.database = fixture;
+            this._output = output;
         }
         /// <author>xiaolei</author>
         /// <Name>InsertCNCases.TestNTable</Name>
@@ -27,6 +31,7 @@ namespace Cases
         public void TestNTable()
         {
             IntPtr conn = database.conn;
+            Assert.NotEqual(conn, IntPtr.Zero);
             IntPtr _res = IntPtr.Zero;
             string tableName = "cn_insert_nchar_ntable";
             // var expectResData = new List<String> { "1637064040000", "true", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "XI", "XII", "{\"k1\": \"v1\"}" };
@@ -48,15 +53,16 @@ namespace Cases
             String dropSql = "drop table " + tableName;
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
 
-            UtilsTools.ExecuteUpdate(conn, dropTb);
-            UtilsTools.ExecuteUpdate(conn, createTb);
-            UtilsTools.ExecuteUpdate(conn, insertSql);
-            _res = UtilsTools.ExecuteQuery(conn, selectSql);
+            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
+            UtilsTools.ExecuteUpdate(conn, createTb, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
+            _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
 
             ResultSet actualResult = new ResultSet(_res);
             List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
             List<String> actualResData = actualResult.GetResultData();
             //Assert Meta data
+            _output.WriteLine("Assert Meta data");
             for (int i = 0; i < actualMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualMeta[i].name);
@@ -65,10 +71,15 @@ namespace Cases
             }
 
             // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
             for (int i = 0; i < actualResData.Count; i++)
             {
+                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                 Assert.Equal(colData[i].ToString(), actualResData[i]);
             }
+
+            _output.WriteLine("InsertCNCases.TestNTable() pass");
+
 
         }
 
@@ -84,15 +95,15 @@ namespace Cases
             IntPtr _res = IntPtr.Zero;
             string tableName = "cn_insert_nchar_stable";
             var colData = new List<Object>{1637064040000,1,"涛思数据",
-            1637064041000,2,"涛思数据taosdata",
-            1637064042000,3,"TDegnine涛思数据",
-            1637064043000,4,"4涛思数据",
-            1637064044000,5,"涛思数据5",
-            1637064045000,6,"taos涛思数据6",
-            1637064046000,7,"7涛思数据taos",
-            1637064047000,8,"8&涛思数据taos",
-            1637064048000,9,"&涛思数据taos9"
-            };
+                    1637064041000,2,"涛思数据taosdata",
+                    1637064042000,3,"TDegnine涛思数据",
+                    1637064043000,4,"4涛思数据",
+                    1637064044000,5,"涛思数据5",
+                    1637064045000,6,"taos涛思数据6",
+                    1637064046000,7,"7涛思数据taos",
+                    1637064047000,8,"8&涛思数据taos",
+                    1637064048000,9,"&涛思数据taos9"
+                    };
             var tagData = new List<Object> { 1, "涛思数据", };
             String dropTb = "drop table if exists " + tableName;
             String createTb = $"create table {tableName} (ts timestamp,v4 int,blob nchar(200))tags(id int,name nchar(50));";
@@ -103,15 +114,16 @@ namespace Cases
 
             List<Object> expectResData = UtilsTools.CombineColAndTagData(colData, tagData, 9);
 
-            UtilsTools.ExecuteUpdate(conn, dropTb);
-            UtilsTools.ExecuteUpdate(conn, createTb);
-            UtilsTools.ExecuteUpdate(conn, insertSql);
-            _res = UtilsTools.ExecuteQuery(conn, selectSql);
+            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
+            UtilsTools.ExecuteUpdate(conn, createTb, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
+            _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
 
             ResultSet actualResult = new ResultSet(_res);
             List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
             List<String> actualResData = actualResult.GetResultData();
             //Assert Meta data
+            _output.WriteLine("Assert Meta data");
             for (int i = 0; i < actualMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualMeta[i].name);
@@ -120,10 +132,15 @@ namespace Cases
             }
 
             // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
             for (int i = 0; i < actualResData.Count; i++)
             {
+                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                 Assert.Equal(expectResData[i].ToString(), actualResData[i]);
             }
+            _output.WriteLine("InsertCNCases.TestSTable() pass");
+
         }
 
         /// <author>xiaolei</author>
@@ -138,15 +155,15 @@ namespace Cases
             IntPtr _res = IntPtr.Zero;
             string tableName = "cn_multi_insert_nchar_ntable";
             var colData = new List<Object>{1637064040000,1,"涛思数据","保利广场","Beijing","China",
-            1637064041000,2,"涛思数据taosdata","保利广场baoli","Beijing","China",
-            1637064042000,3,"TDegnine涛思数据","time广场","NewYork","US",
-            1637064043000,4,"4涛思数据","4广场南部","London","UK",
-            1637064044000,5,"涛思数据5","!广场路中部123","Tokyo","JP",
-            1637064045000,6,"taos涛思数据6","青年广场123号！","Washin","DC",
-            1637064046000,7,"7涛思数据taos","asdf#壮年广场%#endregion","NewYork","US",
-            1637064047000,8,"8&涛思数据taos","incluse阿斯顿发","NewYork","US",
-            1637064048000,9,"&涛思数据taos9","123黑化肥werq会挥……&¥%发！afsdfa","NewYork","US",
-            };
+                          1637064041000,2,"涛思数据taosdata","保利广场baoli","Beijing","China",
+                          1637064042000,3,"TDegnine涛思数据","time广场","NewYork","US",
+                          1637064043000,4,"4涛思数据","4广场南部","London","UK",
+                          1637064044000,5,"涛思数据5","!广场路中部123","Tokyo","JP",
+                          1637064045000,6,"taos涛思数据6","青年广场123号！","Washin","DC",
+                          1637064046000,7,"7涛思数据taos","asdf#壮年广场%#endregion","NewYork","US",
+                          1637064047000,8,"8&涛思数据taos","incluse阿斯顿发","NewYork","US",
+                          1637064048000,9,"&涛思数据taos9","123黑化肥werq会挥……&¥%发！afsdfa","NewYork","US",
+                          };
 
             String dropTb = "drop table if exists " + tableName;
             String createTb = $"create table if not exists {tableName} (ts timestamp,v4 int,blob nchar(200),location nchar(200),city binary(100),coutry binary(200));";
@@ -155,15 +172,18 @@ namespace Cases
             String dropSql = "drop table " + tableName;
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
 
-            UtilsTools.ExecuteUpdate(conn, dropTb);
-            UtilsTools.ExecuteUpdate(conn, createTb);
-            UtilsTools.ExecuteUpdate(conn, insertSql);
-            _res = UtilsTools.ExecuteQuery(conn, selectSql);
+            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
+            UtilsTools.ExecuteUpdate(conn, createTb, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
+            _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
 
             ResultSet actualResult = new ResultSet(_res);
             List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
             List<String> actualResData = actualResult.GetResultData();
+
             //Assert Meta data
+            _output.WriteLine("Assert Meta data");
+
             for (int i = 0; i < actualMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualMeta[i].name);
@@ -172,10 +192,15 @@ namespace Cases
             }
 
             // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
             for (int i = 0; i < actualResData.Count; i++)
             {
+                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                 Assert.Equal(colData[i].ToString(), actualResData[i]);
             }
+            _output.WriteLine("InsertCNCases.TestInsertMultiNTable() passed");
+
         }
 
         /// <author>xiaolei</author>
@@ -190,15 +215,15 @@ namespace Cases
             IntPtr _res = IntPtr.Zero;
             string tableName = "cn_multi_insert_nchar_stable";
             var colData = new List<Object>{1637064040000,1,"涛思数据","保利广场","Beijing","China",
-            1637064041000,2,"涛思数据taosdata","保利广场baoli","Beijing","China",
-            1637064042000,3,"TDegnine涛思数据","time广场","NewYork","US",
-            1637064043000,4,"4涛思数据","4广场南部","London","UK",
-            1637064044000,5,"涛思数据5","!广场路中部123","Tokyo","JP",
-            1637064045000,6,"taos涛思数据6","青年广场123号！","Washin","DC",
-            1637064046000,7,"7涛思数据taos","asdf#壮年广场%#endregion","NewYork","US",
-            1637064047000,8,"8&涛思数据taos","incluse阿斯顿发","NewYork","US",
-            1637064048000,9,"&涛思数据taos9","123黑化肥werq会挥……&¥%发！afsdfa","NewYork","US",
-            };
+                          1637064041000,2,"涛思数据taosdata","保利广场baoli","Beijing","China",
+                          1637064042000,3,"TDegnine涛思数据","time广场","NewYork","US",
+                          1637064043000,4,"4涛思数据","4广场南部","London","UK",
+                          1637064044000,5,"涛思数据5","!广场路中部123","Tokyo","JP",
+                          1637064045000,6,"taos涛思数据6","青年广场123号！","Washin","DC",
+                          1637064046000,7,"7涛思数据taos","asdf#壮年广场%#endregion","NewYork","US",
+                          1637064047000,8,"8&涛思数据taos","incluse阿斯顿发","NewYork","US",
+                          1637064048000,9,"&涛思数据taos9","123黑化肥werq会挥……&¥%发！afsdfa","NewYork","US",
+                          };
             var tagData = new List<Object> { 1, "涛思数据", "中国北方&南方长江黄河！49wq", "tdengine" };
             String dropTb = "drop table if exists " + tableName;
             String createTb = $"create table if not exists {tableName} (ts timestamp," +
@@ -219,15 +244,18 @@ namespace Cases
 
             List<Object> expectResData = UtilsTools.CombineColAndTagData(colData, tagData, 9);
 
-            UtilsTools.ExecuteUpdate(conn, dropTb);
-            UtilsTools.ExecuteUpdate(conn, createTb);
-            UtilsTools.ExecuteUpdate(conn, insertSql);
-            _res = UtilsTools.ExecuteQuery(conn, selectSql);
+            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
+            UtilsTools.ExecuteUpdate(conn, createTb, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
+            _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
 
             ResultSet actualResult = new ResultSet(_res);
             List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
             List<String> actualResData = actualResult.GetResultData();
+
             //Assert Meta data
+            _output.WriteLine("Assert Meta data");
+
             for (int i = 0; i < actualMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualMeta[i].name);
@@ -236,10 +264,16 @@ namespace Cases
             }
 
             // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
             for (int i = 0; i < actualResData.Count; i++)
             {
+                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                 Assert.Equal(expectResData[i].ToString(), actualResData[i]);
             }
+            _output.WriteLine("InsertCNCases.TestInsertMultiSTable() pass");
+
         }
+
     }
 }
