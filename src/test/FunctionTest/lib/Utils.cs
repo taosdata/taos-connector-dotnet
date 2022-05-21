@@ -156,7 +156,7 @@ namespace Test.UtilsTools
             }
             return true;
         }
-        public static void CloseConnection(IntPtr conn, ITestOutputHelper output)
+        public static void Dispose(IntPtr conn, ITestOutputHelper output)
         {
             TDengine.FreeResult(TDengine.Query(conn, "drop database if  exists csharp"));
             if (conn != IntPtr.Zero)
