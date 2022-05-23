@@ -57,26 +57,26 @@ namespace Test.Fixture
 
         public void Dispose()
         {
-            TDengine.Close(conn);
+            //TDengine.Close(conn);
 
-            // IntPtr res;
-            // if (conn != IntPtr.Zero)
-            // {
-            //     if ((res = TDengine.Query(conn, $"drop database if exists {db}")) != IntPtr.Zero)
-            //     {
-            //         TDengine.Close(conn);
-            //         Console.WriteLine("close connection success");
+            IntPtr res;
+            if (conn != IntPtr.Zero)
+            {
+                if ((res = TDengine.Query(conn, $"drop database if exists {db}")) != IntPtr.Zero)
+                {
+                    TDengine.Close(conn);
+                    Console.WriteLine("close connection success");
 
-            //     }
-            //     else
-            //     {
-            //         throw new Exception(TDengine.Error(res));
-            //     }
-            // }
-            // else
-            // {
-            //     throw new Exception("connection if already null");
-            // }
+                }
+                else
+                {
+                    throw new Exception(TDengine.Error(res));
+                }
+            }
+            else
+            {
+                throw new Exception("connection if already null");
+            }
 
         }
         private string GetConfigPath()
