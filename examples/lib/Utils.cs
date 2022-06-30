@@ -19,7 +19,6 @@ namespace Sample.UtilsTools
         {
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "60");
-            TDengine.Init();
 
             IntPtr conn = TDengine.Connect(ip, user, password, db, port);
 

@@ -7,6 +7,7 @@ using Test.UtilsTools.ResultSet;
 using Xunit;
 using Test.Fixture;
 using Test.Case.Attributes;
+using Xunit.Abstractions;
 
 namespace Cases
 {
@@ -17,18 +18,20 @@ namespace Cases
     {
 
         DatabaseFixture database;
+        private readonly ITestOutputHelper _output;
 
 
-        public StableStmtCases(DatabaseFixture fixture)
+        public StableStmtCases(DatabaseFixture fixture, ITestOutputHelper output)
         {
             this.database = fixture;
+            this._output = output;
         }
         /// <author>xiaolei</author>
         /// <Name>StableStmtCases.TestBindSingleLineCN</Name>
-        /// <describe>Test stmt insert single line of chinese character into stable by column after column </describe>
+        /// <describe>Test stmt insert single line of Chinese character into stable by column after column </describe>
         /// <filename>StmtSTable.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "StableStmtCases.TestBindSingleLineCN()"),TestExeOrder(2),Trait("Category", "BindParamCN")]
+        [Fact(DisplayName = "StableStmtCases.TestBindSingleLineCN()"), TestExeOrder(2), Trait("Category", "BindParamCN")]
         public void TestBindSingleLineCN()
         {
             string tableName = "stb_stmt_cases_test_bind_single_line_cn";
@@ -71,8 +74,8 @@ namespace Cases
             TAOS_BIND[] binds = DataSource.GetNTableCNRow();
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createSql);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -86,33 +89,39 @@ namespace Cases
             DataSource.FreeTaosBind(binds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
             List<string> actualResData = actualResult.GetResultData();
 
             // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
             for (int i = 0; i < actualResData.Count; i++)
             {
+                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                 Assert.Equal(expectResData[i], actualResData[i]);
             }
-            // Assert metadata
+            // Assert meta data
+            _output.WriteLine("Assert meta data");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
                 Assert.Equal(expectResMeta[i].type, actualResMeta[i].type);
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
             }
+            _output.WriteLine("StableStmtCases.TestBindSingleLineCN() pass");
 
         }
 
         /// <author>xiaolei</author>
         /// <Name>StableStmtCases.TestBindColumnCN</Name>
-        /// <describe>Test stmt insert single line of chinese character into stable by column after column </describe>
+        /// <describe>Test stmt insert single line of Chinese character into stable by column after column </describe>
         /// <filename>StmtSTable.cs</filename>
         /// <result>pass or failed </result>
-        [Fact(DisplayName = "StableStmtCases.TestBindColumnCN()"),TestExeOrder(4),Trait("Category", "BindParamColumnCN")]
+        [Fact(DisplayName = "StableStmtCases.TestBindColumnCN()"), TestExeOrder(4), Trait("Category", "BindParamColumnCN")]
         public void TestBindColumnCN()
         {
             string tableName = "stb_stmt_cases_test_bindcolumn_cn";
@@ -155,8 +164,8 @@ namespace Cases
             List<String> expectResData = DataSource.GetMultiBindStableCNRowData();
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createSql);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -185,34 +194,39 @@ namespace Cases
             DataSource.FreeTaosMBind(mBinds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
             List<string> actualResData = actualResult.GetResultData();
 
             // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
             for (int i = 0; i < actualResData.Count; i++)
             {
+                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                 Assert.Equal(expectResData[i], actualResData[i]);
             }
-            // Assert metadata
+            // Assert meta data
+            _output.WriteLine("Assert meta data");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
                 Assert.Equal(expectResMeta[i].type, actualResMeta[i].type);
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
             }
-
+            _output.WriteLine("StableStmtCases.TestBindColumnCN() pass");
 
         }
 
         /// <author>xiaolei</author>
         /// <Name>StableStmtCases.TestBindMultiLineCN</Name>
-        /// <describe>Test stmt insert single line of chinese character into stable by column after column </describe>
+        /// <describe>Test stmt insert single line of Chinese character into stable by column after column </describe>
         /// <filename>StmtSTable.cs</filename>
         /// <result>pass or failed </result>
-        [Fact(DisplayName = "StableStmtCases.TestBindMultiLineCN()"),TestExeOrder(6),Trait("Category", "BindParamBatchCN")]
+        [Fact(DisplayName = "StableStmtCases.TestBindMultiLineCN()"), TestExeOrder(6), Trait("Category", "BindParamBatchCN")]
         public void TestBindMultiLineCN()
         {
             string tableName = "stb_stmt_cases_test_bind_multi_line_cn";
@@ -255,8 +269,8 @@ namespace Cases
             List<String> expectResData = DataSource.GetMultiBindStableCNRowData();
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createSql);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -270,24 +284,30 @@ namespace Cases
             DataSource.FreeTaosMBind(mBinds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
             List<string> actualResData = actualResult.GetResultData();
 
             // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
             for (int i = 0; i < actualResData.Count; i++)
             {
+                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                 Assert.Equal(expectResData[i], actualResData[i]);
             }
-            // Assert metadata
+            // Assert meta data
+            _output.WriteLine("Assert meta data");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
                 Assert.Equal(expectResMeta[i].type, actualResMeta[i].type);
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
             }
+            _output.WriteLine("StableStmtCases.TestBindMultiLineCN() pass");
         }
 
         /// <author>xiaolei</author>
@@ -295,7 +315,7 @@ namespace Cases
         /// <describe>Test stmt insert single line into stable by column after column </describe>
         /// <filename>StmtSTable.cs</filename>
         /// <result>pass or failed </result>         
-        [Fact(DisplayName = "StableStmtCases.TestBindMultiLine()"),TestExeOrder(5),Trait("Category", "BindParamBatch")]
+        [Fact(DisplayName = "StableStmtCases.TestBindMultiLine()"), TestExeOrder(5), Trait("Category", "BindParamBatch")]
         public void TestBindMultiLine()
         {
             string tableName = "stb_stmt_cases_test_bind_multi_line";
@@ -338,8 +358,8 @@ namespace Cases
             List<String> expectResData = DataSource.GetMultiBindStableRowData();
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createSql);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -353,37 +373,38 @@ namespace Cases
             DataSource.FreeTaosMBind(mBinds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
             List<string> actualResData = actualResult.GetResultData();
 
             // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
             for (int i = 0; i < actualResData.Count; i++)
             {
-                // Assert.Equal(expectResData[i],actualResData[i]);
-                if (expectResData[i] != actualResData[i])
-                {
-                    Console.WriteLine("{0}==>,expectResData:{1},actualResData:{2}", i, expectResData[i], actualResData[i]);
-                }
-
+                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
+                Assert.Equal(expectResData[i], actualResData[i]);
             }
-            // Assert metadata
+            // Assert meta data
+            _output.WriteLine("Assert meta data");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
                 Assert.Equal(expectResMeta[i].type, actualResMeta[i].type);
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
             }
+            _output.WriteLine("StableStmtCases.TestBindMultiLine() pass");
         }
 
         /// <author>xiaolei</author>
         /// <Name>StableStmtCases.TestBindColumn</Name>
-        /// <describe>Test stmt insert single line of chinese character into stable by column after column </describe>
+        /// <describe>Test stmt insert single line of Chinese character into stable by column after column </describe>
         /// <filename>StmtSTable.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "StableStmtCases.TestBindColumn()"),TestExeOrder(3),Trait("Category", "BindParamColumn")]
+        [Fact(DisplayName = "StableStmtCases.TestBindColumn()"), TestExeOrder(3), Trait("Category", "BindParamColumn")]
         public void TestBindColumn()
         {
             string tableName = "stb_stmt_cases_test_bindcolumn";
@@ -426,8 +447,8 @@ namespace Cases
             List<String> expectResData = DataSource.GetMultiBindStableRowData();
 
             IntPtr conn = database.conn;
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createSql);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
 
             IntPtr stmt = StmtUtilTools.StmtInit(conn);
             StmtUtilTools.StmtPrepare(stmt, insertSql);
@@ -456,24 +477,30 @@ namespace Cases
             DataSource.FreeTaosMBind(mBinds);
 
             string querySql = "select * from " + tableName;
-            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql);
+            IntPtr res = UtilsTools.ExecuteQuery(conn, querySql, _output);
             ResultSet actualResult = new ResultSet(res);
 
             List<TDengineMeta> actualResMeta = actualResult.GetResultMeta();
             List<string> actualResData = actualResult.GetResultData();
 
             // Assert retrieve data
+            _output.WriteLine("Assert retrieve data");
+
             for (int i = 0; i < actualResData.Count; i++)
             {
+                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                 Assert.Equal(expectResData[i], actualResData[i]);
             }
-            // Assert metadata
+            // Assert meta data
+            _output.WriteLine("Assert meta data");
+
             for (int i = 0; i < actualResMeta.Count; i++)
             {
                 Assert.Equal(expectResMeta[i].name, actualResMeta[i].name);
                 Assert.Equal(expectResMeta[i].type, actualResMeta[i].type);
                 Assert.Equal(expectResMeta[i].size, actualResMeta[i].size);
             }
+            _output.WriteLine("StableStmtCases.TestBindColumn() pass");
 
         }
 
