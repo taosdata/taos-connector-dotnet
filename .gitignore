@@ -1,10 +1,7 @@
-src/TDengineDriver/bin/
-src/TDengineDriver/obj/
-src/test/FunctionTest/bin/
-src/test/FunctionTest/obj/
-src/test/XUnitTest/bin/
-src/test/XUnitTest/obj/
-src/test/doc/
+test/Driver.Test/bin/
+test/Driver.Test/obj/
+src/bin/
+src/obj/
 NugetPackTest/
 examples/bin/
 examples/obj/

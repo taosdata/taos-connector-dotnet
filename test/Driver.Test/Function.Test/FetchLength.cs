@@ -1,25 +1,41 @@
 using System;
 using Test.UtilsTools;
 using System.Collections.Generic;
-using Xunit;
 using TDengineDriver;
 using Test.UtilsTools.ResultSet;
 using Test.Case.Attributes;
+using Xunit;
+using Xunit.Abstractions;
+using Test.Fixture;
+
+
 namespace Cases
 {
     [TestCaseOrderer("XUnit.Case.Orderers.TestExeOrderer", "Cases.ExeOrder")]
+    [Collection("Database collection")]
 
     public class FetchLengthCase
     {
+
+        DatabaseFixture _database;
+        private readonly ITestOutputHelper _output;
+
+        public FetchLengthCase(DatabaseFixture fixture, ITestOutputHelper output)
+        {
+            this._database = fixture;
+            this._output = output;
+
+        }
+
         /// <author>xiaolei</author>
         /// <Name>TestRetrieveBinary</Name>
         /// <describe>TD-12103 C# connector fetch_row with binary data retrieving error</describe>
         /// <filename>FetchLength.cs</filename>
         /// <result>pass or failed </result>
-        [Fact(DisplayName = "FetchLengthCase.TestRetrieveBinary()"),TestExeOrder(1)]
+        [Fact(DisplayName = "FetchLengthCase.TestRetrieveBinary()"), TestExeOrder(1)]
         public void TestRetrieveBinary()
         {
-            IntPtr conn = UtilsTools.TDConnection();
+            IntPtr conn = _database.conn;
             var expectData = new List<string> { "log", "test", "db02", "db3" };
             var expectMeta = new List<TDengineMeta>{
                              UtilsTools.ConstructTDengineMeta("ts","timestamp"),
@@ -34,20 +50,20 @@ namespace Cases
             string sql5 = $"insert into tb4 using stb1 tags(4) values(now, '{expectData[3]}');";
 
             string sql6 = "select distinct(name) from stb1;";
-            UtilsTools.ExecuteQuery(conn, sql0);
-            UtilsTools.ExecuteQuery(conn, sql1);
-            UtilsTools.ExecuteQuery(conn, sql2);
-            UtilsTools.ExecuteQuery(conn, sql3);
-            UtilsTools.ExecuteQuery(conn, sql4);
-            UtilsTools.ExecuteQuery(conn, sql5);
+            UtilsTools.ExecuteQuery(conn, sql0, _output);
+            UtilsTools.ExecuteQuery(conn, sql1, _output);
+            UtilsTools.ExecuteQuery(conn, sql2, _output);
+            UtilsTools.ExecuteQuery(conn, sql3, _output);
+            UtilsTools.ExecuteQuery(conn, sql4, _output);
+            UtilsTools.ExecuteQuery(conn, sql5, _output);
 
             IntPtr resPtr = IntPtr.Zero;
-            resPtr = UtilsTools.ExecuteQuery(conn, sql6);
+            resPtr = UtilsTools.ExecuteQuery(conn, sql6, _output);
 
             ResultSet actualResult = new ResultSet(resPtr);
             List<string> actualData = actualResult.GetResultData();
             List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
-            
+
             // Make expected data and retrieved data in same order
             expectData.Sort();
             actualData.Sort();
@@ -66,5 +82,5 @@ namespace Cases
 
         }
     }
-} 
+}
 

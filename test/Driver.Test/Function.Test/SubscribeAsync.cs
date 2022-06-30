@@ -17,12 +17,12 @@ namespace Cases
     {
         DatabaseFixture database;
 
-        private readonly ITestOutputHelper output;
+        private readonly ITestOutputHelper _output;
 
         public SubscribeAsyncCases(DatabaseFixture fixture, ITestOutputHelper output)
         {
             this.database = fixture;
-            this.output = output;
+            this._output = output;
         }
 
         /// <author>xiaolei</author>
@@ -61,15 +61,15 @@ namespace Cases
             expectResData.AddRange(expectResData2);
             var querySql = $"select * from {tableName}";
 
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createSql);
-            UtilsTools.ExecuteUpdate(conn, insertSql);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
 
             SubscribeCallback subscribeCallback1 = new SubscribeCallback(SubCallback1);
             SubscribeCallback subscribeCallback2 = new SubscribeCallback(SubCallback2);
             IntPtr subscribe = TDengine.Subscribe(conn, true, tableName, querySql, subscribeCallback1, IntPtr.Zero, 200);
 
-            UtilsTools.ExecuteUpdate(conn, insertSql2);
+            UtilsTools.ExecuteUpdate(conn, insertSql2, _output);
             Thread.Sleep(1000);
             TDengine.Unsubscribe(subscribe, true);
 
@@ -85,7 +85,7 @@ namespace Cases
                 }
                 else
                 {
-                    output.WriteLine($"async query data failed, failed code:{code}, reason:{TDengine.Error(taosRes)}");
+                    _output.WriteLine($"async query data failed, failed code:{code}, reason:{TDengine.Error(taosRes)}");
                 }
 
             }
@@ -99,14 +99,14 @@ namespace Cases
                     // UtilsTools.DisplayRes(taosRes);
                     if (actualResData.Count == 0)
                     {
-                        output.WriteLine($"consume in subscribe callback without data");
+                        _output.WriteLine($"consume in subscribe callback without data");
                     }
                     else
                     {
-                        output.WriteLine($"consume in subscribe callback with data");
+                        _output.WriteLine($"consume in subscribe callback with data");
 
                         Assert.Equal(expectResData.Count, actualResData.Count);
-                        output.WriteLine("Assert Meta data");
+                        _output.WriteLine("Assert Meta data");
                         //Assert Meta data
                         for (int i = 0; i < actualMeta.Count; i++)
                         {
@@ -114,21 +114,21 @@ namespace Cases
                             Assert.Equal(expectResMeta[i].type, actualMeta[i].type);
                             Assert.Equal(expectResMeta[i].size, actualMeta[i].size);
                         }
-                        output.WriteLine("Assert retrieve data");
+                        _output.WriteLine("Assert retrieve data");
                         // Assert retrieve data
                         for (int i = 0; i < actualResData.Count; i++)
                         {
-                            // output.WriteLine("index:{0},expectResData:{1},actualResData:{2}", i, expectResData[i], actualResData[i]);
+                            _output.WriteLine("index:{0},expectResData:{1},actualResData:{2}", i, expectResData[i], actualResData[i]);
                             Assert.Equal(expectResData[i].ToString(), actualResData[i]);
                         }
                     }
                 }
                 else
                 {
-                    output.WriteLine($"async query data failed, failed code:{code}, reason:{TDengine.Error(taosRes)}");
+                    _output.WriteLine($"async query data failed, failed code:{code}, reason:{TDengine.Error(taosRes)}");
                 }
             }
-
+            _output.WriteLine("SubscribeAsyncCases.ConsumeFromBegin() pass");
         }
 
         /// <author>xiaolei</author>
@@ -166,16 +166,16 @@ namespace Cases
             List<Object> expectResData2 = UtilsTools.CombineColAndTagData(colData2, tagData2, 3);
             var querySql = $"select * from {tableName}";
 
-            UtilsTools.ExecuteUpdate(conn, dropSql);
-            UtilsTools.ExecuteUpdate(conn, createSql);
-            UtilsTools.ExecuteUpdate(conn, insertSql);
+            UtilsTools.ExecuteUpdate(conn, dropSql, _output);
+            UtilsTools.ExecuteUpdate(conn, createSql, _output);
+            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
 
             SubscribeCallback subscribeCallback1 = new SubscribeCallback(SubCallback1);
             SubscribeCallback subscribeCallback2 = new SubscribeCallback(SubCallback2);
             IntPtr subscribe = TDengine.Subscribe(conn, true, tableName, querySql, subscribeCallback1, IntPtr.Zero, 200);
             Thread.Sleep(1000);
             TDengine.Unsubscribe(subscribe, true);
-            UtilsTools.ExecuteUpdate(conn, insertSql2);
+            UtilsTools.ExecuteUpdate(conn, insertSql2, _output);
             subscribe = TDengine.Subscribe(conn, false, tableName, querySql, subscribeCallback2, IntPtr.Zero, 200);
             Thread.Sleep(1000);
             TDengine.Unsubscribe(subscribe, false);
@@ -188,11 +188,10 @@ namespace Cases
                 }
                 else if (taosRes != IntPtr.Zero)
                 {
-                    output.WriteLine($"async query data failed, failed code:{code}, reason:{TDengine.Error(taosRes)}");
+                    _output.WriteLine($"async query data failed, failed code:{code}, reason:{TDengine.Error(taosRes)}");
                 }
 
             }
-
             void SubCallback2(IntPtr subscribe, IntPtr taosRes, IntPtr param, int code)
             {
                 if (code == 0 && taosRes != IntPtr.Zero)
@@ -202,14 +201,14 @@ namespace Cases
                     UtilsTools.DisplayRes(taosRes);
                     if (actualResData.Count == 0)
                     {
-                        output.WriteLine($"consume in subscribe callback without data");
+                        _output.WriteLine($"consume in subscribe callback without data");
                     }
                     else
                     {
-                        output.WriteLine($"consume in subscribe callback with data");
+                        _output.WriteLine($"consume in subscribe callback with data");
 
                         Assert.Equal(expectResData2.Count, actualResData.Count);
-                        output.WriteLine("Assert Meta data");
+                        _output.WriteLine("Assert Meta data");
                         //Assert Meta data
                         for (int i = 0; i < actualMeta.Count; i++)
                         {
@@ -217,21 +216,21 @@ namespace Cases
                             Assert.Equal(expectResMeta[i].type, actualMeta[i].type);
                             Assert.Equal(expectResMeta[i].size, actualMeta[i].size);
                         }
-                        output.WriteLine("Assert retrieve data");
+                        _output.WriteLine("Assert retrieve data");
                         // Assert retrieve data
                         for (int i = 0; i < actualResData.Count; i++)
                         {
-                            // output.WriteLine("index:{0},expectResData:{1},actualResData:{2}", i, expectResData[i], actualResData[i]);
+                            _output.WriteLine("index:{0},expectResData:{1},actualResData:{2}", i, expectResData[i], actualResData[i]);
                             Assert.Equal(expectResData2[i].ToString(), actualResData[i]);
                         }
                     }
                 }
                 else
                 {
-                    output.WriteLine($"async query data failed, failed code:{code}, reason:{TDengine.Error(taosRes)}");
+                    _output.WriteLine($"async query data failed, failed code:{code}, reason:{TDengine.Error(taosRes)}");
                 }
             }
-
+            _output.WriteLine("SubscribeAsyncCases.ConsumeFromLastProgress() pass");
         }
     }
 }

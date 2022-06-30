@@ -1,0 +1,572 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Driver.Test</name>
+    </assembly>
+    <members>
+        <member name="M:Test.UtilsTools.UtilsTools.FreeResult(System.IntPtr)">
+            <summary>
+            Using this method to free TAOS_RES,otherwise will lead memory
+            leak.Notice do not call this method while subscribe/consume until
+            end of the program.
+            </summary>
+            <param name="res">TAOS_RES, the resultset usually is return by taos_query()</param>
+        </member>
+        <member name="M:Test.UtilsTools.UtilsTools.FetchRow(System.IntPtr,System.IntPtr)">
+            <summary>
+            Using to parse TAOS_ROW.
+            </summary>
+            <param name="taosRow">This is TAOS_RES pointer</param>
+            <param name="taosRes"> This is TAOS_ROW pointer</param>
+            <returns></returns>
+        </member>
+        <member name="M:Test.UtilsTools.UtilsTools.GetResDataWithoutFree(System.IntPtr)">
+            <summary>
+            Get the result data from TAO_RES but this interface will
+            not free the TAO_RES at the end. Remember to free the TAOS_RES
+            when you need to do so.
+            </summary>
+            <param name="res"> This is a TAOS_RES pointer.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Cases.FetchFieldCases.TestFetchFieldJsonTag">
+            <author>xiaolei</author>
+            <Name>FetchFieldsCases.TestFetchFieldsJsonTag</Name>
+            <describe>test taos_fetch_fields(), check the meta data</describe>
+            <filename>FetchFields.cs</filename>
+            <result>pass or failed </result>  
+        </member>
+        <member name="M:Cases.FetchLengthCase.TestRetrieveBinary">
+            <author>xiaolei</author>
+            <Name>TestRetrieveBinary</Name>
+            <describe>TD-12103 C# connector fetch_row with binary data retrieving error</describe>
+            <filename>FetchLength.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:Cases.InsertCNCases.TestNTable">
+            <author>xiaolei</author>
+            <Name>InsertCNCases.TestNTable</Name>
+            <describe>Test insert Chinese characters into normal table's nchar column</describe>
+            <filename>InsertCn.cs</filename>
+            <result>pass or failed </result>  
+        </member>
+        <member name="M:Cases.InsertCNCases.TestSTable">
+            <author>xiaolei</author>
+            <Name>InsertCNCases.TestSTable</Name>
+            <describe>test insert Chinese character into stable's nchar column,both tag and column</describe>
+            <filename>InsertCn.cs</filename>
+            <result>pass or failed </result>  
+        </member>
+        <member name="M:Cases.InsertCNCases.TestInsertMultiNTable">
+            <author>xiaolei</author>
+            <Name>InsertCNCases.TestInsertMultiNTable</Name>
+            <describe>test insert Chinese character into normal table's multiple nchar columns</describe>
+            <filename>InsertCn.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.InsertCNCases.TestInsertMultiSTable">
+            <author>xiaolei</author>
+            <Name>InsertCNCases.TestInsertMultiSTable</Name>
+            <describe>test insert Chinese character into stable's multiple nchar columns</describe>
+            <filename>InsertCn.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.QueryAsyncCases.QueryWithoutCondition">
+            <author>xiaolei</author>
+            <Name>QueryAsyncCases.QueryAsyncCases</Name>
+            <describe>Test query without condition</describe>
+            <filename>QueryAsync.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.QueryAsyncCases.QueryWithCondition">
+            <author>xiaolei</author>
+            <Name>QueryAsyncCases.QueryWithCondition</Name>
+            <describe>Test query with condition</describe>
+            <filename>QueryAsync.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.QueryAsyncCases.QueryWithJsonCondition">
+            <author>xiaolei</author>
+            <Name>QueryAsyncCases.QueryWithJsonCondition</Name>
+            <describe>Test query with condition</describe>
+            <filename>QueryAsync.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.NormalTableStmtCases.TestBindSingleLineCN">
+            <author>xiaolei</author>
+            <Name>NormalTableStmtCases.TestBindSingleLineCN</Name>
+            <describe>Test stmt insert single line of Chinese character into normal table by column after column </describe>
+            <filename>StmtNormalTable.cs</filename>
+            <result>pass or failed </result>  
+        </member>
+        <member name="M:Cases.NormalTableStmtCases.TestBindColumnCN">
+            <author>xiaolei</author>
+            <Name>NormalTableStmtCases.TestBindColumnCN</Name>
+            <describe>Test stmt insert single line of Chinese character into normal table by column after column </describe>
+            <filename>StmtNormalTable.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.NormalTableStmtCases.TestBindMultiLineCN">
+            <author>xiaolei</author>
+            <Name>NormalTableStmtCases.TestBindMultiLineCN</Name>
+            <describe>Test stmt insert single line of Chinese character into normal table by column after column </describe>
+            <filename>StmtNormalTable.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.NormalTableStmtCases.TestBindSingleLine">
+            <author>xiaolei</author>
+            <Name>NormalTableStmtCases.TestBindSingleLine</Name>
+            <describe>Test stmt insert single line data into normal table</describe>
+            <filename>StmtNormalTable.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:Cases.NormalTableStmtCases.TestBindMultiLine">
+            <author>xiaolei</author>
+            <Name>NormalTableStmtCases.TestBindMultiLine</Name>
+            <describe>Test stmt insert multiple rows of data into normal table</describe>
+            <filename>StmtNormalTable.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.NormalTableStmtCases.TestBindColumn">
+            <author>xiaolei</author>
+            <Name>NormalTableStmtCases.TestBindColumn</Name>
+            <describe>Test stmt insert multiple rows of data into normal table by column after column </describe>
+            <filename>StmtNormalTable.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.StableStmtCases.TestBindSingleLineCN">
+            <author>xiaolei</author>
+            <Name>StableStmtCases.TestBindSingleLineCN</Name>
+            <describe>Test stmt insert single line of Chinese character into stable by column after column </describe>
+            <filename>StmtSTable.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.StableStmtCases.TestBindColumnCN">
+            <author>xiaolei</author>
+            <Name>StableStmtCases.TestBindColumnCN</Name>
+            <describe>Test stmt insert single line of Chinese character into stable by column after column </describe>
+            <filename>StmtSTable.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:Cases.StableStmtCases.TestBindMultiLineCN">
+            <author>xiaolei</author>
+            <Name>StableStmtCases.TestBindMultiLineCN</Name>
+            <describe>Test stmt insert single line of Chinese character into stable by column after column </describe>
+            <filename>StmtSTable.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:Cases.StableStmtCases.TestBindMultiLine">
+            <author>xiaolei</author>
+            <Name>StableStmtCases.TestBindMultiLine</Name>
+            <describe>Test stmt insert single line into stable by column after column </describe>
+            <filename>StmtSTable.cs</filename>
+            <result>pass or failed </result>         
+        </member>
+        <member name="M:Cases.StableStmtCases.TestBindColumn">
+            <author>xiaolei</author>
+            <Name>StableStmtCases.TestBindColumn</Name>
+            <describe>Test stmt insert single line of Chinese character into stable by column after column </describe>
+            <filename>StmtSTable.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.SubscribeCases.ConsumeFromBegin">
+            <author>xiaolei</author>
+            <Name>SubscribeCases.ConsumeFromBegin</Name>
+            <describe>Subscribe a table and consume from beginning.</describe>
+            <filename>Subscribe.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.SubscribeCases.ConsumeFromLastProgress">
+            <author>xiaolei</author>
+            <Name>SubscribeCases.ConsumeFromLastProgress</Name>
+            <describe>Subscribe table from the last progress.</describe>
+            <filename>Subscribe.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.SubscribeAsyncCases.ConsumeFromBegin">
+            <author>xiaolei</author>
+            <Name>SubscribeAsyncCases.ConsumeFromBegin</Name>
+            <describe>Subscribe a table and consume through callback and the beginning record of the table</describe>
+            <filename>Subscribe.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:Cases.SubscribeAsyncCases.ConsumeFromLastProgress">
+            <author>xiaolei</author>
+            <Name>SubscribeAsyncCases.ConsumeFromLastProgress</Name>
+            <describe>Subscribe a table and consume through callback and from last consume progress.</describe>
+            <filename>Subscribe.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindBoolTrue">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindBoolTrue</Name>
+            <describe>Unit test for binding boolean true value using TAOS_BIND struct through stmt</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindBoolFalse">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindBoolFalse</Name>
+            <describe>Unit test for binding boolean false value using TAOS_BIND struct through stmt</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindTinyIntZero">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindTinyIntZero</Name>
+            <describe>Unit test for binding tinny int zero value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindTinyIntPositive">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindTinyIntPositive</Name>
+            <describe>Unit test for binding tinny int positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindTinyIntNegative">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindTinyIntNegative</Name>
+            <describe>Unit test for binding tinny int negative value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindSmallIntNegative">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindSmallIntNegative</Name>
+            <describe>Unit test for binding small int negative value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindSmallIntZero">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindSmallIntZero</Name>
+            <describe>Unit test for binding small int zero value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindSmallIntPositive">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindSmallIntPositive</Name>
+            <describe>Unit test for binding small int positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindIntNegative">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindIntNegative</Name>
+            <describe>Unit test for binding small int positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindIntZero">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindIntZero</Name>
+            <describe>Unit test for binding int zero value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindIntPositive">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindIntPositive</Name>
+            <describe>Unit test for binding int positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindBigIntNegative">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindBigIntNegative</Name>
+            <describe>Unit test for binding int negative value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindBigIntZero">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindBigIntZero</Name>
+            <describe>Unit test for binding big int zero value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindBigIntPositive">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindBigIntPositive</Name>
+            <describe>Unit test for binding big int positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindUTinyZero">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindBigIntPositive</Name>
+            <describe>Unit test for binding big int positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindUTinyPositive">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindUTinyPositive</Name>
+            <describe>Unit test for binding unsigned tinny int positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindUSmallIntZero">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindUSmallIntZero</Name>
+            <describe>Unit test for binding unsigned small int zero value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result> 
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindUSmallIntPositive">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindUSmallIntPositive</Name>
+            <describe>Unit test for binding unsigned small int positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindUIntZero">
+            <author>xiaolei</author>
+            <Name>TestTaosBind.TestBindUIntZero</Name>
+            <describe>Unit test for binding unsigned int zero value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindUIntPositive">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindUIntPositive</Name>
+            <describe>Unit test for binding unsigned int positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindUBigIntZero">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindUBigIntZero</Name>
+            <describe>Unit test for binding unsigned big int zero value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindUBigIntPositive">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindUBigIntPositive</Name>
+            <describe>Unit test for binding unsigned big int positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindFloatNegative">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindFloatNegative</Name>
+            <describe>Unit test for binding float negative value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindFloatZero">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindFloatNegative</Name>
+            <describe>Unit test for binding float zero value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindFloatPositive">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindFloatPositive</Name>
+            <describe>Unit test for binding float positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindDoubleZero">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindDoubleZero</Name>
+            <describe>Unit test for binding double zero value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindDoublePositive">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindDoublePositive</Name>
+            <describe>Unit test for binding double positive value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindDoubleNegative">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindDoubleNegative</Name>
+            <describe>Unit test for binding double negative value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindBinaryEn">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindBinaryEn</Name>
+            <describe>Unit test for binding binary character without CN character using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindBinaryCn">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindBinaryCn</Name>
+            <describe>Unit test for binding binary character with CN character using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindBinaryCnAndEn">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindBinaryCnAndEn</Name>
+            <describe>Unit test for binding binary characters with CN and  other characters using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindNcharEn">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindNcharEn</Name>
+            <describe>Unit test for binding nchar characters without cn using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindNcharCn">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindNcharCn</Name>
+            <describe>Unit test for binding nchar characters with cn using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindNcharCnAndEn">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindNcharCnAndEn</Name>
+            <describe>Unit test for binding nchar  with cn characters and other characters using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindNil">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindNil</Name>
+            <describe>Unit test for binding null value using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindTimestampNegative">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindTimestampNegative</Name>
+            <describe>Unit test for binding negative timestamp using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindTimestampZero">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindTimestampZero</Name>
+            <describe>Unit test for binding zero timestamp using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTaosBind.TestBindTimestampPositive">
+            <author>xiaolei</author>    
+            <Name>TestTaosBind.TestBindTimestampPositive</Name>
+            <describe>Unit test for binding positive timestamp using TAOS_BIND struct through stmt.</describe>
+            <filename>TestTaosBind.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameBool">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameBool</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's bool meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameTINYINT">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameTINYINT</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's TinnyInt's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameSMALLINT">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameSMALLINT</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's SMALLINT's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameINT">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameINT</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's INT's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameBIGINT">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameBIGINT</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's BIGINT's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameUTINYINT">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameUTINYINT</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's TINYINT UNSIGNED's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameUSMALLINT">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameUSMALLINT</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's SMALLINT UNSIGNED's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameUINT">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameUINT</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's INT UNSIGNED's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameUBIGINT">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameUBIGINT</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's BIGINT UNSIGNED's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameFLOAT">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameFLOAT</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's FLOAT's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameDOUBLE">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameDOUBLE</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's DOUBLE's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameSTRING">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameSTRING</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's BINARY's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameTIMESTAMP">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameTIMESTAMP</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's TIMESTAMP's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameNCHAR">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameNCHAR</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's NCHAR's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+        <member name="M:TDengineDriver.Test.TestTDengineMeta.TestTypeNameUndefined">
+            <author>xiaolei</author>
+            <Name>TestTDengineMeta.TestTypeNameUndefined</Name>
+            <describe>Unit test for object TDengineDriver.TDengineMeta's undefine's meta info</describe>
+            <filename>TestTDengineMeta.cs</filename>
+            <result>pass or failed </result>
+        </member>
+    </members>
+</doc>
