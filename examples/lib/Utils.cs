@@ -3,28 +3,29 @@ using TDengineDriver;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Collections.Generic;
-namespace Sample.UtilsTools
+
+namespace Examples.UtilsTools
 {
-    public class UtilsTools
+    public class Tools
     {
 
-        static string ip = "127.0.0.1";
+        static string ip = "my-ali-cloud";//"127.0.0.1";
         static string user = "root";
         static string password = "taosdata";
         static string db = "";
         static short port = 0;
         static string globalDbName = "csharp_example_db";
         //get a TDengine connection
-        public static IntPtr TDConnection(string dbName = "csharp_example_db")
+        public static IntPtr TDConnection()
         {
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "60");
 
             IntPtr conn = TDengine.Connect(ip, user, password, db, port);
 
-            UtilsTools.ExecuteUpdate(conn, $"drop database if  exists {dbName}");
-            UtilsTools.ExecuteUpdate(conn, $"create database if not exists {dbName} keep 3650");
-            UtilsTools.ExecuteUpdate(conn, $"use {dbName}");
+            //Tools.ExecuteUpdate(conn, $"drop database if  exists {dbName}");
+            //Tools.ExecuteUpdate(conn, $"create database if not exists {dbName} keep 3650");
+            //Tools.ExecuteUpdate(conn, $"use {dbName}");
 
             return conn;
         }
@@ -157,7 +158,6 @@ namespace Sample.UtilsTools
         }
         public static void CloseConnection(IntPtr conn)
         {
-            ExecuteUpdate(conn, $"drop database if  exists {globalDbName}");
             if (conn != IntPtr.Zero)
             {
                 TDengine.Close(conn);
@@ -209,7 +209,10 @@ namespace Sample.UtilsTools
             return dataRaw;
         }
 
-
+        public static void FreeTaosRes(IntPtr taosRes)
+        {
+            TDengine.FreeResult(taosRes);
+        }
         public static List<Object> FetchRow(IntPtr taosRow, IntPtr taosRes)//, List<TDengineMeta> metaList, int numOfFiled
         {
             List<TDengineMeta> metaList = TDengine.FetchFields(taosRes);

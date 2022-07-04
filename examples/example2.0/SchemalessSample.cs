@@ -4,10 +4,10 @@ using System.Text;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Collections;
-using Sample.UtilsTools;
+using Examples.UtilsTools;
 using TDengineDriver;
 
-namespace Example
+namespace Examples
 {
     class SchemalessSample
     {
@@ -35,21 +35,21 @@ namespace Example
             };
             StringBuilder querySql = new StringBuilder();
             Console.WriteLine(querySql.ToString());
-            this.conn = UtilsTools.TDConnection(this.dbName);
+            this.conn = Tools.TDConnection();
 
             schemalessInsert(lines, 2, (int)TDengineSchemalessProtocol.TSDB_SML_LINE_PROTOCOL, (int)TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NANO_SECONDS);
             querySql.Append("select * from ").Append(this.dbName).Append(".").Append("stg");
-            UtilsTools.DisplayRes(UtilsTools.ExecuteQuery(this.conn, querySql.ToString()));
+            Tools.DisplayRes(Tools.ExecuteQuery(this.conn, querySql.ToString()));
 
             schemalessInsert(jsonStr, 1, (int)TDengineSchemalessProtocol.TSDB_SML_JSON_PROTOCOL, (int)TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_SECONDS);
             querySql.Clear();
             querySql.Append("select * from ").Append(this.dbName).Append(".").Append("stb0_0");
-            UtilsTools.DisplayRes(UtilsTools.ExecuteQuery(this.conn, querySql.ToString()));
+            Tools.DisplayRes(Tools.ExecuteQuery(this.conn, querySql.ToString()));
 
             querySql.Clear();
             querySql.Append("drop database if exists ").Append(this.dbName);
-            UtilsTools.ExecuteUpdate(this.conn, querySql.ToString());
-            UtilsTools.CloseConnection(this.conn);
+            Tools.ExecuteUpdate(this.conn, querySql.ToString());
+            Tools.CloseConnection(this.conn);
 
         }
         public void schemalessInsert(string[] sqlstr, int lineCnt, int protocol, int precision)

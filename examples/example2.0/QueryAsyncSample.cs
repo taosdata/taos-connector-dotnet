@@ -1,10 +1,10 @@
 using System;
 using TDengineDriver;
-using Sample.UtilsTools;
+using Examples.UtilsTools;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Example
+namespace Examples
 {
     public class AsyncQuerySample
     {
@@ -29,16 +29,16 @@ namespace Example
             string insert4 = $"insert into {tableName}_s04 using {tableName} tags('tag4','标签4') values(now,1,2,3,4)(now+1m,5,6,7,8)(now+2m,9,0,-1,-2)(now+3m,-3,-4,-5,-6)(now+4m,-7,-8,-9,0)";
             string insert5 = $"insert into {tableName}_s05 using {tableName} tags('tag5','标签5') values(now,1,2,3,4)(now+1m,5,6,7,8)(now+2m,9,0,-1,-2)(now+3m,-3,-4,-5,-6)(now+4m,-7,-8,-9,0)";
 
-            UtilsTools.ExecuteUpdate(conn, createTable);
-            UtilsTools.ExecuteUpdate(conn, insert1);
+            Tools.ExecuteUpdate(conn, createTable);
+            Tools.ExecuteUpdate(conn, insert1);
             Thread.Sleep(100);
-            UtilsTools.ExecuteUpdate(conn, insert2);
+            Tools.ExecuteUpdate(conn, insert2);
             Thread.Sleep(100);
-            UtilsTools.ExecuteUpdate(conn, insert3);
+            Tools.ExecuteUpdate(conn, insert3);
             Thread.Sleep(100);
-            UtilsTools.ExecuteUpdate(conn, insert4);
+            Tools.ExecuteUpdate(conn, insert4);
             Thread.Sleep(100);
-            UtilsTools.ExecuteUpdate(conn, insert5);
+            Tools.ExecuteUpdate(conn, insert5);
 
         }
 
@@ -61,7 +61,7 @@ namespace Example
             if (numOfRows > 0)
             {
                 Console.WriteLine($"{numOfRows} rows async retrieved");
-                UtilsTools.DisplayRes(taosRes);
+                Tools.DisplayRes(taosRes);
                 TDengine.FetchRowAsync(taosRes, FetchCallback, param);
             }
             else

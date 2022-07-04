@@ -23,7 +23,7 @@ namespace Test.Fixture
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "90");
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_LOCALE, "C");
             TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CHARSET, "UTF-8");
-            string ?ENV_HOST = Environment.GetEnvironmentVariable("TEST_HOST");
+            string? ENV_HOST = Environment.GetEnvironmentVariable("TEST_HOST");
             ip = string.IsNullOrEmpty(ENV_HOST) == true ? "127.0.0.1" : ENV_HOST;
             this.conn = TDengine.Connect(ip, user, password, "", port);
             IntPtr res;
