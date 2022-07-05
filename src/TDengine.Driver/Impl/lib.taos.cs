@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using System.Text;
 //using TDengineDriver;
 namespace TDengineDriver.Impl
 {
@@ -54,14 +55,15 @@ namespace TDengineDriver.Impl
             Console.WriteLine("numOfRows:{0}", numOfRows);
             Console.WriteLine("pData:{0}", pData);
 
+            // offset pDataPtr 12 bytes
+            pData = pData + 12 + (4+2)*numOfFileds;
 
             // int colDataLength = 0;
             int colLengthBlockSize = sizeof(Int32) * numOfFileds;
 
             int bitMapSize = (int)Math.Ceiling(numOfRows / 8.0);
             Console.WriteLine("bitMapSize:{0}", bitMapSize);
-            // offset pDataPtr 12 bytes
-            pData = pData + 12;
+
             for (int i = 0; i < numOfRows; i++)
             {
                 IntPtr colBlockHead = pData + colLengthBlockSize;
@@ -71,7 +73,7 @@ namespace TDengineDriver.Impl
                     Console.WriteLine(" Marshal.ReadInt32(pData, (j) * sizeof(Int32)):{0}|{1}", Marshal.ReadInt32(pData, (j) * sizeof(Int32)), j);
 
                     //solid length Type
-                    if (!_IsVarData(metaList[j]))
+                    if (_IsVarData(metaList[j]) == ColType.SOLID)
                     {
                         colDataHead = colBlockHead + bitMapSize + metaList[j].size * i;
                         Console.WriteLine("solid:colDataHead:{0},colBlockHead:{1},pData:{2}", colDataHead, colBlockHead, pData);
@@ -88,13 +90,14 @@ namespace TDengineDriver.Impl
                         Console.WriteLine("bitFlag:{0},bitmapValue:{1}", bitFlag, Convert.ToString(bitMap[byteArrayIndex], 2));
                         if (bitFlag == 1)
                         {
-                            list.Add(null);
+                            list.Add("NULL");
 
                         }
                         else
                         {
                             list.Add(_ReadSolidType((IntPtr)colDataHead, (IntPtr)colBlockHead, metaList[j]));
-                        }
+                        }  
+
                         colBlockHead = colBlockHead + bitMapSize + Marshal.ReadInt32(pData, (j) * sizeof(Int32));
                         Console.WriteLine("solid:colDataHead:{0},colBlockHead:{1},pData:{2}", colDataHead, colBlockHead, pData);
                     }
@@ -112,10 +115,17 @@ namespace TDengineDriver.Impl
                         {
                             colDataHead = colBlockHead + sizeof(Int32) * numOfRows + varOffset;
                             int varTypeLength = Marshal.ReadInt16(colDataHead);
-                            // Console.WriteLine("===var:colDataHead:{0},colBlockHead:{1},pData:{2}", colDataHead, colBlockHead, pData);
-                            // Console.WriteLine("===varTypeLength:{0},varOffset:{1}", varTypeLength, varOffset);
+                            Console.WriteLine("===var:colDataHead:{0},colBlockHead:{1},pData:{2}", colDataHead, colBlockHead, pData);
+                            Console.WriteLine("===varTypeLength:{0},varOffset:{1}", varTypeLength, varOffset);
+                            if (_IsVarData(metaList[j]) == ColType.VARCHAR)
+                            {
+                                list.Add(_ReadVarType(colDataHead + 2, varTypeLength));
+                            }
+                            else
+                            {
+                                list.Add(_ReadNcharType(colDataHead + 2, varTypeLength));
+                            }
 
-                            list.Add(_ReadVarType(colDataHead + 2, varTypeLength));
                             colBlockHead = colBlockHead + sizeof(Int32) * numOfRows + Marshal.ReadInt32(pData, (j) * sizeof(Int32));
                             Console.WriteLine("var:colDataHead:{0},colBlockHead:{1},pData:{2}", colDataHead, colBlockHead, pData);
                         }
@@ -192,9 +202,9 @@ namespace TDengineDriver.Impl
         }
 
 
-        private static object _ReadVarType(IntPtr blockHead, int length)
+        private static string _ReadVarType(IntPtr blockHead, int length)
         {
-            Object data;
+            string data;
             if (length != -1)
             {
                 Console.WriteLine("Marshal.PtrToStringAnsi(blockHead, length),{0}", Marshal.PtrToStringUTF8(blockHead, length));
@@ -206,19 +216,50 @@ namespace TDengineDriver.Impl
             }
             return data;
         }
+        private static string _ReadNcharType(IntPtr blockHead, int length)
+        {
+            string data;
+            if (length != -1)
+            {
+                Console.WriteLine("Marshal.PtrToStringAnsi(blockHead, length),{0}", Marshal.PtrToStringUTF8(blockHead, length));
+                int cnt = length / 4;
+                StringBuilder tmp = new StringBuilder(cnt);
+                for (int i = 0; i < cnt; i++)
+                {
+                    Int32 utf32 = (Int32)Marshal.ReadInt32(blockHead, i * 4);
+                    tmp.Append(Char.ConvertFromUtf32(utf32));
 
-        private static bool _IsVarData(TDengineMeta meta)
+                }
+                data = tmp.ToString();
+                tmp.Clear();
+            }
+            else
+            {
+                data = "NULL";
+            }
+            return data;
+        }
+
+        private static ColType _IsVarData(TDengineMeta meta)
         {
             switch ((TDengineDataType)meta.type)
             {
                 case TDengineDataType.TSDB_DATA_TYPE_NCHAR:
+                    return ColType.NCHAR;
                 case TDengineDataType.TSDB_DATA_TYPE_BINARY:
-                    return true;
+                case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
+                    return ColType.VARCHAR;
                 default:
-                    return false;
+                    return ColType.SOLID;
             }
         }
 
+        private enum ColType
+        {
+            SOLID = 0,
+            VARCHAR = 1,
+            NCHAR = 2,
+        }
     }
 
 

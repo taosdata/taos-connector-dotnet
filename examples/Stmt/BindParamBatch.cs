@@ -20,7 +20,7 @@ namespace Examples.Stmt
             if (stmt == IntPtr.Zero)
             {
                 Console.WriteLine("StmtInit() fail");
-                System.Environment.Exit(0);
+                System.Environment.Exit(1);
             }
             else
             {

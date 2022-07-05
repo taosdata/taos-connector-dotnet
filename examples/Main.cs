@@ -14,21 +14,21 @@ namespace Examples
             IntPtr conn = Tools.TDConnection();
 
 
-            InitData data = new InitData();
-            data.Create(conn, "tmp_db", "sb", true);
-            data.InsertData(conn, "tmp_db", "sb", "sb_01", 5);
+            //InitData data = new InitData();
+            //data.Create(conn, "tmp_db", "sb", true);
+            //data.InsertData(conn, "tmp_db", "sb", "sb_01", 5);
             //data.Drop(conn, "tmp_db", null);
 
-            InitData data2 = new InitData();
-            data2.Create(conn, "tmp_db", "tb", false);
-            data2.InsertData(conn, "tmp_db", null, "tb", 5);
-            //data2.Drop(conn,null,"tb");
+            //InitData data2 = new InitData();
+            //data2.Create(conn, "tmp_db", "tb", false);
+            //data2.InsertData(conn, "tmp_db", null, "tb", 5);
+            //data2.Drop(conn, null, "tb");
 
             // Query
-            Query.QueryData(conn, "query", "q", "q_01", 5);
+            Query.QueryData(conn, "query_db", "q", "q_01", 5);
 
             // Stmt
-            Tools.CloseConnection(conn);
+            //Tools.CloseConnection(conn);
 
 
         }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-
+using TDengineDriver;
 
 namespace TDengineTMQ.Impl
 {

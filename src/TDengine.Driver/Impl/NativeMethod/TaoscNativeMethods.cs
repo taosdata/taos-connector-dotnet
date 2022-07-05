@@ -68,7 +68,7 @@ namespace TDengineDriver
                 int offset = i * (int)TaosField.STRUCT_SIZE;
                 // Console.WriteLine("offset:{0}",offset);
                 TDengineMeta meta = new TDengineMeta();
-                meta.name = Marshal.PtrToStringAnsi(fieldsPtr + offset, (int)TaosField.NAME_LENGTH);
+                meta.name = Marshal.PtrToStringUTF8(fieldsPtr + offset);
                 // Console.WriteLine("fetchFeilds().name:{0}",meta.name);
                 meta.type = Marshal.ReadByte(fieldsPtr + offset + (int)TaosField.TYPE_OFFSET);
                 // Console.WriteLine("fetchFeilds().type:{0}",meta.type);
