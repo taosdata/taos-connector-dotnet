@@ -17,8 +17,7 @@ namespace TDengineDriver.Impl
             IntPtr numOfRowsPrt = Marshal.AllocHGlobal(sizeof(Int32));
             IntPtr pDataPtr = Marshal.AllocHGlobal(IntPtr.Size);
             IntPtr pData;
-            try
-            {
+
                 int code = TDengine.FetchRawBlock(taosRes, numOfRowsPrt, pDataPtr);
                 if (code != 0)
                 {
@@ -33,11 +32,8 @@ namespace TDengineDriver.Impl
                     list = ReadRawBlock(pData, metaList, numOfRows);
                     return list;
                 }
-            }
-            finally
-            {
-                TDengine.FreeResult(taosRes);
-            }
+            
+
 
         }
         public static List<TDengineMeta> GetMeta(IntPtr taosRes)
@@ -51,18 +47,13 @@ namespace TDengineDriver.Impl
 
             int numOfFileds = metaList.Count;
             List<Object> list = new List<Object>(numOfRows * numOfFileds);
-            Console.WriteLine("numOfFileds:{0}", numOfFileds);
-            Console.WriteLine("numOfRows:{0}", numOfRows);
-            Console.WriteLine("pData:{0}", pData);
 
             // offset pDataPtr 12 bytes
             pData = pData + 12 + (4+2)*numOfFileds;
 
-            // int colDataLength = 0;
             int colLengthBlockSize = sizeof(Int32) * numOfFileds;
 
             int bitMapSize = (int)Math.Ceiling(numOfRows / 8.0);
-            Console.WriteLine("bitMapSize:{0}", bitMapSize);
 
             for (int i = 0; i < numOfRows; i++)
             {
@@ -70,24 +61,21 @@ namespace TDengineDriver.Impl
                 IntPtr colDataHead = colBlockHead;
                 for (int j = 0; j < numOfFileds; j++)
                 {
-                    Console.WriteLine(" Marshal.ReadInt32(pData, (j) * sizeof(Int32)):{0}|{1}", Marshal.ReadInt32(pData, (j) * sizeof(Int32)), j);
-
                     //solid length Type
                     if (_IsVarData(metaList[j]) == ColType.SOLID)
                     {
                         colDataHead = colBlockHead + bitMapSize + metaList[j].size * i;
-                        Console.WriteLine("solid:colDataHead:{0},colBlockHead:{1},pData:{2}", colDataHead, colBlockHead, pData);
+
                         // which range
                         var byteArrayIndex = i >> 3;
                         // locate position
                         var bitwiseOffset = 7 - (i & 7);
-                        // var bitwiseOffset = 7- (i%8);
-                        Console.WriteLine("bit map {0},{1}", byteArrayIndex, bitwiseOffset);
+
                         Byte[] bitMap = new Byte[bitMapSize];
                         Marshal.Copy(colBlockHead, bitMap, 0, bitMapSize);
 
                         var bitFlag = (bitMap[byteArrayIndex] & (1 << bitwiseOffset)) >> bitwiseOffset;
-                        Console.WriteLine("bitFlag:{0},bitmapValue:{1}", bitFlag, Convert.ToString(bitMap[byteArrayIndex], 2));
+
                         if (bitFlag == 1)
                         {
                             list.Add("NULL");
@@ -99,13 +87,11 @@ namespace TDengineDriver.Impl
                         }  
 
                         colBlockHead = colBlockHead + bitMapSize + Marshal.ReadInt32(pData, (j) * sizeof(Int32));
-                        Console.WriteLine("solid:colDataHead:{0},colBlockHead:{1},pData:{2}", colDataHead, colBlockHead, pData);
                     }
                     else
                     {
 
                         int varOffset = Marshal.ReadInt32(colBlockHead, sizeof(Int32) * i);
-                        Console.WriteLine($"varOffset + (sizeof(Int16) * {j}):{varOffset}");
                         if (varOffset == -1)
                         {
                             list.Add("NULL");
@@ -115,8 +101,7 @@ namespace TDengineDriver.Impl
                         {
                             colDataHead = colBlockHead + sizeof(Int32) * numOfRows + varOffset;
                             int varTypeLength = Marshal.ReadInt16(colDataHead);
-                            Console.WriteLine("===var:colDataHead:{0},colBlockHead:{1},pData:{2}", colDataHead, colBlockHead, pData);
-                            Console.WriteLine("===varTypeLength:{0},varOffset:{1}", varTypeLength, varOffset);
+
                             if (_IsVarData(metaList[j]) == ColType.VARCHAR)
                             {
                                 list.Add(_ReadVarType(colDataHead + 2, varTypeLength));
@@ -127,13 +112,10 @@ namespace TDengineDriver.Impl
                             }
 
                             colBlockHead = colBlockHead + sizeof(Int32) * numOfRows + Marshal.ReadInt32(pData, (j) * sizeof(Int32));
-                            Console.WriteLine("var:colDataHead:{0},colBlockHead:{1},pData:{2}", colDataHead, colBlockHead, pData);
                         }
                     }
                 }
             }
-            return list;
-
             return list;
         }
 
@@ -149,12 +131,7 @@ namespace TDengineDriver.Impl
         private static Object _ReadSolidType(IntPtr pdata, IntPtr ifNullOffset, TDengineMeta field)
         {
             Object data;
-            // if (Marshal.ReadByte(ifNullOffset) == 0) // read bit not byte 
-            // {
-            //     this.taosResult.Add("NULL");
-            // }
-            // else
-            {
+
                 switch ((TDengineDataType)field.type)
                 {
                     case TDengineDataType.TSDB_DATA_TYPE_BOOL:
@@ -198,7 +175,7 @@ namespace TDengineDriver.Impl
                 }
                 return data;
 
-            }
+            
         }
 
 
@@ -207,7 +184,6 @@ namespace TDengineDriver.Impl
             string data;
             if (length != -1)
             {
-                Console.WriteLine("Marshal.PtrToStringAnsi(blockHead, length),{0}", Marshal.PtrToStringUTF8(blockHead, length));
                 data = Marshal.PtrToStringUTF8(blockHead, length);
             }
             else
@@ -221,7 +197,6 @@ namespace TDengineDriver.Impl
             string data;
             if (length != -1)
             {
-                Console.WriteLine("Marshal.PtrToStringAnsi(blockHead, length),{0}", Marshal.PtrToStringUTF8(blockHead, length));
                 int cnt = length / 4;
                 StringBuilder tmp = new StringBuilder(cnt);
                 for (int i = 0; i < cnt; i++)

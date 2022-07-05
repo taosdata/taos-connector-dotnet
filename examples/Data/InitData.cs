@@ -82,6 +82,7 @@ namespace Examples.Data
             {
                 sb.Append("create database if not exists ");
                 sb.Append(db);
+                sb.Append(" keep 36500");
                 createDB = sb.ToString();
                 sb.Clear();
                 //sb.Append("drop database if exists ");

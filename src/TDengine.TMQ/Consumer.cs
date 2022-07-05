@@ -33,7 +33,7 @@ namespace TDengineTMQ
 
         public ConsumeResult<TKey, TValue> Consume(int millisecondsTimeout)
         {
-            throw new NotImplementedException();
+            return tmqHandle.ConsumerPoll(this.comsumer, millisecondsTimeout);
         }
 
         public ConsumeResult<TKey, TValue> Consume(TimeSpan timeout)
@@ -58,7 +58,7 @@ namespace TDengineTMQ
 
         public void Commit(ConsumeResult<TKey, TValue> consumerResult)
         {
-            throw new NotImplementedException();
+            tmqHandle.CommitSync(this.comsumer, consumerResult);
         }
 
         public void CommitAsync(ConsumeResult<TKey, TValue> consumerResult, Delegate Callback)

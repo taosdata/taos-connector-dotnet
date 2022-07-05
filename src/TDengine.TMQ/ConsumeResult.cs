@@ -13,13 +13,15 @@ namespace TDengineTMQ
         internal int vGroupId { get; set; }
         internal string db { get; set; }
         internal string table { get; set; }
+        internal IntPtr taosResPtr { get; set; }
 
-        public TopicPartition(string topic, int vGroupId, string db, string table)
+        public TopicPartition(string topic, int vGroupId, string db, string table,IntPtr msg)
         {
             this.topic = topic;
             this.vGroupId = vGroupId;
             this.db = db;
             this.table = table;
+            this.taosResPtr = msg;
         }
         public string ToString()
         {

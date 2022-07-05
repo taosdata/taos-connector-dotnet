@@ -1,9 +1,11 @@
 using System;
 using Examples.UtilsTools;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using TDengineDriver;
 using Examples.Data;
-using System.Collections.Generic;
+using Examples.Stmt;
+using Examples.AsyncQuery;
 
 namespace Examples
 {
@@ -25,10 +27,20 @@ namespace Examples
             //data2.Drop(conn, null, "tb");
 
             // Query
-            Query.QueryData(conn, "query_db", "q", "q_01", 5);
+            // Query.QueryData(conn, "query_db", "q", "q_01", 5);
 
             // Stmt
-            //Tools.CloseConnection(conn);
+            //BindParamBatch bindParamBatchExample = new BindParamBatch();
+            //bindParamBatchExample.RunStmtBindParamBatch(conn,"bind_param_batch");
+
+            //BindSingleParamBatch bindSingleParamBatchExample = new BindSingleParamBatch();
+            //bindSingleParamBatchExample.RunStmtBindSingleParam(conn,"bind_single_param_batch");
+
+            //QueryAsync
+            QueryAsync queryAsyncExample = new QueryAsync();
+            queryAsyncExample.RunQueryAsync(conn,"q_tb");
+
+            Tools.CloseConnection(conn);
 
 
         }

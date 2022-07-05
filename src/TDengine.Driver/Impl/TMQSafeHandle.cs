@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using TDengineDriver;
+using TDengineDriver.Impl;
+using System.Collections;
 
 namespace TDengineTMQ.Impl
 {
@@ -90,9 +92,7 @@ namespace TDengineTMQ.Impl
             return LibTMQ.tmq_get_table_name(message);
         }
 
-        //Message value
-        //Message meta 
-
+    
         //config
 
         internal IntPtr ConfNew()
@@ -232,13 +232,13 @@ namespace TDengineTMQ.Impl
             IntPtr taosRes = LibTMQ.tmq_consumer_poll(tmq, timeout);
             NullReferenceHandler(taosRes);
 
-            TopicPartition topicPartition = new TopicPartition(LibTMQ.tmq_get_topic_name(taosRes), LibTMQ.tmq_get_vgroup_id(taosRes), LibTMQ.tmq_get_db_name(taosRes), LibTMQ.tmq_get_table_name(taosRes));
-            List<TDengineMeta> metas = new List<TDengineMeta>() { };// TDengine.FetchFields(taosRes)
-            List<Object> records = new List<object>() { 12345, true, "nchar" }; // TDengine.FetchRawBlock(taosRes)
+            TopicPartition topicPartition = new TopicPartition(LibTMQ.tmq_get_topic_name(taosRes), LibTMQ.tmq_get_vgroup_id(taosRes), LibTMQ.tmq_get_db_name(taosRes), LibTMQ.tmq_get_table_name(taosRes),taosRes);
+            List<TDengineMeta> metas = LibTaos.GetMeta(taosRes);
+            List < Object > records = LibTaos.GetData(taosRes);
 
             ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<Object>>> consumerResult = new ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<object>>>(KeyValuePair.Create(topicPartition, KeyValuePair.Create(metas, records))); ;
 
-            // need to free taosRes with taos_free()
+            TDengine.FreeResult(taosRes);
             return consumerResult;
         }
 
@@ -248,12 +248,14 @@ namespace TDengineTMQ.Impl
             return LibTMQ.tmq_consumer_close(tmq);
         }
 
-        internal void CommitSync(IntPtr tmq, IntPtr msg)
+        internal void CommitSync(IntPtr tmq, ConsumeResult<TKey, TValue> msg)
         {
             NullReferenceHandler(tmq);
-            NullReferenceHandler(msg);
+            NullReferenceHandler(msg.key.taosResPtr);
+
+            ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<Object>>> message = new ConsumeResult(msg.key,msg.value);
             int code = -1;
-            if ((code = LibTMQ.tmq_commit_sync(tmq, msg)) != 0)
+            if ((code = LibTMQ.tmq_commit_sync(tmq, msg.key.taosResPtr)) != 0)
             {
                 throw new Exception($"Sync Commit has failed {LibTMQ.err2str(code)}");
             }

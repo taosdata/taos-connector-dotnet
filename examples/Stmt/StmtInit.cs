@@ -1,16 +1,17 @@
 ﻿using System;
 using TDengineDriver;
+using Examples.UtilsTools;
 
 namespace Examples.Stmt
 {
     internal static class InitEnv
     {
+        static string dropDB = "drop database if exists stmt30";
+        static string createDB = "create database if not exists stmt30 keep 36500";
+        static string selectDB = "use stmt30";
         public static void InitSTable(IntPtr conn, string stable)
-        {
-            // string dropDB = "drop database if exists stmt30";
-            // string createDB = "create database if not exists stmt30 keep 36500";
-            // string selectDB = "use stmt30";
-            string createTable = $"create stable {stable} (ts timestamp "
+        {    
+            string createTable = $"create stable if not exists {stable} (ts timestamp "
                                 + ",b bool"
                                 + ",v1 tinyint"
                                 + ",v2 smallint"
@@ -26,44 +27,35 @@ namespace Examples.Stmt
                                 + ",ncr nchar(200)"
                                 + ")tags("
                                 + "bo bool"
-                                // + ",tt tinyint"
-                                // + ",si smallint"
-                                // + ",ii int"
-                                // + ",bi bigint"
-                                // + ",tu tinyint unsigned"
-                                // + ",su smallint unsigned"
-                                // + ",iu int unsigned"
-                                // + ",bu bigint unsigned"
-                                // + ",ff float "
-                                // + ",dd double "
-                                // + ",vrc_tag varchar(200)"
-                                // + ",ncr_tag nchar(200)"
+                                 + ",tt tinyint"
+                                 + ",si smallint"
+                                 + ",ii int"
+                                 + ",bi bigint"
+                                 + ",tu tinyint unsigned"
+                                 + ",su smallint unsigned"
+                                 + ",iu int unsigned"
+                                 + ",bu bigint unsigned"
+                                 + ",ff float "
+                                 + ",dd double "
+                                 + ",vrc_tag varchar(200)"
+                                 + ",ncr_tag nchar(200)"
                                 + ")";
 
             string dropTable = $"drop table if exists {stable}";
-            IntPtr res;
-            if ((res = TDengine.Query(conn, dropTable)) != IntPtr.Zero)
-            {
-                Console.WriteLine($"drop table {stable} success");
-                if ((res = TDengine.Query(conn, createTable)) != IntPtr.Zero)
-                {
-                    Console.WriteLine($"create table {stable} success");
-                    TDengine.FreeResult(res);
-                }
-                else
-                {
-                    throw new Exception(TDengine.Error(res));
-                }
-            }
-            else
-            {
-                throw new Exception(TDengine.Error(res));
-            }
+
+            Tools.ExecuteUpdate(conn,createDB);
+            Tools.ExecuteUpdate(conn,selectDB);
+            Tools.ExecuteUpdate(conn, createTable);
+        }
+
+        public static void Dispose(IntPtr conn)
+        {
+            Tools.ExecuteUpdate(conn, dropDB);
         }
 
         public static void InitNTable(IntPtr conn, string ntable)
         {
-            string createTable = $"create table {ntable} ("
+            string createTable = $"create table if not exists {ntable} ("
                                 + "ts timestamp "
                                 + ",b bool"
                                 + ",v1 tinyint"
@@ -81,50 +73,37 @@ namespace Examples.Stmt
                                 + ")";
 
             string dropTable = $"drop table if exists {ntable}";
-            IntPtr res;
-            if ((res = TDengine.Query(conn, dropTable)) != IntPtr.Zero)
-            {
-                Console.WriteLine($"drop table {ntable} success");
-                if ((res = TDengine.Query(conn, createTable)) != IntPtr.Zero)
-                {
-                    Console.WriteLine($"create table {ntable} success");
-                    TDengine.FreeResult(res);
-                }
-                else
-                {
-                    throw new Exception(TDengine.Error(res));
-                }
-            }
-            else
-            {
-                throw new Exception(TDengine.Error(res));
-            }
+            Tools.ExecuteUpdate(conn, createDB);
+            Tools.ExecuteUpdate(conn, selectDB);
+            Tools.ExecuteUpdate(conn, createTable);
+
         }
         public static TAOS_MULTI_BIND[] InitTags()
         {
-            // TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[13];
-            TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[1];
+            TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[13];
+
             mBinds[0] = TaosMultiBind.MultiBindBool(new bool?[] { true });
-            // mBinds[1] = TaosMultiBind.MultiBindTinyInt(new sbyte?[] { 1 });
-            // mBinds[2] = TaosMultiBind.MultiBindSmallInt(new short?[] { 2 });
-            // mBinds[3] = TaosMultiBind.MultiBindInt(new int?[] { 3 });
-            // mBinds[4] = TaosMultiBind.MultiBindBigint(new long?[] { 4 });
-            // mBinds[5] = TaosMultiBind.MultiBindFloat(new float?[] { 18.58f });
-            // mBinds[6] = TaosMultiBind.MultiBindDouble(new double?[] { 2020.05071858d });
-            // mBinds[7] = TaosMultiBind.MultiBindUTinyInt(new byte?[] { 1 });
-            // mBinds[8] = TaosMultiBind.MultiBindUSmallInt(new ushort?[] { 2 });
-            // mBinds[9] = TaosMultiBind.MultiBindUInt(new uint?[] { 3 });
-            // mBinds[10] = TaosMultiBind.MultiBindUBigInt(new ulong?[] { 4 });
-            // mBinds[11] = TaosMultiBind.MultiBindBinary(new string?[] { "taosdata" });
-            // mBinds[12] = TaosMultiBind.MultiBindNchar(new string?[] { "TDenginge" });
+            mBinds[1] = TaosMultiBind.MultiBindTinyInt(new sbyte?[] { 1 });
+            mBinds[2] = TaosMultiBind.MultiBindSmallInt(new short?[] { 2 });
+            mBinds[3] = TaosMultiBind.MultiBindInt(new int?[] { 3 });
+            mBinds[4] = TaosMultiBind.MultiBindBigint(new long?[] { 4 });
+            mBinds[5] = TaosMultiBind.MultiBindUTinyInt(new byte?[] { 1 });
+            mBinds[6] = TaosMultiBind.MultiBindUSmallInt(new ushort?[] { 2 });
+            mBinds[7] = TaosMultiBind.MultiBindUInt(new uint?[] { 3 });
+            mBinds[8] = TaosMultiBind.MultiBindUBigInt(new ulong?[] { 4 });
+            mBinds[9] = TaosMultiBind.MultiBindFloat(new float?[] { 18.58f });
+            mBinds[10] = TaosMultiBind.MultiBindDouble(new double?[] { 2020.05071858d });
+            mBinds[11] = TaosMultiBind.MultiBindBinary(new string?[] { "taosdata" });
+            mBinds[12] = TaosMultiBind.MultiBindNchar(new string?[] { "TDenginge" });
+
             return mBinds;
         }
 
         public static TAOS_MULTI_BIND[] InitData()
         {
             TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[14];
-            // TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[8];
-            long[] tsArr = new long[5] { 1637064040000, 1637064041000, 1637064042000, 1637064043000, 1637064044000 };
+
+            long[] tsArr = new long[5] { 1656677700000, 1656677710000, 1656677720000, 1656677730000, 1656677700000 };
             bool?[] boolArr = new bool?[5] { true, false, null, true, true };
             sbyte?[] tinyIntArr = new sbyte?[5] { -127, 0, null, 8, 127 };
             short?[] shortArr = new short?[5] { short.MinValue + 1, -200, null, 100, short.MaxValue };
@@ -138,6 +117,7 @@ namespace Examples.Stmt
             ulong?[] uLongArr = new ulong?[5] { ulong.MinValue, 2000, null, 1000, long.MaxValue - 1 };
             string[] binaryArr = new string[5] { "1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", String.Empty, null, "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM", "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$%^&*()_+=-`[]{}:,./<>?" };
             string[] ncharArr = new string[5] { "1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", null, "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM", "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", string.Empty };
+            
             mBinds[0] = TaosMultiBind.MultiBindTimestamp(tsArr);
             mBinds[1] = TaosMultiBind.MultiBindBool(boolArr);
             mBinds[2] = TaosMultiBind.MultiBindTinyInt(tinyIntArr);
@@ -152,15 +132,6 @@ namespace Examples.Stmt
             mBinds[11] = TaosMultiBind.MultiBindUBigInt(uLongArr);
             mBinds[12] = TaosMultiBind.MultiBindBinary(binaryArr);
             mBinds[13] = TaosMultiBind.MultiBindNchar(ncharArr);
-
-            // mBinds[1] = TaosMultiBind.MultiBindDouble(doubleArr);
-            // mBinds[2] = TaosMultiBind.MultiBindUTinyInt(uTinyIntArr);
-            // mBinds[3] = TaosMultiBind.MultiBindUSmallInt(uShortArr);
-            // mBinds[4] = TaosMultiBind.MultiBindUInt(uIntArr);
-            // mBinds[5] = TaosMultiBind.MultiBindUBigInt(uLongArr);
-            // mBinds[6] = TaosMultiBind.MultiBindBinary(binaryArr);
-            // mBinds[7] = TaosMultiBind.MultiBindNchar(ncharArr);
-
 
             return mBinds;
         }
