@@ -1,6 +1,10 @@
 ﻿using System;
 using TDengineTMQ.Impl;
+using TDengineDriver;
+using TDengineDriver.Impl;
+using System.Timers;
 using System.Collections.Generic;
+
 
 namespace TDengineTMQ
 {
@@ -31,15 +35,30 @@ namespace TDengineTMQ
             tmqHandle.ConsumerClose(this.comsumer);
         }
 
-        public ConsumeResult<TKey, TValue> Consume(int millisecondsTimeout)
+        public ConsumeResult Consume(int millisecondsTimeout)
         {
-            return tmqHandle.ConsumerPoll(this.comsumer, millisecondsTimeout);
+            IntPtr msgPtr = tmqHandle.ConsumerPoll(this.comsumer, millisecondsTimeout);
+            try
+            {
+                List<TDengineMeta> meta = LibTaos.GetMeta(msgPtr);
+                List<Object> result = LibTaos.GetData(msgPtr);
+
+                return new ConsumeResult
+                {
+                    TopicPartition = new TopicPartition(LibTMQ.tmq_get_topic_name(msgPtr), LibTMQ.tmq_get_vgroup_id(msgPtr), LibTMQ.tmq_get_db_name(msgPtr), LibTMQ.tmq_get_table_name(msgPtr), msgPtr)，
+                    Key = meta,
+                    Value = result
+                };
+            }
+            finally
+            {
+                TDengine.FreeResult(msgPtr);
+            }
+ 
         }
 
         public ConsumeResult<TKey, TValue> Consume(TimeSpan timeout)
-        {
-            throw new NotImplementedException();
-        }
+        => Consume(timeout.TotalMillisecondsAsInt());
 
         public void Subscribe(IEnumerable<string> topics)
         {

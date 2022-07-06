@@ -226,20 +226,21 @@ namespace TDengineTMQ.Impl
             return topics;
         }
 
-        internal ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<Object>>> ConsumerPoll(IntPtr tmq, Int64 timeout)
+        internal IntPtr ConsumerPoll(IntPtr tmq, Int64 timeout)
         {
             NullReferenceHandler(tmq);
             IntPtr taosRes = LibTMQ.tmq_consumer_poll(tmq, timeout);
             NullReferenceHandler(taosRes);
 
-            TopicPartition topicPartition = new TopicPartition(LibTMQ.tmq_get_topic_name(taosRes), LibTMQ.tmq_get_vgroup_id(taosRes), LibTMQ.tmq_get_db_name(taosRes), LibTMQ.tmq_get_table_name(taosRes),taosRes);
-            List<TDengineMeta> metas = LibTaos.GetMeta(taosRes);
-            List < Object > records = LibTaos.GetData(taosRes);
+            //TopicPartition topicPartition = new TopicPartition(LibTMQ.tmq_get_topic_name(taosRes), LibTMQ.tmq_get_vgroup_id(taosRes), LibTMQ.tmq_get_db_name(taosRes), LibTMQ.tmq_get_table_name(taosRes),taosRes);
+            //List<TDengineMeta> metas = LibTaos.GetMeta(taosRes);
+            //List < Object > records = LibTaos.GetData(taosRes);
 
-            ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<Object>>> consumerResult = new ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<object>>>(KeyValuePair.Create(topicPartition, KeyValuePair.Create(metas, records))); ;
+            //ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<Object>>> consumerResult = new ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<object>>>(KeyValuePair.Create(topicPartition, KeyValuePair.Create(metas, records))); ;
 
-            TDengine.FreeResult(taosRes);
-            return consumerResult;
+            //TDengine.FreeResult(taosRes);
+            //return consumerResult;
+            return taosRes;
         }
 
         internal Int32 ConsumerClose(IntPtr tmq)
@@ -248,12 +249,12 @@ namespace TDengineTMQ.Impl
             return LibTMQ.tmq_consumer_close(tmq);
         }
 
-        internal void CommitSync(IntPtr tmq, ConsumeResult<TKey, TValue> msg)
+        internal void CommitSync(IntPtr tmq, ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<Object>>> msg)
         {
             NullReferenceHandler(tmq);
             NullReferenceHandler(msg.key.taosResPtr);
 
-            ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<Object>>> message = new ConsumeResult(msg.key,msg.value);
+            //ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<Object>>> message = new ConsumeResult(msg.key,msg.value);
             int code = -1;
             if ((code = LibTMQ.tmq_commit_sync(tmq, msg.key.taosResPtr)) != 0)
             {

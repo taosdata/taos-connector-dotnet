@@ -37,8 +37,10 @@ namespace Examples
             //bindSingleParamBatchExample.RunStmtBindSingleParam(conn,"bind_single_param_batch");
 
             //QueryAsync
-            QueryAsync queryAsyncExample = new QueryAsync();
-            queryAsyncExample.RunQueryAsync(conn,"q_tb");
+            //QueryAsync queryAsyncExample = new QueryAsync();
+            //queryAsyncExample.RunQueryAsync(conn,"q_tb");
+
+
 
             Tools.CloseConnection(conn);
 
