@@ -12,25 +12,30 @@ namespace Examples
         {
             InitData data = new InitData();
             string tmp = String.IsNullOrEmpty(stable) ? table : stable;
-            data.Create(conn, db, tmp, string.IsNullOrEmpty(stable));
+            data.Create(conn, db, tmp, !string.IsNullOrEmpty(stable));
             data.InsertData(conn, db, stable, table, numOfRows);
             IntPtr res = Tools.ExecuteQuery(conn, $"select * from {tmp} ");
-            List<Object> resData = LibTaos.GetData(res);
             List<TDengineDriver.TDengineMeta> resMeta = LibTaos.GetMeta(res);
+            List<Object> resData = LibTaos.GetData(res);
 
             foreach (var meta in resMeta)
             {
-                Console.Write($"{meta.name} {meta.TypeName} ({meta.size}) \n");
+                Console.Write($"\t|{meta.name} {meta.TypeName()} ({meta.size})\t|");
             }
+
+            Console.WriteLine("");
 
             for (int i = 0; i < resData.Count; i++)
             {
-                Console.Write($"{resData[i]}\t|");
-                if ((i + 1) % resMeta.Count == 0)
+                Console.Write($"|{resData[i].ToString()} \t");
+                //Console.WriteLine("{0},{1},{2}", i, resMeta.Count, (i) % resMeta.Count);
+                if (((i+1) % resMeta.Count == 0))
                 {
                     Console.WriteLine("");
                 }
             }
+            Console.WriteLine("");
+
             Tools.FreeTaosRes(res);
             data.Drop(conn, db, null);
         }

@@ -1,26 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using TDengineDriver;
+using Examples.UtilsTools;
 
 namespace Examples.Stmt
 {
-    public class StmtBindParamBatchExample
+    public class BindParamBatch
     {
         public void RunStmtBindParamBatch(IntPtr conn, string stable)
         {
             // string stable = stable;
             string subTable = stable + "_s01";
             InitEnv.InitSTable(conn, stable);
-            // string insertSql = $"insert into test_01 using {stable} tags(true,1,2,3,4,5,6,7,8,9,0,null,null) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-            string insertSql = $"insert into ? using {stable} tags (?) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            string insertSql = $"insert into ? using {stable} tags(?,?,?,?,?,?,?,?,?,?,?,?,?) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             Console.WriteLine(insertSql);
+
             string querySql = $"select * from {stable}";
 
             IntPtr stmt = TDengine.StmtInit(conn);
             if (stmt == IntPtr.Zero)
             {
                 Console.WriteLine("StmtInit() fail");
-                System.Environment.Exit(0);
+                System.Environment.Exit(1);
             }
             else
             {
@@ -28,7 +29,8 @@ namespace Examples.Stmt
             }
 
             int stmtReturn = -1;
-            stmtReturn = TDengine.StmtPrepare(stmt, insertSql, (ulong)insertSql.Length);
+
+            stmtReturn = TDengine.StmtPrepare(stmt, insertSql);
             IfStmtSucc(stmtReturn, stmt, "StmtPrepare()");
 
             TDengine.LoadTableInfo(conn, new string[] { stable });
@@ -56,7 +58,11 @@ namespace Examples.Stmt
                 throw new Exception("StmtClose() failed");
             };
 
-
+            IntPtr res = Tools.ExecuteQuery(conn, querySql);
+            Tools.DisplayRes(res);
+            
+            Tools.FreeTaosRes(res);
+            InitEnv.Dispose(conn);
         }
 
         public void IfStmtSucc(int stmtReturn, IntPtr stmt, string method)

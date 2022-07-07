@@ -68,7 +68,7 @@ namespace TDengineDriver
                 int offset = i * (int)TaosField.STRUCT_SIZE;
                 // Console.WriteLine("offset:{0}",offset);
                 TDengineMeta meta = new TDengineMeta();
-                meta.name = Marshal.PtrToStringAnsi(fieldsPtr + offset, (int)TaosField.NAME_LENGTH);
+                meta.name = Marshal.PtrToStringUTF8(fieldsPtr + offset);
                 // Console.WriteLine("fetchFeilds().name:{0}",meta.name);
                 meta.type = Marshal.ReadByte(fieldsPtr + offset + (int)TaosField.TYPE_OFFSET);
                 // Console.WriteLine("fetchFeilds().type:{0}",meta.type);
@@ -144,7 +144,14 @@ namespace TDengineDriver
         /// <param name="length">no used</param>
         /// <returns>0 for success, non-zero for failure.</returns>
         [DllImport(DLLName, EntryPoint = "taos_stmt_prepare", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int StmtPrepare(IntPtr stmt, string sql, ulong length);
+        static extern private int _StmtPrepare(IntPtr stmt, string sql, ulong length);
+
+        public static int StmtPrepare(IntPtr stmt, string sql)
+        {
+            //IntPtr utf8Sql = Marshal.StringToCoTaskMemUTF8(sql);
+            return _StmtPrepare(stmt, sql, (ulong)sql.Length);
+
+        }
         // int taos_stmt_prepare(TAOS_STMT* stmt, const char* sql, unsigned long length);
 
         /// <summary>

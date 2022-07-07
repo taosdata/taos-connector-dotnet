@@ -15,20 +15,18 @@ namespace Examples.AsyncQuery
             string db = "query_a_db";
             InitData data = new InitData();
             data.Create(conn, db, table, true);
-            data.InsertData(conn, db, table, "s_01", 5);
-            Thread.Sleep(100);
-            data.InsertData(conn, db, table, "s_02", 5);
-            Thread.Sleep(100);
-            data.InsertData(conn, db, table, "s_03", 5);
-            Thread.Sleep(100);
-            data.InsertData(conn, db, table, "s_04", 5);
-            Thread.Sleep(100);
-            data.InsertData(conn, db, table, "s_05", 5);
-            Thread.Sleep(100);
+            data.InsertData(conn, db, table, "s_01", 10);
 
             QueryAsyncCallback queryAsyncCallback = new QueryAsyncCallback(QueryCallback);
             Console.WriteLine($"Start calling QueryAsync(),query {table}'s data asynchronously.");
             TDengine.QueryAsync(conn, $"select * from {table}", queryAsyncCallback, IntPtr.Zero);
+            
+            data.InsertData(conn, db, table, "s_02", 10);
+            Thread.Sleep(100);
+            data.InsertData(conn, db, table, "s_03", 10);
+            Thread.Sleep(100);
+            data.InsertData(conn, db, table, "s_04", 10);
+     
             Thread.Sleep(2000);
             Console.WriteLine("QueryAsync done.");
 

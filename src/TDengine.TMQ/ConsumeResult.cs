@@ -13,13 +13,15 @@ namespace TDengineTMQ
         internal int vGroupId { get; set; }
         internal string db { get; set; }
         internal string table { get; set; }
+        internal IntPtr taosResPtr { get; set; }
 
-        public TopicPartition(string topic, int vGroupId, string db, string table)
+        public TopicPartition(string topic, int vGroupId, string db, string table,IntPtr msg)
         {
             this.topic = topic;
             this.vGroupId = vGroupId;
             this.db = db;
             this.table = table;
+            this.taosResPtr = msg;
         }
         public string ToString()
         {
@@ -30,30 +32,24 @@ namespace TDengineTMQ
     /// <summary>
     ///  Represent consume result.
     /// </summary>
-    public class ConsumeResult<TKey, TValue>
+    public class ConsumeResult
     {
+        public TopicPartition TopicPartition { get; set; }
         /// <summary>
         /// An instance of the <see cref="TopicPartition"/>
         /// </summary>
-        public TKey key { get; }
+        public List<TDengineMeta> Key { get; set; }
 
         /// <summary>
         ///  An instance of KeyValuePair, 
         ///  key is List of <see cref="TDengineMeta"/> represents the meta info of the consumer result.
         ///  and value is <see cref="Object"/> which represents the retrieved data.
         /// </summary>
-        public TValue value { get; }
+        public List<Object> Value { get; set; }
 
         /// <summary>
         /// store the result pointer.
         /// </summary>
-
-
-        public ConsumeResult(KeyValuePair<TKey, TValue> record)
-        {
-            this.key = record.Key;
-            this.value = record.Value;
-        }
 
     }
 }
