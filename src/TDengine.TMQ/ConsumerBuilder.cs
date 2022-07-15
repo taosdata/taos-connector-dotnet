@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace TDengineTMQ
 {
-    public class ConsumerBuilder<TKey, TValue>
+    public class ConsumerBuilder
     {
         internal protected IEnumerable<KeyValuePair<string, string>> Config { get; set; }
 
-        public virtual IConsumer<TKey, TValue> Build()
+        public virtual IConsumer Build()
         {
-            return new Consumer<TKey, TValue>(this);
+            return new Consumer(this);
         }
 
         public ConsumerBuilder(IEnumerable<KeyValuePair<string, string>> config)

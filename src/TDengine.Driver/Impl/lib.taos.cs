@@ -12,36 +12,51 @@ namespace TDengineDriver.Impl
             IfNullReference(taosRes);
 
             List<TDengineMeta> metaList = GetMeta(taosRes);
-            List<Object> list;
+            List<Object> list = new List<object>();
 
             IntPtr numOfRowsPrt = Marshal.AllocHGlobal(sizeof(Int32));
             IntPtr pDataPtr = Marshal.AllocHGlobal(IntPtr.Size);
             IntPtr pData;
-
-                int code = TDengine.FetchRawBlock(taosRes, numOfRowsPrt, pDataPtr);
-                if (code != 0)
+            try
+            {
+                while (true)
                 {
-                    throw new Exception($"fetch_raw_block failed,code {code} reason:{TDengine.Error(taosRes)}");
-                }
-                else
-                {
+                    int code = TDengine.FetchRawBlock(taosRes, numOfRowsPrt, pDataPtr);
+                    if (code != 0)
+                    {
+                        throw new Exception($"fetch_raw_block failed,code {code} reason:{TDengine.Error(taosRes)}");
+                    }
                     int numOfRows = Marshal.ReadInt32(numOfRowsPrt);
                     int numOfFileds = TDengine.FieldCount(taosRes);
-                    list = new List<Object>(numOfRows * numOfFileds);
-                    pData = Marshal.ReadIntPtr(pDataPtr);
-                    list = ReadRawBlock(pData, metaList, numOfRows);
-                    return list;
+                    if (numOfRows == 0)
+                    {
+                        break;
+                    }
+                    else
+                    {
+
+                        //list = new List<Object>(numOfRows * numOfFileds);
+                        pData = Marshal.ReadIntPtr(pDataPtr);
+                        list.AddRange(ReadRawBlock(pData, metaList, numOfRows));
+                        //return list;
+                    }
+
                 }
-            
-
-
+                return list;
+            }
+            finally 
+            {
+                Marshal.FreeHGlobal(numOfRowsPrt);
+                Marshal.FreeHGlobal(pDataPtr);
+            }  
+                
         }
         public static List<TDengineMeta> GetMeta(IntPtr taosRes)
         {
             IfNullReference(taosRes);
             return TDengine.FetchFields(taosRes);
         }
-
+        
         public static List<object> ReadRawBlock(IntPtr pData, List<TDengineMeta> metaList, int numOfRows)
         {
 

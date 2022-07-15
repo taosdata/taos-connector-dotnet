@@ -7,24 +7,10 @@ namespace TDengineTMQ.Impl
     {
         public const string DLLName = "taos";
 
-        /* -------------------------- TEMP ------------------------------- */
-        //[DllImport(DLLName, EntryPoint = "taos_connect", CallingConvention = CallingConvention.Cdecl)]
-        //internal static extern IntPtr taos_connect(string ip, string user, string password, string db, short port);
-
-        //[DllImport(DLLName, EntryPoint = "taos_close", CallingConvention = CallingConvention.Cdecl)]
-        //internal static extern void taos_close(IntPtr taos);
-
-        //[DllImport(DLLName, EntryPoint = "taos_get_server_info", CallingConvention = CallingConvention.Cdecl)]
-        //internal static extern string taos_get_server_info(IntPtr taos);
-
-        // char *taos_get_client_info();
-        [DllImport(DLLName, EntryPoint = "taos_get_client_info", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern string taos_get_client_info();
-
         /* --------------------------TMQ INTERFACE------------------------------- */
 
         [DllImport(DLLName, EntryPoint = "tmq_err2str", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern string tmq_err2str(Int32 errorCode);
+        internal static extern IntPtr tmq_err2str(Int32 errorCode);
         //const char *tmq_err2str(int32_t code);
 
         /* --------------------------TMQ Config---------------------------------- */
@@ -58,7 +44,7 @@ namespace TDengineTMQ.Impl
         //int32_t   tmq_unsubscribe(tmq_t *tmq);
 
         [DllImport(DLLName, EntryPoint = "tmq_subscription", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern Int32 tmq_subscription(IntPtr tmq, out IntPtr topicListPtr);
+        internal static extern Int32 tmq_subscription(IntPtr tmq, IntPtr topicListPtr);
         //int32_t   tmq_subscription(tmq_t *tmq, tmq_list_t **topics);
 
         [DllImport(DLLName, EntryPoint = "tmq_consumer_poll", CallingConvention = CallingConvention.Cdecl)]
@@ -88,11 +74,11 @@ namespace TDengineTMQ.Impl
         //int32_t tmq_get_raw_meta(TAOS_RES* res, const void** raw_meta, int32_t *raw_meta_len);
 
         [DllImport(DLLName, EntryPoint = "tmq_get_topic_name", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern string tmq_get_topic_name(IntPtr taosRes);
+        internal static extern IntPtr tmq_get_topic_name(IntPtr taosRes);
         //const char* tmq_get_topic_name(TAOS_RES * res);
 
         [DllImport(DLLName, EntryPoint = "tmq_get_db_name", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern string tmq_get_db_name(IntPtr taosRes);
+        internal static extern IntPtr tmq_get_db_name(IntPtr taosRes);
         //const char* tmq_get_db_name(TAOS_RES * res);
 
         [DllImport(DLLName, EntryPoint = "tmq_get_vgroup_id", CallingConvention = CallingConvention.Cdecl)]
@@ -100,14 +86,13 @@ namespace TDengineTMQ.Impl
         //int32_t tmq_get_vgroup_id(TAOS_RES* res);
 
         [DllImport(DLLName, EntryPoint = "tmq_get_table_name", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern string tmq_get_table_name(IntPtr taosRes);
+        internal static extern IntPtr tmq_get_table_name(IntPtr taosRes);
         //const char* tmq_get_table_name(TAOS_RES * res);
 
         /* --------------------------TMQ Topic List-------------------------------- */
         [DllImport(DLLName, EntryPoint = "tmq_list_new", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr tmq_list_new();
         // tmq_list_t *tmq_list_new();
-
 
         [DllImport(DLLName, EntryPoint = "tmq_list_append", CallingConvention = CallingConvention.Cdecl)]
         internal static extern Int32 tmq_list_append(IntPtr tmqList, string str);
