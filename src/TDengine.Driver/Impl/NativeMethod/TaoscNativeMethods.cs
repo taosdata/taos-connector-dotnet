@@ -364,11 +364,21 @@ namespace TDengineDriver
 
         // char *taos_get_server_info(TAOS *taos);
         [DllImport(DLLName, EntryPoint = "taos_get_server_info", CallingConvention = CallingConvention.Cdecl)]
-        static extern public string GetServerInfo(IntPtr taos);
+        static extern private IntPtr _GetServerInfo(IntPtr taos);
+        static public string GetServerInfo(IntPtr taos) 
+        {
+            IntPtr serverInfoPtr = _GetServerInfo(taos);  
+            return Marshal.PtrToStringUTF8(serverInfoPtr);
+        }
 
         // char *taos_get_client_info();
         [DllImport(DLLName, EntryPoint = "taos_get_client_info", CallingConvention = CallingConvention.Cdecl)]
-        static extern public string GetClinetInfo();
+        static extern private IntPtr _GetClientInfo();
+        static public string GetClientInfo()
+        {
+            IntPtr clientInfoPtr = _GetClientInfo();
+            return Marshal.PtrToStringUTF8(clientInfoPtr);
+        }
 
         // ====================== 3.0 =====================
         //bool taos_is_null(TAOS_RES *res, int32_t row, int32_t col);

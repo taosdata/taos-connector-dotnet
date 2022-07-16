@@ -211,6 +211,7 @@ namespace Examples.Data
                 sb.Append("\'varchar_col_" + i + "\'");
                 sb.Append(',');
                 sb.Append("\'nchar_col_" + i + "\'");
+                sb.Append(',');
                 sb.Append(i % 2 == 0 ? "true" : "false");
                 sb.Append(',');
                 sb.Append("NULL");

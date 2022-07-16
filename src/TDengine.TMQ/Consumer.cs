@@ -1,17 +1,14 @@
 ﻿using System;
-using TDengineTMQ.Impl;
-using TDengineDriver;
-using TDengineDriver.Impl;
-using System.Timers;
 using System.Collections.Generic;
+using TDengineTMQ.Impl;
 
 
 namespace TDengineTMQ
 {
-    internal class Consumer<TKey, TValue> : IConsumer<TKey, TValue>
+    internal class Consumer : IConsumer
     {
-        private TMQSafeHandle tmqHandle;
-        private IntPtr comsumer;
+        private TMQSafeHandle tmqHandle = new TMQSafeHandle();
+        private  IntPtr comsumer = IntPtr.Zero;
 
         // construct Consumer with incoming configuration
 
@@ -19,10 +16,12 @@ namespace TDengineTMQ
         /// 
         /// </summary>
         /// <param name="builder"></param>
-        internal Consumer(ConsumerBuilder<TKey, TValue> builder)
+        internal Consumer(ConsumerBuilder builder)
         {
-            this.tmqHandle = new TMQSafeHandle();
-            this.comsumer = tmqHandle.ConsumerNew(builder.Config);
+            //this.tmqHandle = new TMQSafeHandle();
+            LibTMQ.Initialize(null);
+            Console.WriteLine("consumer.cs 23");
+            comsumer = tmqHandle.ConsumerNew(builder.Config);
         }
 
         public List<string> Subscription()
@@ -37,28 +36,15 @@ namespace TDengineTMQ
 
         public ConsumeResult Consume(int millisecondsTimeout)
         {
-            IntPtr msgPtr = tmqHandle.ConsumerPoll(this.comsumer, millisecondsTimeout);
-            try
-            {
-                List<TDengineMeta> meta = LibTaos.GetMeta(msgPtr);
-                List<Object> result = LibTaos.GetData(msgPtr);
-
-                return new ConsumeResult
-                {
-                    TopicPartition = new TopicPartition(LibTMQ.tmq_get_topic_name(msgPtr), LibTMQ.tmq_get_vgroup_id(msgPtr), LibTMQ.tmq_get_db_name(msgPtr), LibTMQ.tmq_get_table_name(msgPtr), msgPtr)，
-                    Key = meta,
-                    Value = result
-                };
-            }
-            finally
-            {
-                TDengine.FreeResult(msgPtr);
-            }
- 
+            return tmqHandle.ConsumerPoll(this.comsumer, millisecondsTimeout);
         }
 
-        public ConsumeResult<TKey, TValue> Consume(TimeSpan timeout)
-        => Consume(timeout.TotalMillisecondsAsInt());
+        public ConsumeResult Consume(TimeSpan timeout)
+        {
+            //return Consume(timeout.TotalMillisecondsAsInt());
+            throw new NotImplementedException();
+        }
+
 
         public void Subscribe(IEnumerable<string> topics)
         {
@@ -75,12 +61,12 @@ namespace TDengineTMQ
             tmqHandle.Unsubscribe(this.comsumer);
         }
 
-        public void Commit(ConsumeResult<TKey, TValue> consumerResult)
+        public void Commit(ConsumeResult consumerResult)
         {
             tmqHandle.CommitSync(this.comsumer, consumerResult);
         }
 
-        public void CommitAsync(ConsumeResult<TKey, TValue> consumerResult, Delegate Callback)
+        public void CommitAsync(ConsumeResult consumerResult, Delegate Callback)
         {
             throw new NotImplementedException();
         }

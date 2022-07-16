@@ -23,11 +23,11 @@ namespace TDengineTMQ
                 this.SetObject("group.id", value);
             }
         }
-        public int? ClientId
+        public string? ClientId
         {
             get
             {
-                return GetInt("client.id");
+                return Get("client.id");
             }
             set
             {
@@ -35,11 +35,11 @@ namespace TDengineTMQ
             }
         }
 
-        public bool? EnableAutoCommit
+        public string? EnableAutoCommit
         {
             get
             {
-                return GetBool("enable.auto.commit");
+                return Get("enable.auto.commit");
             }
             set
             {
@@ -47,23 +47,23 @@ namespace TDengineTMQ
             }
         }
 
-        public int? AutoCommitIntervalMs
+        public string? AutoCommitIntervalMs
         {
-            get => GetInt("auto.commit.interval.ms");
+            get => Get("auto.commit.interval.ms");
 
             set => this.SetObject("auto.commit.interval.ms", value);
         }
 
 
-        public bool? AutoOffsetReset
+        public string? AutoOffsetReset
         {
-            get => GetBool("auto.offset.reset");
+            get => Get("auto.offset.reset");
             set => this.SetObject("auto.offset.reset", value);
         }
 
-        public bool? MsgWithTableName
+        public string? MsgWithTableName
         {
-            get => GetBool("msg.with.table.name");
+            get => Get("msg.with.table.name");
             set => this.SetObject("msg.with.table.name", value);
         }
 
@@ -85,9 +85,9 @@ namespace TDengineTMQ
             set => SetObject("td.connect.pass", value);
         }
 
-        public int? TDConnectPort
+        public string? TDConnectPort
         {
-            get => GetInt("td.connect.port");
+            get => Get("td.connect.port");
             set => this.SetObject("td.connect.port", value);
         }
 

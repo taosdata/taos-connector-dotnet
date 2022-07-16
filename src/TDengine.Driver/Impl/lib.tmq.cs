@@ -76,15 +76,10 @@ namespace TDengineTMQ.Impl
         {
             var methods = nativeMethodClass.GetRuntimeMethods().ToArray();
 
-            _connect = (Func<string, string, string, string, short, IntPtr>)methods.Single(m => m.Name == "Connect").CreateDelegate(typeof(Func<string, string, string, string, short, IntPtr>));
-            _close = (Action<IntPtr>)methods.Single(m => m.Name == "Close").CreateDelegate(typeof(Action<IntPtr>));
-            _getServerInfo = (Func<IntPtr, string>)methods.Single(m => m.Name == "GetServerInfo").CreateDelegate(typeof(Func<IntPtr, string>));
-            _getClinetInfo = (Func<string>)methods.Single(methods => methods.Name == "GetClinetInfo").CreateDelegate(typeof(Func<string>));
-
             /* --------------------------TMQ INTERFACE------------------------------- */
 
             //_tmq_commit_cb = (Action<IntPtr,Int32,IntPtr>)methods.Single(m => m.Name == "tmq_commit_cb").CreateDelegate(typeof(Action<IntPtr, Int32, IntPtr>));
-            _err2str = (Func<Int32, string>)methods.Single(m => m.Name == "tmq_err2str").CreateDelegate(typeof(Func<Int32, string>));
+            _err2str = (Func<Int32, IntPtr>)methods.Single(m => m.Name == "tmq_err2str").CreateDelegate(typeof(Func<Int32, IntPtr>));
 
             _tmq_conf_new = (Func<IntPtr>)methods.Single(m => m.Name == "tmq_conf_new").CreateDelegate(typeof(Func<IntPtr>));
             _tmq_conf_set = (Func<IntPtr, string, string, int>)methods.Single(m => m.Name == "tmq_conf_set").CreateDelegate(typeof(Func<IntPtr, string, string, int>));
@@ -98,56 +93,35 @@ namespace TDengineTMQ.Impl
             _tmq_consumer_poll = (Func<IntPtr, Int64, IntPtr>)methods.Single(m => m.Name == "tmq_consumer_poll").CreateDelegate(typeof(Func<IntPtr, Int64, IntPtr>));
             _tmq_consumer_close = (Func<IntPtr, Int32>)methods.Single(m => m.Name == "tmq_consumer_close").CreateDelegate(typeof(Func<IntPtr, Int32>));
             _tmq_commit_sync = (Func<IntPtr, IntPtr, Int32>)methods.Single(m => m.Name == "tmq_commit_sync").CreateDelegate(typeof(Func<IntPtr, IntPtr, Int32>));
-            _tmq_commit_async = (Action<IntPtr, IntPtr, tmq_commit_cb, IntPtr>)methods.Single(m => m.Name == "tmq_commit_async ").CreateDelegate(typeof(Action<IntPtr, IntPtr, tmq_commit_cb, IntPtr>));
+            //_tmq_commit_async = (Action<IntPtr, IntPtr, tmq_commit_cb, IntPtr>)methods.Single(m => m.Name == "tmq_commit_async ").CreateDelegate(typeof(Action<IntPtr, IntPtr, tmq_commit_cb, IntPtr>));
 
 
 
             _tmq_get_res_type = (Func<IntPtr, int>)methods.Single(m => m.Name == "tmq_get_res_type").CreateDelegate(typeof(Func<IntPtr, int>));
-            _tmq_get_raw_meta = (Func<IntPtr, IntPtr, IntPtr, int>)methods.Single(m => m.Name == "tmq_get_raw_meta").CreateDelegate(typeof(Func<IntPtr, IntPtr, IntPtr, int>));
-            _tmq_get_topic_name = (Func<IntPtr, string>)methods.Single(m => m.Name == "tmq_get_topic_name").CreateDelegate(typeof(Func<IntPtr, string>));
-            _tmq_get_db_name = (Func<IntPtr, string>)methods.Single(m => m.Name == "tmq_get_db_name").CreateDelegate(typeof(Func<IntPtr, string>));
+            _tmq_get_topic_name = (Func<IntPtr, IntPtr>)methods.Single(m => m.Name == "tmq_get_topic_name").CreateDelegate(typeof(Func<IntPtr, IntPtr>));
+            _tmq_get_db_name = (Func<IntPtr, IntPtr>)methods.Single(m => m.Name == "tmq_get_db_name").CreateDelegate(typeof(Func<IntPtr, IntPtr>));
             _tmq_get_vgroup_id = (Func<IntPtr, Int32>)methods.Single(m => m.Name == "tmq_get_vgroup_id").CreateDelegate(typeof(Func<IntPtr, Int32>));
-            _tmq_get_table_name = (Func<IntPtr, string>)methods.Single(m => m.Name == "tmq_get_table_name").CreateDelegate(typeof(Func<IntPtr, string>));
+            _tmq_get_table_name = (Func<IntPtr, IntPtr>)methods.Single(m => m.Name == "tmq_get_table_name").CreateDelegate(typeof(Func<IntPtr, IntPtr>));
 
             _tmq_list_new = (Func<IntPtr>)methods.Single(m => m.Name == "tmq_list_new").CreateDelegate(typeof(Func<IntPtr>));
             _tmq_list_append = (Func<IntPtr, string, Int32>)methods.Single(m => m.Name == "tmq_list_append").CreateDelegate(typeof(Func<IntPtr, string, Int32>));
             _tmq_list_destroy = (Action<IntPtr>)methods.Single(m => m.Name == "tmq_list_destroy").CreateDelegate(typeof(Action<IntPtr>));
             _tmq_list_get_size = (Func<IntPtr, Int32>)methods.Single(m => m.Name == "tmq_list_get_size").CreateDelegate(typeof(Func<IntPtr, Int32>));
-            _tmq_list_to_c_array = (Func<IntPtr, IntPtr>)methods.Single(m => m.Name == "tmq_list_to_c_array").CreateDelegate(typeof(Func<IntPtr, Int32>));
+            _tmq_list_to_c_array = (Func<IntPtr, IntPtr>)methods.Single(m => m.Name == "tmq_list_to_c_array").CreateDelegate(typeof(Func<IntPtr, IntPtr>));
 
-
-            try
-            {
-                //do something
-            }
-            catch
-            {
-                return false;
-            }
             return true;
 
         }
-        private static Func<string, string, string, string, short, IntPtr> _connect;
-        internal static IntPtr Connect(string host, string user, string passwd, string db, short port) => _connect(host, user, passwd, db, port);
-
-        private static Action<IntPtr> _close;
-        internal static void Close(IntPtr taos) => _close(taos);
-
-        private static Func<IntPtr, string> _getServerInfo;
-        internal static string GetServerInfo(IntPtr taos) => _getServerInfo(taos);
-
-        private static Func<string> _getClinetInfo;
-        internal static string GetClinetInfo() => _getClinetInfo();
 
         //typedef void (tmq_commit_cb(tmq_t*, int32_t code, void* param));
         [UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)]
         internal delegate void tmq_commit_cb(IntPtr tmq, Int32 code, IntPtr param);
 
         //private static Action<IntPtr, Int32, IntPtr> _tmq_commit_cb;
-        //internal static void tmq_commit_cb(IntPtr tmq, Int32 code, IntPtr param) => _tmq_commit_cb(tmq,code,param);
+        //internal static void tmq_commit_cb(IntPtr tmq, Int32 code, IntPtr param) => _tmq_commit_cb(tmq, code, param);
 
-        private static Func<Int32, string> _err2str;
-        internal static string err2str(Int32 code) => _err2str(code);
+        private static Func<Int32, IntPtr> _err2str;
+        internal static IntPtr err2str(Int32 code) => _err2str(code);
 
         // config
         private static Func<IntPtr> _tmq_conf_new;
@@ -175,6 +149,7 @@ namespace TDengineTMQ.Impl
         internal static Int32 tmq_unsubscribe(IntPtr tmq) => _tmq_unsubscribe(tmq);
 
         private static Func<IntPtr, IntPtr, Int32> _tmq_subscription;
+        //internal static Int32 tmq_subscription(IntPtr tmq, ref IntPtr topicListPtr) => _tmq_subscription(tmq, topicListPtr);
         internal static Int32 tmq_subscription(IntPtr tmq, IntPtr topicListPtr) => _tmq_subscription(tmq, topicListPtr);
 
         private static Func<IntPtr, Int64, IntPtr> _tmq_consumer_poll;
@@ -186,27 +161,24 @@ namespace TDengineTMQ.Impl
         private static Func<IntPtr, IntPtr, Int32> _tmq_commit_sync;
         internal static Int32 tmq_commit_sync(IntPtr tmq, IntPtr msg) => _tmq_commit_sync(tmq, msg);
 
-        private static Action<IntPtr, IntPtr, tmq_commit_cb, IntPtr> _tmq_commit_async;
-        internal static void tmq_commit_async(IntPtr tmq, IntPtr msg, tmq_commit_cb callback, IntPtr param) => _tmq_commit_async(tmq, msg, callback, param);
+        //private static Action<IntPtr, IntPtr, tmq_commit_cb, IntPtr> _tmq_commit_async;
+        //internal static void tmq_commit_async(IntPtr tmq, IntPtr msg, tmq_commit_cb callback, IntPtr param) => _tmq_commit_async(tmq, msg, callback, param);
 
         // consumer result
         private static Func<IntPtr, int> _tmq_get_res_type;
         internal static int tmq_get_res_type(IntPtr taosRes) => _tmq_get_res_type(taosRes);
 
-        private static Func<IntPtr, IntPtr, IntPtr, int> _tmq_get_raw_meta;
-        internal static Int32 tmq_get_raw_meta(IntPtr taosRes, IntPtr rawMetaPtr, IntPtr rawMetaLengthPtr) => _tmq_get_raw_meta(taosRes, rawMetaPtr, rawMetaLengthPtr);
+        private static Func<IntPtr, IntPtr> _tmq_get_topic_name;
+        internal static IntPtr tmq_get_topic_name(IntPtr taosRes) => _tmq_get_topic_name(taosRes);
 
-        private static Func<IntPtr, string> _tmq_get_topic_name;
-        internal static string tmq_get_topic_name(IntPtr taosRes) => _tmq_get_topic_name(taosRes);
-
-        private static Func<IntPtr, string> _tmq_get_db_name;
-        internal static string tmq_get_db_name(IntPtr taosRes) => _tmq_get_db_name(taosRes);
+        private static Func<IntPtr, IntPtr> _tmq_get_db_name;
+        internal static IntPtr tmq_get_db_name(IntPtr taosRes) => _tmq_get_db_name(taosRes);
 
         private static Func<IntPtr, Int32> _tmq_get_vgroup_id;
         internal static Int32 tmq_get_vgroup_id(IntPtr taosRes) => _tmq_get_vgroup_id(taosRes);
 
-        private static Func<IntPtr, string> _tmq_get_table_name;
-        internal static string tmq_get_table_name(IntPtr taosRes) => _tmq_get_table_name(taosRes);
+        private static Func<IntPtr, IntPtr> _tmq_get_table_name;
+        internal static IntPtr tmq_get_table_name(IntPtr taosRes) => _tmq_get_table_name(taosRes);
 
         //topic list
         private static Func<IntPtr> _tmq_list_new;
