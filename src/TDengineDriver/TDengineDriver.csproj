@@ -4,7 +4,7 @@
     <TargetFrameworks>net5;netstandard2.1;net6</TargetFrameworks>
     <PackageId>TDengine.Connector</PackageId>
     <PackageIcon>logo.jpg</PackageIcon>
-    <Version>1.0.6</Version>
+    <Version>1.0.7</Version>
     <Authors>taosdata</Authors>
     <Company>www.taosdata.com</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -14,7 +14,7 @@
         This C # connector supports: Linux 64/Windows x64/Windows x86.
         more information please visit: https://www.taosdata.com
     </Description>
-    <RepositoryUrl>https://github.com/taosdata/TDengine/tree/develop/src/connector/C%2523/src/TDengineDriver</RepositoryUrl>
+    <RepositoryUrl>https://github.com/taosdata/taos-connector-dotnet</RepositoryUrl>
     <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
