@@ -1,34 +1,24 @@
 using System;
 using TDengineDriver;
-using System.Collections.Generic;
-namespace Test.UtilsTools.ResultSet
+using TDengineDriver.Impl;
+namespace Test.Utils.ResultSet
 {
     public class ResultSet
     {
-        private List<TDengineMeta> resultMeta;
-        private List<String> resultData;
-        // private bool isValidResult = false;
+        internal List<TDengineMeta> ResultMeta { get; set; }
+        internal List<Object> ResultData { get; set; }
         public ResultSet(IntPtr res)
         {
 
-            resultMeta = UtilsTools.GetResField(res);
-            resultData = UtilsTools.GetResData(res);
+            ResultMeta = LibTaos.GetMeta(res);
+            ResultData = LibTaos.GetData(res);
+            TDengine.FreeResult(res);
         }
 
-        public ResultSet(List<TDengineMeta> meta, List<String> data)
+        public ResultSet(List<TDengineMeta> meta, List<Object> data)
         {
-            resultMeta = meta;
-            resultData = data;
-        }
-
-        public List<String> GetResultData()
-        {
-            return resultData;
-        }
-
-        public List<TDengineMeta> GetResultMeta()
-        {
-            return resultMeta;
+            ResultMeta = meta;
+            ResultData = data;
         }
 
     }

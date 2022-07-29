@@ -1,10 +1,9 @@
 using System;
-using Test.UtilsTools;
+using Test.Utils;
 using TDengineDriver;
-using Test.UtilsTools.DataSource;
 using Xunit;
 using System.Collections.Generic;
-using Test.UtilsTools.ResultSet;
+using Test.Utils.ResultSet;
 using Test.Case.Attributes;
 using Test.Fixture;
 using Xunit.Abstractions;
@@ -15,7 +14,7 @@ namespace Cases
     [Collection("Database collection")]
     public class InsertCNCases
     {
-        DatabaseFixture database;
+        readonly DatabaseFixture database;
         private readonly ITestOutputHelper _output;
         public InsertCNCases(DatabaseFixture fixture, ITestOutputHelper output)
         {
@@ -30,11 +29,11 @@ namespace Cases
         [Fact(DisplayName = "InsertCNCases.TestNTable"), TestExeOrder(1)]
         public void TestNTable()
         {
-            IntPtr conn = database.conn;
+            IntPtr conn = database.Conn;
             Assert.NotEqual(conn, IntPtr.Zero);
             IntPtr _res = IntPtr.Zero;
             string tableName = "cn_insert_nchar_ntable";
-            // var expectResData = new List<String> { "1637064040000", "true", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "XI", "XII", "{\"k1\": \"v1\"}" };
+
             var colData = new List<Object>{1637064040000,1,"涛思数据",
             1637064041000,2,"涛思数据taosdata",
             1637064042000,3,"TDegnine涛思数据",
@@ -46,21 +45,22 @@ namespace Cases
             1637064048000,9,"&涛思数据taos9"
             };
 
-            String dropTb = "drop table if exists " + tableName;
-            String createTb = $"create table if not exists {tableName} (ts timestamp,v4 int,blob nchar(200));";
-            String insertSql = UtilsTools.ConstructInsertSql(tableName, "", colData, null, 9);
-            String selectSql = "select * from " + tableName;
-            String dropSql = "drop table " + tableName;
-            List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
+            String dropTb = $"drop table if exists {tableName}";
+            String createTb = $"create table if not exists {tableName} (ts timestamp,v4 int,nchr nchar(200));";
+            String insertSql = Tools.ConstructInsertSql(tableName, "", colData, null, 9);
+            String selectSql = $"select * from {tableName}";
+            List<TDengineMeta> expectResMeta = Tools.GetMetaFromDDL(createTb);
 
-            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
-            UtilsTools.ExecuteUpdate(conn, createTb, _output);
-            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
-            _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
+            Tools.ExecuteUpdate(conn, dropTb, _output);
+            Tools.ExecuteUpdate(conn, createTb, _output);
+            Tools.ExecuteUpdate(conn, insertSql, _output);
+            _res = Tools.ExecuteQuery(conn, selectSql, _output);
 
             ResultSet actualResult = new ResultSet(_res);
-            List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
-            List<String> actualResData = actualResult.GetResultData();
+            List<TDengineMeta> actualMeta = actualResult.ResultMeta;
+            List<Object> actualResData = actualResult.ResultData;
+            Tools.FreeResult(_res);
+
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
             for (int i = 0; i < actualMeta.Count; i++)
@@ -75,12 +75,9 @@ namespace Cases
             for (int i = 0; i < actualResData.Count; i++)
             {
                 // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
-                Assert.Equal(colData[i].ToString(), actualResData[i]);
+                Assert.Equal(colData[i], actualResData[i]);
             }
-
             _output.WriteLine("InsertCNCases.TestNTable() pass");
-
-
         }
 
         /// <author>xiaolei</author>
@@ -91,7 +88,7 @@ namespace Cases
         [Fact(DisplayName = "InsertCNCases.TestSTable()"), TestExeOrder(2)]
         public void TestSTable()
         {
-            IntPtr conn = database.conn;
+            IntPtr conn = database.Conn;
             IntPtr _res = IntPtr.Zero;
             string tableName = "cn_insert_nchar_stable";
             var colData = new List<Object>{1637064040000,1,"涛思数据",
@@ -106,22 +103,24 @@ namespace Cases
                     };
             var tagData = new List<Object> { 1, "涛思数据", };
             String dropTb = "drop table if exists " + tableName;
-            String createTb = $"create table {tableName} (ts timestamp,v4 int,blob nchar(200))tags(id int,name nchar(50));";
-            String insertSql = UtilsTools.ConstructInsertSql(tableName + "_sub1", tableName, colData, tagData, 9);
-            String selectSql = "select * from " + tableName;
-            String dropSql = "drop table " + tableName;
-            List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
+            String createTb = $"create table {tableName} (ts timestamp,v4 int,nchr nchar(200))tags(id int,name nchar(50));";
+            String insertSql = Tools.ConstructInsertSql(tableName + "_sub1", tableName, colData, tagData, 9);
+            String selectSql = $"select * from {tableName}";
+            String dropSql = $"drop table {tableName}";
+            List<TDengineMeta> expectResMeta = Tools.GetMetaFromDDL(createTb);
 
-            List<Object> expectResData = UtilsTools.CombineColAndTagData(colData, tagData, 9);
+            List<Object> expectResData = Tools.ConstructResData(colData, tagData, 9);
 
-            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
-            UtilsTools.ExecuteUpdate(conn, createTb, _output);
-            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
-            _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
+            Tools.ExecuteUpdate(conn, dropTb, _output);
+            Tools.ExecuteUpdate(conn, createTb, _output);
+            Tools.ExecuteUpdate(conn, insertSql, _output);
+            _res = Tools.ExecuteQuery(conn, selectSql, _output);
 
             ResultSet actualResult = new ResultSet(_res);
-            List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
-            List<String> actualResData = actualResult.GetResultData();
+            List<TDengineMeta> actualMeta = actualResult.ResultMeta;
+            List<Object> actualResData = actualResult.ResultData;
+            Tools.FreeResult(_res);
+
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
             for (int i = 0; i < actualMeta.Count; i++)
@@ -137,7 +136,7 @@ namespace Cases
             for (int i = 0; i < actualResData.Count; i++)
             {
                 // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
-                Assert.Equal(expectResData[i].ToString(), actualResData[i]);
+                Assert.Equal(expectResData[i], actualResData[i]);
             }
             _output.WriteLine("InsertCNCases.TestSTable() pass");
 
@@ -151,7 +150,7 @@ namespace Cases
         [Fact(DisplayName = "InsertCNCases.TestInsertMultiNTable()"), TestExeOrder(3)]
         public void TestInsertMultiNTable()
         {
-            IntPtr conn = database.conn;
+            IntPtr conn = database.Conn;
             IntPtr _res = IntPtr.Zero;
             string tableName = "cn_multi_insert_nchar_ntable";
             var colData = new List<Object>{1637064040000,1,"涛思数据","保利广场","Beijing","China",
@@ -167,19 +166,20 @@ namespace Cases
 
             String dropTb = "drop table if exists " + tableName;
             String createTb = $"create table if not exists {tableName} (ts timestamp,v4 int,blob nchar(200),location nchar(200),city binary(100),coutry binary(200));";
-            String insertSql = UtilsTools.ConstructInsertSql(tableName, "", colData, null, 9);
+            String insertSql = Tools.ConstructInsertSql(tableName, "", colData, null, 9);
             String selectSql = "select * from " + tableName;
             String dropSql = "drop table " + tableName;
-            List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
+            List<TDengineMeta> expectResMeta = Tools.GetMetaFromDDL(createTb);
 
-            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
-            UtilsTools.ExecuteUpdate(conn, createTb, _output);
-            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
-            _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
+            Tools.ExecuteUpdate(conn, dropTb, _output);
+            Tools.ExecuteUpdate(conn, createTb, _output);
+            Tools.ExecuteUpdate(conn, insertSql, _output);
+            _res = Tools.ExecuteQuery(conn, selectSql, _output);
 
             ResultSet actualResult = new ResultSet(_res);
-            List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
-            List<String> actualResData = actualResult.GetResultData();
+            List<TDengineMeta> actualMeta = actualResult.ResultMeta;
+            List<Object> actualResData = actualResult.ResultData;
+            Tools.FreeResult(_res);
 
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
@@ -197,7 +197,7 @@ namespace Cases
             for (int i = 0; i < actualResData.Count; i++)
             {
                 // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
-                Assert.Equal(colData[i].ToString(), actualResData[i]);
+                Assert.Equal(colData[i], actualResData[i]);
             }
             _output.WriteLine("InsertCNCases.TestInsertMultiNTable() passed");
 
@@ -211,7 +211,7 @@ namespace Cases
         [Fact(DisplayName = "InsertCNCases.TestInsertMultiSTable()"), TestExeOrder(4)]
         public void TestInsertMultiSTable()
         {
-            IntPtr conn = database.conn;
+            IntPtr conn = database.Conn;
             IntPtr _res = IntPtr.Zero;
             string tableName = "cn_multi_insert_nchar_stable";
             var colData = new List<Object>{1637064040000,1,"涛思数据","保利广场","Beijing","China",
@@ -237,22 +237,22 @@ namespace Cases
             $"name nchar(50)," +
             $"addr nchar(200)," +
             $"en_name binary(200));";
-            String insertSql = UtilsTools.ConstructInsertSql(tableName + "_sub1", tableName, colData, tagData, 9);
+            String insertSql = Tools.ConstructInsertSql(tableName + "_sub1", tableName, colData, tagData, 9);
             String selectSql = "select * from " + tableName;
             String dropSql = "drop table " + tableName;
-            List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
+            List<TDengineMeta> expectResMeta = Tools.GetMetaFromDDL(createTb);
 
-            List<Object> expectResData = UtilsTools.CombineColAndTagData(colData, tagData, 9);
+            List<Object> expectResData = Tools.ConstructResData(colData, tagData, 9);
 
-            UtilsTools.ExecuteUpdate(conn, dropTb, _output);
-            UtilsTools.ExecuteUpdate(conn, createTb, _output);
-            UtilsTools.ExecuteUpdate(conn, insertSql, _output);
-            _res = UtilsTools.ExecuteQuery(conn, selectSql, _output);
+            Tools.ExecuteUpdate(conn, dropTb, _output);
+            Tools.ExecuteUpdate(conn, createTb, _output);
+            Tools.ExecuteUpdate(conn, insertSql, _output);
+            _res = Tools.ExecuteQuery(conn, selectSql, _output);
 
             ResultSet actualResult = new ResultSet(_res);
-            List<TDengineMeta> actualMeta = actualResult.GetResultMeta();
-            List<String> actualResData = actualResult.GetResultData();
-
+            List<TDengineMeta> actualMeta = actualResult.ResultMeta;
+            List<Object> actualResData = actualResult.ResultData;
+            Tools.FreeResult(_res);
             //Assert Meta data
             _output.WriteLine("Assert Meta data");
 
@@ -268,8 +268,8 @@ namespace Cases
 
             for (int i = 0; i < actualResData.Count; i++)
             {
-                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
-                Assert.Equal(expectResData[i].ToString(), actualResData[i]);
+                //_output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
+                Assert.Equal(expectResData[i], actualResData[i]);
             }
             _output.WriteLine("InsertCNCases.TestInsertMultiSTable() pass");
 
