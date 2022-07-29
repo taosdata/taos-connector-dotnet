@@ -483,6 +483,10 @@ namespace TDengineDriver
             return multiBind;
         }
 
+        public static TAOS_MULTI_BIND MultiBindVarchar(string[] arr)
+        {
+            return MultiBindBinary(arr);
+        }
         public static TAOS_MULTI_BIND MultiBindNchar(string[] arr)
         {
             TAOS_MULTI_BIND multiBind = new TAOS_MULTI_BIND();
@@ -533,6 +537,60 @@ namespace TDengineDriver
 
             return multiBind;
         }
+
+        public static TAOS_MULTI_BIND MultiBindJson(string[] jsonStr)
+        {
+            TAOS_MULTI_BIND multiBind = new TAOS_MULTI_BIND();
+            int elementCount = jsonStr.Length;
+            //TypeSize represent the Max element length of the comming arr
+            //The size of the buffer is typeSize * elementCount
+            //This buffer is used to store TAOS_MULTI_BIND.buffer
+            int typeSize = MaxElementLength(jsonStr);
+            //This intSize is used to calculate buffer size of the struct TAOS_MULTI_BIND's 
+            //length. The buffer is intSize * elementCount,which is used to store TAOS_MULTI_BIND.length
+            int intSize = sizeof(int);
+            //This byteSize is used to calculate the buffer size of the struct TAOS_MULTI_BIND.is_null
+            //This buffer size is byteSize * elementCount
+            int byteSize = sizeof(byte);
+
+            StringBuilder arrStrBuilder = new StringBuilder(); ;
+            //TAOS_MULTI_BIND.length
+            IntPtr lengthArr = Marshal.AllocHGlobal(intSize * elementCount);
+            //TAOS_MULTI_BIND.is_null
+            IntPtr nullArr = Marshal.AllocHGlobal(byteSize * elementCount);
+            //TAOS_MULTI_BIND.buffer
+            IntPtr c_char_prt = Marshal.AllocHGlobal(typeSize * elementCount);
+
+            for (int i = 0; i < elementCount; i++)
+            {
+                int itemLength = 0;
+                byte[] decodeByte = GetStringEncodeByte(jsonStr[i]);
+                itemLength = decodeByte.Length;
+                if (!String.IsNullOrEmpty(jsonStr[i]))
+                {
+                    for (int j = 0; j < itemLength; j++)
+                    {
+                        //Read byte after byte
+                        Marshal.WriteByte(c_char_prt, i * typeSize + j, decodeByte[j]);
+                    }
+                }
+                //Set TAOS_MULTI_BIND.length
+                Marshal.WriteInt32(lengthArr, intSize * i, itemLength);
+                //Set TAOS_MULTI_BIND.is_null 
+                Marshal.WriteByte(nullArr, byteSize * i, Convert.ToByte(String.IsNullOrEmpty(jsonStr[i]) ? 1 : 0));
+            }
+            //Config TAOS_MULTI_BIND
+            multiBind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_JSONTAG;
+            multiBind.buffer = c_char_prt;
+            multiBind.buffer_length = (ulong)typeSize;
+            multiBind.length = lengthArr;
+            multiBind.is_null = nullArr;
+            multiBind.num = elementCount;
+
+            return multiBind;
+
+        }
+
 
         public static TAOS_MULTI_BIND MultiBindTimestamp(long[] arr)
         {

@@ -66,14 +66,12 @@ namespace TDengineDriver
             for (int i = 0; i < fieldCount; ++i)
             {
                 int offset = i * (int)TaosField.STRUCT_SIZE;
-                // Console.WriteLine("offset:{0}",offset);
                 TDengineMeta meta = new TDengineMeta();
+
                 meta.name = Marshal.PtrToStringUTF8(fieldsPtr + offset);
-                // Console.WriteLine("fetchFeilds().name:{0}",meta.name);
                 meta.type = Marshal.ReadByte(fieldsPtr + offset + (int)TaosField.TYPE_OFFSET);
-                // Console.WriteLine("fetchFeilds().type:{0}",meta.type);
                 meta.size = Marshal.ReadInt16(fieldsPtr + offset + (int)TaosField.BYTES_OFFSET);
-                // Console.WriteLine("fetchFeilds().size:{0}",meta.size);
+
                 metaList.Add(meta);
             }
 
@@ -180,7 +178,7 @@ namespace TDengineDriver
         //int  taos_stmt_set_tbname(TAOS_STMT *stmt, const char *name);
 
         [DllImport(DLLName, EntryPoint = "taos_stmt_set_tags", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int StmtSetTags(IntPtr stmt, ref TAOS_MULTI_BIND tags);
+        static extern public int StmtSetTags(IntPtr stmt, TAOS_MULTI_BIND[] tags);
         //int taos_stmt_set_tags(TAOS_STMT *stmt, TAOS_MULTI_BIND *tags);
 
         /// <summary>
@@ -365,9 +363,9 @@ namespace TDengineDriver
         // char *taos_get_server_info(TAOS *taos);
         [DllImport(DLLName, EntryPoint = "taos_get_server_info", CallingConvention = CallingConvention.Cdecl)]
         static extern private IntPtr _GetServerInfo(IntPtr taos);
-        static public string GetServerInfo(IntPtr taos) 
+        static public string GetServerInfo(IntPtr taos)
         {
-            IntPtr serverInfoPtr = _GetServerInfo(taos);  
+            IntPtr serverInfoPtr = _GetServerInfo(taos);
             return Marshal.PtrToStringUTF8(serverInfoPtr);
         }
 
