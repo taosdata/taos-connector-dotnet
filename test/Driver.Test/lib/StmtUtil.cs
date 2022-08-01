@@ -1,4 +1,6 @@
 using TDengineDriver;
+using System.Runtime.InteropServices;
+using System;
 
 namespace Test.Utils.Stmt
 {

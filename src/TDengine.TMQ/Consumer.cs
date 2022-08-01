@@ -39,13 +39,6 @@ namespace TDengineTMQ
             return tmqHandle.ConsumerPoll(this.comsumer, millisecondsTimeout);
         }
 
-        public ConsumeResult Consume(TimeSpan timeout)
-        {
-            //return Consume(timeout.TotalMillisecondsAsInt());
-            throw new NotImplementedException();
-        }
-
-
         public void Subscribe(IEnumerable<string> topics)
         {
             tmqHandle.Subscribe(this.comsumer, topics);

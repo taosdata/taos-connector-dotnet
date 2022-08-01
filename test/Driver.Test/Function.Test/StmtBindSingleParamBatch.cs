@@ -7,8 +7,11 @@ using Test.Utils.ResultSet;
 using Test.Utils.Stmt;
 using Xunit;
 using Xunit.Abstractions;
+using System;
+using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
-namespace Cases
+namespace Function.Test.Taosc
 {
     [TestCaseOrderer("XUnit.Case.Orderers.TestExeOrderer", "Cases.ExeOrder")]
     [Collection("Database collection")]
@@ -77,7 +80,7 @@ namespace Cases
             _output.WriteLine("Assert retrieve data");
             for (int i = 0; i < actualResData.Count; i++)
             {
-                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
+                //_output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                 Assert.Equal(expectResData[i], actualResData[i]);
             }
             _output.WriteLine("StmtBindSingleParamBatch.NormalTable() pass");

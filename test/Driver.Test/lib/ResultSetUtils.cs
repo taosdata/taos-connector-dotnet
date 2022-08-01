@@ -1,6 +1,7 @@
 using System;
 using TDengineDriver;
 using TDengineDriver.Impl;
+using System.Collections.Generic;
 namespace Test.Utils.ResultSet
 {
     public class ResultSet

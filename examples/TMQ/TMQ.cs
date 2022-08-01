@@ -73,33 +73,21 @@ namespace Examples.TMQ
                         var consumerRes = consumer.Consume(30);
                         Console.WriteLine("================ consume {0} times ", i);
 
-                        Console.WriteLine("================ topic partition ");
 
-                        consumerRes.TopicPartitions.ForEach(item =>
+                        foreach (KeyValuePair<TopicPartition, TaosResult> kv in consumerRes.Message)
                         {
-                            Console.Write(item.ToString());
-                        });
+                            Console.WriteLine("topic partitions:{0}", kv.Key.ToString());
 
-                        Console.WriteLine("================ TDengineMeta for data ");
-
-                        consumerRes.MetaList.ForEach(list =>
-                        {
-                            list.ForEach(meta =>
+                            kv.Value.Metas.ForEach(meta =>
                             {
-                                Console.Write($"{meta.name} {meta.type}({meta.size}) \t");
+                                Console.Write("{0} {1}({2}) \t|",meta.name,meta.TypeName(),meta.size);
                             });
-                        });
-
-                        Console.WriteLine("\n================ retrieved data ");
-
-                        consumerRes.DataList.ForEach(list =>
-                        {
-                            list.ForEach(data =>
+                            Console.WriteLine("");
+                            kv.Value.Datas.ForEach(data =>
                             {
-                                Console.Write($"{data}\t|");
+                                Console.WriteLine(data.ToString());
                             });
-
-                        });
+                        }
                         i++;
                         consumer.Commit(consumerRes);
                         Console.WriteLine("\n================ commit ");

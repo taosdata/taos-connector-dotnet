@@ -27,7 +27,7 @@ namespace Examples.AsyncQuery
             Thread.Sleep(100);
             data.InsertData(conn, db, table, "s_04", 10);
      
-            Thread.Sleep(2000);
+            Thread.Sleep(5000);
             Console.WriteLine("QueryAsync done.");
 
             data.Drop(conn, db, null);
@@ -55,8 +55,21 @@ namespace Examples.AsyncQuery
                 Console.WriteLine($"{numOfRows} rows async retrieved");
                 IntPtr pdata = TDengine.GetRawBlock(taosRes);
                 List<TDengineMeta> metaList = TDengine.FetchFields(taosRes);
-                LibTaos.ReadRawBlock(pdata,metaList,numOfRows);
-                Tools.DisplayRes(taosRes);
+                List<object> dataList = LibTaos.ReadRawBlock(pdata,metaList,numOfRows);
+
+                for (int i = 0; i < metaList.Count; i++)
+                {
+                    Console.Write("{0} {1}({2}) \t|", metaList[i].name, metaList[i].type, metaList[i].size);
+                }
+                Console.WriteLine();
+                for (int i = 0; i < dataList.Count; i++)
+                {
+                    if (i != 0 && i % metaList.Count == 0)
+                    {
+                        Console.WriteLine("{0}\t|", dataList[i]);
+                    }
+                    Console.Write("{0}\t|", dataList[i]);
+                }
                 TDengine.FetchRawBlockAsync(taosRes, FetchRawBlockCallback, param);
             }
             else

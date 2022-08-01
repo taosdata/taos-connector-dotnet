@@ -26,7 +26,7 @@ namespace Examples
             queryAsyncExample.RunQueryAsync(conn, "q_tb");
 
 
-            TMQExample tmqExample = new TMQExample(conn,"topic_01","tmq_db","s_tmq",true);
+            TMQExample tmqExample = new TMQExample(conn, "topic_01", "tmq_db", "s_tmq", true);
             tmqExample.RunConsumer();
 
             Tools.CloseConnection(conn);

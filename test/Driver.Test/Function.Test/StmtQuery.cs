@@ -7,8 +7,11 @@ using Test.Utils.ResultSet;
 using Test.Utils.Stmt;
 using Xunit;
 using Xunit.Abstractions;
+using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using System;
 
-namespace Cases
+namespace Function.Test.Taosc
 {
     [TestCaseOrderer("XUnit.Case.Orderers.TestExeOrderer", "Cases.ExeOrder")]
     [Collection("Database collection")]
