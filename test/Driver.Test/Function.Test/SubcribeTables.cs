@@ -210,7 +210,7 @@ namespace Function.Test.TMQ
                                 Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
                                 Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
                             });
-                            tmpData.ForEach(data=>
+                            tmpData.ForEach(data =>
                             {
                                 Assert.Contains(data, expectResData[0]);
                             });
@@ -245,7 +245,7 @@ namespace Function.Test.TMQ
                             break;
                         default:
                             throw new Exception($"Unexpected table name {kv.Key.table}");
-                    }              
+                    }
 
                 }
                 consumer.Commit(consumerResult);

@@ -86,7 +86,7 @@ namespace TDengineTMQ.Impl
             NullReferenceHandler(message);
             return LibTMQ.tmq_get_vgroup_id(message);
         }
-        internal string GetDBName(IntPtr message) 
+        internal string GetDBName(IntPtr message)
         {
             NullReferenceHandler(message);
             string db = Marshal.PtrToStringUTF8(LibTMQ.tmq_get_db_name(message));
@@ -172,7 +172,7 @@ namespace TDengineTMQ.Impl
                     string errStr = Marshal.PtrToStringUTF8(errStrPtr, errStringLength);
                     throw new Exception($"Create new Consumer failed, reason:{errStr}");
                 }
-                else 
+                else
                 {
                     return consumer;
                 }
@@ -182,7 +182,7 @@ namespace TDengineTMQ.Impl
                 Marshal.FreeHGlobal(errStrPtr);
                 this.ConfDestroy(confPtr);
             }
-           
+
         }
 
         internal void Subscribe(IntPtr tmq, IEnumerable<string> topicList)
@@ -194,7 +194,7 @@ namespace TDengineTMQ.Impl
             foreach (var topic in topicList)
             {
                 int code = LibTMQ.tmq_list_append(topicPtr, topic);
-                if (code != 0) 
+                if (code != 0)
                 {
                     this.ErrorHandler("tmq_list_append", code);
                 }
@@ -214,7 +214,7 @@ namespace TDengineTMQ.Impl
         {
             NullReferenceHandler(tmq);
             IntPtr topicListPtr = LibTMQ.tmq_list_new();
-            IntPtr topicListPPtr =  Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
+            IntPtr topicListPPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
             Marshal.WriteIntPtr(topicListPPtr, topicListPtr);
             List<string> topics;
             try
@@ -231,7 +231,7 @@ namespace TDengineTMQ.Impl
 
                     for (int i = 0; i < c_array_leng; i++)
                     {
-                        string tmpStr = Marshal.PtrToStringUTF8(Marshal.ReadIntPtr(c_array_ptr+ (i * offset)));
+                        string tmpStr = Marshal.PtrToStringUTF8(Marshal.ReadIntPtr(c_array_ptr + (i * offset)));
                         topics.Add(tmpStr);
                     }
                     return topics;
@@ -241,13 +241,13 @@ namespace TDengineTMQ.Impl
                     this.ErrorHandler("tmq_subscription", code);
                     return null;
                 }
-                
+
             }
             finally
             {
                 LibTMQ.tmq_list_destroy(topicListPtr);
                 Marshal.FreeHGlobal(topicListPPtr);
-                
+
             }
 
         }
@@ -259,7 +259,7 @@ namespace TDengineTMQ.Impl
 
             ConsumeResult consumeResult = new ConsumeResult();
 
-            if (taosRes == IntPtr.Zero) 
+            if (taosRes == IntPtr.Zero)
             {
                 return consumeResult;
             }
@@ -288,19 +288,19 @@ namespace TDengineTMQ.Impl
                     }
                     else
                     {
-                        
+
                         string topic = this.GetTopicName(taosRes);
                         Int32 vGourpId = this.GetVGroupID(taosRes);
                         string db = this.GetDBName(taosRes);
                         string? table = this.GetTableName(taosRes);
-   
+
                         List<TDengineMeta> metaList = LibTaos.GetMeta(taosRes);
                         List<Object> dataList = LibTaos.ReadRawBlock(pData, metaList, numOfRows);
                         Console.WriteLine("====={0},{1},{2},{3}", topic, vGourpId, db, table);
-                       
+
                         consumeResult.Add(new TopicPartition(topic, vGourpId, db, table), new TaosResult(metaList, dataList));
                         consumeResult.Offset = taosRes;
-    
+
                     }
                 }
 
@@ -313,7 +313,7 @@ namespace TDengineTMQ.Impl
                 Marshal.FreeHGlobal(pDataPtr);
                 TDengine.FreeResult(taosRes);
             }
-            
+
         }
 
         internal Int32 ConsumerClose(IntPtr tmq)
@@ -331,11 +331,11 @@ namespace TDengineTMQ.Impl
             int code = -1;
             if ((code = LibTMQ.tmq_commit_sync(tmq, consumeResult.Offset)) != 0)
             {
-                ErrorHandler("Sync Commit",code);
+                ErrorHandler("Sync Commit", code);
             }
         }
 
-        internal void CommitAsync(IntPtr tmq, ConsumeResult consumeResult, LibTMQ.tmq_commit_cb callback, IntPtr ? param )
+        internal void CommitAsync(IntPtr tmq, ConsumeResult consumeResult, LibTMQ.tmq_commit_cb callback, IntPtr? param)
         {
             NullReferenceHandler(tmq);
             NullReferenceHandler(consumeResult.Offset);

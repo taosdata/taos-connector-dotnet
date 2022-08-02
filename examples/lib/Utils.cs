@@ -106,7 +106,7 @@ namespace Examples.UtilsTools
             Dictionary<List<TDengineMeta>, List<Object>> taosResult = GetResultSet(res);
             foreach (var kv in taosResult)
             {
-                foreach (TDengineMeta k in kv.Key) 
+                foreach (TDengineMeta k in kv.Key)
                 {
                     Console.Write($"\t|{k.name} {k.TypeName()} ({k.size})\t|");
                 }
@@ -114,7 +114,7 @@ namespace Examples.UtilsTools
 
                 for (int i = 0; i < kv.Value.Count; i++)
                 {
-                    
+
                     Console.Write($"|{kv.Value[i].ToString()} \t");
                     //Console.WriteLine("{0},{1},{2}", i, resMeta.Count, (i) % resMeta.Count);
                     if (((i + 1) % kv.Key.Count == 0))
@@ -126,18 +126,18 @@ namespace Examples.UtilsTools
 
             }
 
-            
+
         }
 
-        public static Dictionary<List<TDengineMeta>,List<Object>> GetResultSet(IntPtr res)
+        public static Dictionary<List<TDengineMeta>, List<Object>> GetResultSet(IntPtr res)
         {
-            
+
 
             if (!IsValidResult(res))
             {
                 ExitProgram();
             }
-            
+
             List<TDengineMeta> resMeta = LibTaos.GetMeta(res);
             List<Object> resData = LibTaos.GetData(res);
             Dictionary<List<TDengineMeta>, List<Object>> result = new Dictionary<List<TDengineMeta>, List<Object>>(1);
@@ -176,8 +176,8 @@ namespace Examples.UtilsTools
             List<TDengineMeta> meta = TDengine.FetchFields(res);
             return meta;
         }
-        
-       // Only for exceptional exit.
+
+        // Only for exceptional exit.
         public static void ExitProgram()
         {
             TDengine.Cleanup();
@@ -188,7 +188,7 @@ namespace Examples.UtilsTools
         {
             TDengine.FreeResult(taosRes);
         }
-       
+
     }
 }
 

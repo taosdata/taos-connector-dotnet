@@ -34,18 +34,18 @@ namespace Function.Test.Taosc
         {
             IntPtr conn = database.Conn;
             string tableName = "query_tn";
-            string createTable = Tools.CreateTable(tableName,false,false);
+            string createTable = Tools.CreateTable(tableName, false, false);
             List<Object> columns = Tools.ColumnsList(5);
             List<TDengineMeta> expectResMeta = Tools.GetMetaFromDDL(createTable);
             string insertSql = Tools.ConstructInsertSql(tableName, "", columns, null, 5);
             string selectSql = $"select * from {tableName}";
 
             // prepare 
-            Tools.ExecuteUpdate(conn,createTable,_output);
-            Tools.ExecuteUpdate(conn,insertSql,_output);
+            Tools.ExecuteUpdate(conn, createTable, _output);
+            Tools.ExecuteUpdate(conn, insertSql, _output);
 
             // assert 
-            IntPtr res = Tools.ExecuteQuery(conn,selectSql,_output);
+            IntPtr res = Tools.ExecuteQuery(conn, selectSql, _output);
             List<TDengineMeta> actualResMeta = LibTaos.GetMeta(res);
             List<object> acutalResData = LibTaos.GetData(res);
 
@@ -76,23 +76,23 @@ namespace Function.Test.Taosc
         {
             IntPtr conn = database.Conn;
             string tableName = "query_st";
-            string createSql = Tools.CreateTable(tableName,true,false);
+            string createSql = Tools.CreateTable(tableName, true, false);
             List<object> columns = Tools.ColumnsList(5);
-            List<object> tags = Tools.TagsList(1,false);
-            List<Object> expectResData = Tools.ConstructResData(columns,tags,5);
+            List<object> tags = Tools.TagsList(1, false);
+            List<Object> expectResData = Tools.ConstructResData(columns, tags, 5);
             List<TDengineMeta> expectResMeta = Tools.GetMetaFromDDL(createSql);
-            string insertSql = Tools.ConstructInsertSql($"{tableName}_s1",tableName,columns,tags,5);
+            string insertSql = Tools.ConstructInsertSql($"{tableName}_s1", tableName, columns, tags, 5);
             string selectSql = $"select * from {tableName}";
 
             // prepare 
-            Tools.ExecuteUpdate(conn,createSql,_output);
-            Tools.ExecuteUpdate(conn,insertSql,_output);
+            Tools.ExecuteUpdate(conn, createSql, _output);
+            Tools.ExecuteUpdate(conn, insertSql, _output);
 
             // Assert 
-            IntPtr res = Tools.ExecuteQuery(conn,selectSql,_output);
+            IntPtr res = Tools.ExecuteQuery(conn, selectSql, _output);
             List<TDengineMeta> actualResMeta = LibTaos.GetMeta(res);
             List<object> actualResData = LibTaos.GetData(res);
-            
+
 
             _output.WriteLine("Assert meta");
             expectResMeta.ForEach(meta =>
@@ -116,7 +116,7 @@ namespace Function.Test.Taosc
         /// <filename>Query.cs</filename>
         /// <result>pass or failed </result> 
         [Fact(DisplayName = "Query.JSONTag"), TestExeOrder(3), Trait("Category", "JSONTag")]
-        public void JSONTag() 
+        public void JSONTag()
         {
             IntPtr conn = database.Conn;
             string tableName = "query_sj";

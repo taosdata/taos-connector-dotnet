@@ -32,7 +32,7 @@ namespace TDengineTMQ
         public List<TDengineMeta> Metas { get; set; }
         public List<Object> Datas { get; set; }
 
-        public TaosResult(List<TDengineMeta> meta , List<Object> data)
+        public TaosResult(List<TDengineMeta> meta, List<Object> data)
         {
             this.Datas = data;
             this.Metas = meta;
@@ -49,7 +49,7 @@ namespace TDengineTMQ
     /// </summary>
     public class ConsumeResult
     {
-        public Dictionary<TopicPartition, TaosResult> Message { get; set; } 
+        public Dictionary<TopicPartition, TaosResult> Message { get; set; }
 
         public IntPtr Offset { get; set; }
 
@@ -58,13 +58,13 @@ namespace TDengineTMQ
             this.Message = new Dictionary<TopicPartition, TaosResult>();
             this.Offset = IntPtr.Zero;
         }
-        public ConsumeResult(TopicPartition topicPartition,TaosResult taosRes, IntPtr offset)
+        public ConsumeResult(TopicPartition topicPartition, TaosResult taosRes, IntPtr offset)
         {
             if (Message.ContainsKey(topicPartition))
             {
                 Message[topicPartition].AppendData(taosRes);
             }
-            else 
+            else
             {
                 Message.Add(topicPartition, taosRes);
             }

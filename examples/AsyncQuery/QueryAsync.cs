@@ -20,13 +20,13 @@ namespace Examples.AsyncQuery
             QueryAsyncCallback queryAsyncCallback = new QueryAsyncCallback(QueryCallback);
             Console.WriteLine($"Start calling QueryAsync(),query {table}'s data asynchronously.");
             TDengine.QueryAsync(conn, $"select * from {table}", queryAsyncCallback, IntPtr.Zero);
-            
+
             data.InsertData(conn, db, table, "s_02", 10);
             Thread.Sleep(100);
             data.InsertData(conn, db, table, "s_03", 10);
             Thread.Sleep(100);
             data.InsertData(conn, db, table, "s_04", 10);
-     
+
             Thread.Sleep(5000);
             Console.WriteLine("QueryAsync done.");
 
@@ -55,7 +55,7 @@ namespace Examples.AsyncQuery
                 Console.WriteLine($"{numOfRows} rows async retrieved");
                 IntPtr pdata = TDengine.GetRawBlock(taosRes);
                 List<TDengineMeta> metaList = TDengine.FetchFields(taosRes);
-                List<object> dataList = LibTaos.ReadRawBlock(pdata,metaList,numOfRows);
+                List<object> dataList = LibTaos.ReadRawBlock(pdata, metaList, numOfRows);
 
                 for (int i = 0; i < metaList.Count; i++)
                 {

@@ -29,7 +29,7 @@ namespace Examples
             {
                 Console.Write($"|{resData[i].ToString()} \t");
                 //Console.WriteLine("{0},{1},{2}", i, resMeta.Count, (i) % resMeta.Count);
-                if (((i+1) % resMeta.Count == 0))
+                if (((i + 1) % resMeta.Count == 0))
                 {
                     Console.WriteLine("");
                 }

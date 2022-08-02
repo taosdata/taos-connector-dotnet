@@ -8,7 +8,7 @@ namespace TDengineTMQ
     internal class Consumer : IConsumer
     {
         private TMQSafeHandle tmqHandle = new TMQSafeHandle();
-        private  IntPtr comsumer = IntPtr.Zero;
+        private IntPtr comsumer = IntPtr.Zero;
 
         // construct Consumer with incoming configuration
 

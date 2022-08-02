@@ -35,7 +35,7 @@ namespace Examples.TMQ
         }
         internal void Dispose()
         {
-            Tools.ExecuteUpdate(this.conn,$"drop topic if exists {this.topic}_1");
+            Tools.ExecuteUpdate(this.conn, $"drop topic if exists {this.topic}_1");
             //Tools.ExecuteUpdate(this.conn,$"drop topic if exists {this.topic}_2");
             //Tools.ExecuteUpdate(this.conn,$"drop topic if exists {this.topic}_3");
             //Tools.ExecuteUpdate(this.conn, $"drop topic if exist {this.topic}");
@@ -62,7 +62,7 @@ namespace Examples.TMQ
             //consumer
             {
 
-                consumer.Subscribe(new List<string> { this.topic+"_1", this.topic + "_2", this.topic + "_3" });
+                consumer.Subscribe(new List<string> { this.topic + "_1", this.topic + "_2", this.topic + "_3" });
                 Console.WriteLine("================ subscribe topic {0}", this.topic);
 
                 try
@@ -80,7 +80,7 @@ namespace Examples.TMQ
 
                             kv.Value.Metas.ForEach(meta =>
                             {
-                                Console.Write("{0} {1}({2}) \t|",meta.name,meta.TypeName(),meta.size);
+                                Console.Write("{0} {1}({2}) \t|", meta.name, meta.TypeName(), meta.size);
                             });
                             Console.WriteLine("");
                             kv.Value.Datas.ForEach(data =>

@@ -10,7 +10,7 @@ namespace Examples.Stmt
         static string createDB = "create database if not exists stmt30 keep 36500";
         static string selectDB = "use stmt30";
         public static void InitSTable(IntPtr conn, string stable)
-        {    
+        {
             string createTable = $"create stable if not exists {stable} (ts timestamp "
                                 + ",b bool"
                                 + ",v1 tinyint"
@@ -43,8 +43,8 @@ namespace Examples.Stmt
 
             string dropTable = $"drop table if exists {stable}";
 
-            Tools.ExecuteUpdate(conn,createDB);
-            Tools.ExecuteUpdate(conn,selectDB);
+            Tools.ExecuteUpdate(conn, createDB);
+            Tools.ExecuteUpdate(conn, selectDB);
             Tools.ExecuteUpdate(conn, createTable);
         }
 
@@ -117,7 +117,7 @@ namespace Examples.Stmt
             ulong?[] uLongArr = new ulong?[5] { ulong.MinValue, 2000, null, 1000, long.MaxValue - 1 };
             string[] binaryArr = new string[5] { "1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", String.Empty, null, "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM", "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$%^&*()_+=-`[]{}:,./<>?" };
             string[] ncharArr = new string[5] { "1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", null, "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM", "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", string.Empty };
-            
+
             mBinds[0] = TaosMultiBind.MultiBindTimestamp(tsArr);
             mBinds[1] = TaosMultiBind.MultiBindBool(boolArr);
             mBinds[2] = TaosMultiBind.MultiBindTinyInt(tinyIntArr);

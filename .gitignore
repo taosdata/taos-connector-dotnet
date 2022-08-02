@@ -1,5 +1,6 @@
 test/Driver.Test/bin/
 test/Driver.Test/obj/
+test/Driver.Test/doc/
 src/bin/
 src/obj/
 NugetPackTest/
