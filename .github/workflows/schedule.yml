@@ -1,0 +1,76 @@
+
+# In order to test compatibility with latest TDengine, this workflow will be triggered everyday at mid night.
+name: compatibility test 
+
+on:
+  schedule:
+    - cron: '0 2,14 * * *'
+    # runner timezone is utc-0
+jobs:
+  schedule_test:
+    runs-on: ubuntu-20.04
+
+    steps:
+      
+    - name: Build Tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+    
+    - name: Checkout TDengine
+      uses: actions/checkout@v3
+      with:
+          fetch-depth: 1
+          repository: 'taosdata/TDengine'
+          path: 'TDengine'
+          ref: 'develop'
+          submodules: 'recursive'
+
+    - name: Build TDengine
+      run: |
+          cd TDengine
+          echo `pwd`
+          mkdir debug
+          cd debug
+          cmake .. -DBUILD_JDBC=false -DBUILD_TOOLS=false
+          make -j
+          sudo make install
+          cd ../../
+          echo `pwd`
+
+          
+    - name: start taosd
+      run: |
+        nohup sudo taosd &
+        taos -V    
+        
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 5.0.x
+    
+    - name: checkout taos-connector-dotnet 
+      uses: actions/checkout@v3
+      with:
+        path: 'csharp-driver'
+        ref: 'develop'
+
+    - name: Restore dependencies
+      run: |
+        cd csharp-driver
+        echo `pwd`
+        ls -al
+        dotnet restore
+
+    - name: Build C# Driver
+      run: |
+       cd csharp-driver
+       dotnet build --no-restore
+       echo `pwd`
+       ls -al
+
+    - name: Test C# Driver
+      run: |
+       cd csharp-driver
+       sudo dotnet test --no-build --logger "console;verbosity=detailed"
+       

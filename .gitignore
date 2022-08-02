@@ -1,9 +1,12 @@
 test/Driver.Test/bin/
 test/Driver.Test/obj/
 test/Driver.Test/doc/
+test/Driver.Test/TestResults/
+coveragereport/
 src/bin/
 src/obj/
 NugetPackTest/
 examples/bin/
 examples/obj/
+.config/
 .vs

@@ -364,8 +364,8 @@ namespace Test.Utils
                 columns.Add((ulong)(i + 3));
                 columns.Add((float)(3.1415F + i));
                 columns.Add((double)(3.1415926535897932D + i));
-                columns.Add("binary_col_��_" + i);
-                columns.Add("nchar_col_��_" + i);
+                columns.Add("binary_col_列_" + i);
+                columns.Add("nchar_col_列_" + i);
                 columns.Add((i & 1) == 1 ? true : false);
             }
             return columns;
@@ -384,13 +384,13 @@ namespace Test.Utils
                 switch (seq)
                 {
                     case 1:
-                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine��˼����\",\"key4\":1,\"key5\":true}");
+                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine涛思数据\",\"key4\":1,\"key5\":true}");
                         break;
                     case 2:
-                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine��˼����\",\"key4\":2,\"key5\":false}");
+                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine涛思数据\",\"key4\":2,\"key5\":false}");
                         break;
                     case 3:
-                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine��˼����\",\"key4\":3,\"key5\":true}");
+                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine涛思数据\",\"key4\":3,\"key5\":true}");
                         break;
                     default:
                         throw new IndexOutOfRangeException("seq should in range 1-3");
@@ -410,8 +410,8 @@ namespace Test.Utils
                 tags.Add((ulong)(3 + seq));
                 tags.Add((float)(3.1415F + seq));
                 tags.Add((double)(3.1415926535897932D + seq));
-                tags.Add("binary_tag_��ǩ_" + seq);
-                tags.Add("nchar_tag_��ǩ_" + seq);
+                tags.Add("binary_tag_标签_" + seq);
+                tags.Add("nchar_tag_标签_" + seq);
 
                 return tags;
             }
