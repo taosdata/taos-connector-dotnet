@@ -284,7 +284,6 @@ namespace TDengineTMQ.Impl
 
                     if (numOfRows == 0)
                     {
-                        Console.WriteLine("numOfRows==0 true");
                         break;
                     }
                     else
@@ -294,14 +293,14 @@ namespace TDengineTMQ.Impl
                         Int32 vGourpId = this.GetVGroupID(taosRes);
                         string db = this.GetDBName(taosRes);
                         string? table = this.GetTableName(taosRes);
-
+   
                         List<TDengineMeta> metaList = LibTaos.GetMeta(taosRes);
-                        consumeResult.MetaList.Add(metaList);
-
                         List<Object> dataList = LibTaos.ReadRawBlock(pData, metaList, numOfRows);
-                        consumeResult.DataList.Add(dataList);
-
-                        consumeResult.TopicPartitions.Add(new TopicPartition(topic, vGourpId, db, table));
+                        Console.WriteLine("====={0},{1},{2},{3}", topic, vGourpId, db, table);
+                       
+                        consumeResult.Add(new TopicPartition(topic, vGourpId, db, table), new TaosResult(metaList, dataList));
+                        consumeResult.Offset = taosRes;
+    
                     }
                 }
 
@@ -330,7 +329,7 @@ namespace TDengineTMQ.Impl
 
             //ConsumeResult<TopicPartition, KeyValuePair<List<TDengineMeta>, List<Object>>> message = new ConsumeResult(msg.key,msg.value);
             int code = -1;
-            if ((code = LibTMQ.tmq_commit_sync(tmq, consumeResult.msg)) != 0)
+            if ((code = LibTMQ.tmq_commit_sync(tmq, consumeResult.Offset)) != 0)
             {
                 ErrorHandler("Sync Commit",code);
             }
@@ -339,7 +338,7 @@ namespace TDengineTMQ.Impl
         internal void CommitAsync(IntPtr tmq, ConsumeResult consumeResult, LibTMQ.tmq_commit_cb callback, IntPtr ? param )
         {
             NullReferenceHandler(tmq);
-            NullReferenceHandler(consumeResult.msg);
+            NullReferenceHandler(consumeResult.Offset);
             //LibTMQ.tmq_commit_async(tmq, consumeResult.msg, callback, IntPtr.Zero);
         }
 

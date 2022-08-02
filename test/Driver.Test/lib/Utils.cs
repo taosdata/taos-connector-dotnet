@@ -2,7 +2,8 @@ using System.Text;
 using TDengineDriver;
 using TDengineDriver.Impl;
 using Xunit.Abstractions;
-
+using System;
+using System.Collections.Generic;
 namespace Test.Utils
 {
     public class Tools
@@ -347,40 +348,6 @@ namespace Test.Utils
             return list;
         }
 
-        public static string ConstructInsert(string table, List<object> data, List<object> tags, int numOfColumns, bool ifStable = true)
-        {
-            StringBuilder insert = new();
-
-            insert.Append($"insert into {table} ");
-            if (ifStable && tags != null)
-            {
-                insert.Append("tags(");
-                foreach (var tag in tags)
-                {
-                    insert.Append(tag);
-                    insert.Append(',');
-                }
-                insert.Remove(insert.Length, 1);
-                insert.Append(')');
-            }
-
-            insert.Append("values");
-
-            for (int j = 0; j < data.Count; j += numOfColumns)
-            {
-                insert.Append('(');
-                for (int i = 0; i < numOfColumns; ++i)
-                {
-                    insert.Append(i + j);
-                    insert.Append(',');
-                }
-                insert.Remove(insert.Length, -1);
-                insert.Append(')');
-            }
-
-            return insert.ToString();
-        }
-
         public static List<Object> ColumnsList(int numOfRows) 
         {
             List<object> columns = new List<object>();
@@ -391,10 +358,10 @@ namespace Test.Utils
                 columns.Add((short)(-20+i));
                 columns.Add(-30+i);
                 columns.Add((long)(-40 + i));
-                columns.Add((sbyte)i);
-                columns.Add((short)(i+1));
-                columns.Add(i+2);
-                columns.Add((long)(i + 3));
+                columns.Add((byte)i);
+                columns.Add((ushort)(i+1));
+                columns.Add((uint)(i + 2));
+                columns.Add((ulong)(i + 3));
                 columns.Add((float)(3.1415F + i));
                 columns.Add((double)(3.1415926535897932D + i));
                 columns.Add("binary_col_ап_"+i);

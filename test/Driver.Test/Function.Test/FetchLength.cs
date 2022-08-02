@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 using Test.Fixture;
 
 
-namespace Cases
+namespace Function.Test.Taosc
 {
     [TestCaseOrderer("XUnit.Case.Orderers.TestExeOrderer", "Cases.ExeOrder")]
     [Collection("Database collection")]

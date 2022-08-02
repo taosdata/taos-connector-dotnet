@@ -10,12 +10,12 @@ namespace TDengineTMQ
     /// </summary>
     public struct TopicPartition
     {
-        internal string topic { get; set; }
-        internal int vGroupId { get; set; }
-        internal string db { get; set; }
-        internal string? table { get; set; }
+        public string topic { get; set; }
+        public int vGroupId { get; set; }
+        public string db { get; set; }
+        public string? table { get; set; }
 
-        public TopicPartition(string topic, int vGroupId, string db, string ? table)
+        public TopicPartition(string topic, int vGroupId, string db, string? table)
         {
             this.topic = topic;
             this.vGroupId = vGroupId;
@@ -27,36 +27,60 @@ namespace TDengineTMQ
             return $"topic:{this.topic} \nvGroupId:{this.vGroupId} \ndb:{this.db}  \ntable:{this.table} \n";
         }
     }
+    public class TaosResult
+    {
+        public List<TDengineMeta> Metas { get; set; }
+        public List<Object> Datas { get; set; }
 
+        public TaosResult(List<TDengineMeta> meta , List<Object> data)
+        {
+            this.Datas = data;
+            this.Metas = meta;
+        }
+
+        public void AppendData(TaosResult result)
+        {
+            this.Datas.AddRange(result.Datas);
+        }
+
+    }
     /// <summary>
     ///  Represent consume result.
     /// </summary>
     public class ConsumeResult
     {
-        public List<TopicPartition> TopicPartitions { get; set; }
-        /// <summary>
-        /// An instance of the <see cref="TopicPartition"/>
-        /// </summary>
-        public List<List<TDengineMeta>> MetaList { get; set; }
+        public Dictionary<TopicPartition, TaosResult> Message { get; set; } 
 
-        /// <summary>
-        ///  An instance of KeyValuePair, 
-        ///  key is List of <see cref="TDengineMeta"/> represents the meta info of the consumer result.
-        ///  and value is <see cref="Object"/> which represents the retrieved data.
-        /// </summary>
-        public List<List<Object>> DataList { get; set; }
+        public IntPtr Offset { get; set; }
 
-        /// <summary>
-        /// store the result pointer.
-        /// </summary>
-        
-        public IntPtr msg { get; set; }
-
-        public ConsumeResult() 
+        public ConsumeResult()
         {
-            this.TopicPartitions = new List<TopicPartition>();
-            this.MetaList = new List<List<TDengineMeta>>();
-            this.DataList  = new List<List<object>>();
+            this.Message = new Dictionary<TopicPartition, TaosResult>();
+            this.Offset = IntPtr.Zero;
+        }
+        public ConsumeResult(TopicPartition topicPartition,TaosResult taosRes, IntPtr offset)
+        {
+            if (Message.ContainsKey(topicPartition))
+            {
+                Message[topicPartition].AppendData(taosRes);
+            }
+            else 
+            {
+                Message.Add(topicPartition, taosRes);
+            }
+            this.Offset = offset;
+        }
+
+        public void Add(TopicPartition topicPartition, TaosResult taosRes)
+        {
+            if (Message.ContainsKey(topicPartition))
+            {
+                Message[topicPartition].AppendData(taosRes);
+            }
+            else
+            {
+                Message.Add(topicPartition, taosRes);
+            }
         }
     }
 }

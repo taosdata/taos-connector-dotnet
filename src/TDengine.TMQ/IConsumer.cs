@@ -7,8 +7,6 @@ namespace TDengineTMQ
     {
         ConsumeResult Consume(int millisecondsTimeout);
 
-        ConsumeResult Consume(TimeSpan timeout);
-
         List<string> Subscription();
 
         void Subscribe(IEnumerable<string> topic);
