@@ -137,7 +137,7 @@ namespace Examples.Data
             }
         }
 
-        internal void InsertData(IntPtr conn, string? db, string? stable, string table, int numOfRows,long begin = 1656677700000)
+        internal void InsertData(IntPtr conn, string? db, string? stable, string table, int numOfRows, long begin = 1656677700000)
         {
             StringBuilder sb = new StringBuilder();
             long ts = begin;

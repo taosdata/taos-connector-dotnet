@@ -348,24 +348,24 @@ namespace Test.Utils
             return list;
         }
 
-        public static List<Object> ColumnsList(int numOfRows) 
+        public static List<Object> ColumnsList(int numOfRows)
         {
             List<object> columns = new List<object>();
             for (int i = 0; i < numOfRows; i++)
             {
                 columns.Add(1659060000000 + (i * 10));
-                columns.Add((sbyte)(-10+i));
-                columns.Add((short)(-20+i));
-                columns.Add(-30+i);
+                columns.Add((sbyte)(-10 + i));
+                columns.Add((short)(-20 + i));
+                columns.Add(-30 + i);
                 columns.Add((long)(-40 + i));
                 columns.Add((byte)i);
-                columns.Add((ushort)(i+1));
+                columns.Add((ushort)(i + 1));
                 columns.Add((uint)(i + 2));
                 columns.Add((ulong)(i + 3));
                 columns.Add((float)(3.1415F + i));
                 columns.Add((double)(3.1415926535897932D + i));
-                columns.Add("binary_col_ÁÐ_"+i);
-                columns.Add("nchar_col_ÁÐ_" + i);
+                columns.Add("binary_col_åˆ—_" + i);
+                columns.Add("nchar_col_åˆ—_" + i);
                 columns.Add((i & 1) == 1 ? true : false);
             }
             return columns;
@@ -373,7 +373,7 @@ namespace Test.Utils
 
         public static List<Object> TagsList(int seq, bool ifJson = false)
         {
-            List<object> tags = new List<object> ();
+            List<object> tags = new List<object>();
             List<Object> jTags = new List<Object>();
             if (seq > 3 || seq < 1)
             {
@@ -384,13 +384,13 @@ namespace Test.Utils
                 switch (seq)
                 {
                     case 1:
-                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengineÌÎË¼Êý¾Ý\",\"key4\":1,\"key5\":true}");
+                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengineæ¶›æ€æ•°æ®\",\"key4\":1,\"key5\":true}");
                         break;
                     case 2:
-                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengineÌÎË¼Êý¾Ý\",\"key4\":2,\"key5\":false}");
+                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengineæ¶›æ€æ•°æ®\",\"key4\":2,\"key5\":false}");
                         break;
                     case 3:
-                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengineÌÎË¼Êý¾Ý\",\"key4\":3,\"key5\":true}");
+                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengineæ¶›æ€æ•°æ®\",\"key4\":3,\"key5\":true}");
                         break;
                     default:
                         throw new IndexOutOfRangeException("seq should in range 1-3");
@@ -399,7 +399,7 @@ namespace Test.Utils
             }
             else
             {
-                tags.Add((seq&1) == 1?true:false);
+                tags.Add((seq & 1) == 1 ? true : false);
                 tags.Add((sbyte)(-10 + seq));
                 tags.Add((short)(-20 + seq));
                 tags.Add(-30 + seq);
@@ -410,14 +410,14 @@ namespace Test.Utils
                 tags.Add((ulong)(3 + seq));
                 tags.Add((float)(3.1415F + seq));
                 tags.Add((double)(3.1415926535897932D + seq));
-                tags.Add("binary_tag_±êÇ©_"+seq);
-                tags.Add("nchar_tag_±êÇ©_"+seq);
+                tags.Add("binary_tag_æ ‡ç­¾_" + seq);
+                tags.Add("nchar_tag_æ ‡ç­¾_" + seq);
 
                 return tags;
             }
- 
+
         }
-        
+
         /*-------------------- other utility functions -----------------*/
         public static bool IsValidResult(IntPtr res)
         {

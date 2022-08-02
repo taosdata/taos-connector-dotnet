@@ -44,19 +44,19 @@ namespace TDengineDriver.Impl
                 }
                 return list;
             }
-            finally 
+            finally
             {
                 Marshal.FreeHGlobal(numOfRowsPrt);
                 Marshal.FreeHGlobal(pDataPtr);
-            }  
-                
+            }
+
         }
         public static List<TDengineMeta> GetMeta(IntPtr taosRes)
         {
             IfNullReference(taosRes);
             return TDengine.FetchFields(taosRes);
         }
-        
+
         public static List<object> ReadRawBlock(IntPtr pData, List<TDengineMeta> metaList, int numOfRows)
         {
 
@@ -64,7 +64,7 @@ namespace TDengineDriver.Impl
             List<Object> list = new List<Object>(numOfRows * numOfFileds);
 
             // offset pDataPtr 12 bytes
-            pData = pData + 12 + (4+2)*numOfFileds;
+            pData = pData + 12 + (4 + 2) * numOfFileds;
 
             int colLengthBlockSize = sizeof(Int32) * numOfFileds;
 
@@ -99,7 +99,7 @@ namespace TDengineDriver.Impl
                         else
                         {
                             list.Add(_ReadSolidType((IntPtr)colDataHead, (IntPtr)colBlockHead, metaList[j]));
-                        }  
+                        }
 
                         colBlockHead = colBlockHead + bitMapSize + Marshal.ReadInt32(pData, (j) * sizeof(Int32));
                     }
@@ -147,50 +147,50 @@ namespace TDengineDriver.Impl
         {
             Object data;
 
-                switch ((TDengineDataType)field.type)
-                {
-                    case TDengineDataType.TSDB_DATA_TYPE_BOOL:
-                        data = Marshal.ReadByte(pdata) == 0 ? false : true;
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_TINYINT:
-                        data = (sbyte)Marshal.ReadByte(pdata);
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_SMALLINT:
-                        data = Marshal.ReadInt16(pdata);
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_INT:
-                        data = Marshal.ReadInt32(pdata);
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_BIGINT:
-                        data = Marshal.ReadInt64(pdata);
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_FLOAT:
-                        data = (float)Marshal.PtrToStructure(pdata, typeof(float));
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_DOUBLE:
-                        data = (double)Marshal.PtrToStructure(pdata, typeof(double));
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP:
-                        data = Marshal.ReadInt64(pdata);
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_UTINYINT:
-                        data = Marshal.ReadByte(pdata);
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_USMALLINT:
-                        data = (ushort)Marshal.ReadInt16(pdata);
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_UINT:
-                        data = (uint)Marshal.ReadInt32(pdata);
-                        break;
-                    case TDengineDataType.TSDB_DATA_TYPE_UBIGINT:
-                        data = (ulong)Marshal.ReadInt64(pdata);
-                        break;
-                    default:
-                        throw new Exception($"TDengine unsupported data type {field.type}");
-                }
-                return data;
+            switch ((TDengineDataType)field.type)
+            {
+                case TDengineDataType.TSDB_DATA_TYPE_BOOL:
+                    data = Marshal.ReadByte(pdata) == 0 ? false : true;
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_TINYINT:
+                    data = (sbyte)Marshal.ReadByte(pdata);
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_SMALLINT:
+                    data = Marshal.ReadInt16(pdata);
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_INT:
+                    data = Marshal.ReadInt32(pdata);
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_BIGINT:
+                    data = Marshal.ReadInt64(pdata);
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_FLOAT:
+                    data = (float)Marshal.PtrToStructure(pdata, typeof(float));
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_DOUBLE:
+                    data = (double)Marshal.PtrToStructure(pdata, typeof(double));
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP:
+                    data = Marshal.ReadInt64(pdata);
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_UTINYINT:
+                    data = Marshal.ReadByte(pdata);
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_USMALLINT:
+                    data = (ushort)Marshal.ReadInt16(pdata);
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_UINT:
+                    data = (uint)Marshal.ReadInt32(pdata);
+                    break;
+                case TDengineDataType.TSDB_DATA_TYPE_UBIGINT:
+                    data = (ulong)Marshal.ReadInt64(pdata);
+                    break;
+                default:
+                    throw new Exception($"TDengine unsupported data type {field.type}");
+            }
+            return data;
 
-            
+
         }
 
 

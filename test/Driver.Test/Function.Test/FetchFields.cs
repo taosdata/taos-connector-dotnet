@@ -54,7 +54,7 @@ namespace Function.Test.Taosc
             };
             var expectResData = new List<String> { "1637064040000", "true", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "XI", "XII", "{\"k1\": \"v1\"}" };
             String dropTb = "drop table if exists " + tableName;
-            string createTb = $"create stable {tableName}" + 
+            string createTb = $"create stable {tableName}" +
                                 "(ts timestamp" +
                                 ",b bool" +
                                 ",v1 tinyint" +
@@ -73,11 +73,11 @@ namespace Function.Test.Taosc
                                 "tags" +
                                 "(jsontag json);";
 
-            String insertSql = $"insert into {tableName}_t1 using {tableName} "+
+            String insertSql = $"insert into {tableName}_t1 using {tableName} " +
                                " tags('{\"k1\": \"v1\"}') " +
                                "values(1637064040000,true,1,2,3,4,5,6,7,8,9,10,'XI','XII')";
             String selectSql = $"select * from {tableName}";
-            String dropSql = Tools.DropTable(String.Empty,tableName);
+            String dropSql = Tools.DropTable(String.Empty, tableName);
 
             Tools.ExecuteUpdate(conn, dropTb, _output);
             Tools.ExecuteUpdate(conn, createTb, _output);

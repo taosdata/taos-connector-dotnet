@@ -60,7 +60,7 @@ namespace Examples.Stmt
 
             IntPtr res = Tools.ExecuteQuery(conn, querySql);
             Tools.DisplayRes(res);
-            
+
             Tools.FreeTaosRes(res);
             InitEnv.Dispose(conn);
         }

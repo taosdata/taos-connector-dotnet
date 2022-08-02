@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{AC08364F-B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Driver.Test", "test\Driver.Test\Driver.Test.csproj", "{2EDACE6A-E4DF-466F-8E67-8F30C6A1A16C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples", "Examples\Examples.csproj", "{9EA81A2C-08AA-48E0-BBE2-20A1FC0C7E75}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "examples", "examples\examples.csproj", "{70766A53-AB56-4E59-80EC-C65743C20E31}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,10 +25,10 @@ Global
 		{2EDACE6A-E4DF-466F-8E67-8F30C6A1A16C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2EDACE6A-E4DF-466F-8E67-8F30C6A1A16C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2EDACE6A-E4DF-466F-8E67-8F30C6A1A16C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9EA81A2C-08AA-48E0-BBE2-20A1FC0C7E75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9EA81A2C-08AA-48E0-BBE2-20A1FC0C7E75}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9EA81A2C-08AA-48E0-BBE2-20A1FC0C7E75}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9EA81A2C-08AA-48E0-BBE2-20A1FC0C7E75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70766A53-AB56-4E59-80EC-C65743C20E31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70766A53-AB56-4E59-80EC-C65743C20E31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70766A53-AB56-4E59-80EC-C65743C20E31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70766A53-AB56-4E59-80EC-C65743C20E31}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

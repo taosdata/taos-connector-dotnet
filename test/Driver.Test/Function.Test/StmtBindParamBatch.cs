@@ -33,7 +33,7 @@ namespace Function.Test.Taosc
         /// <describe>Using bindParamBatch to insert into normal table.</describe>
         /// <filename>StmtBindParamBatch.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "StmtBindParamBatch.NormalTable"),TestExeOrder(1), Trait("Category", "NormalTable")]
+        [Fact(DisplayName = "StmtBindParamBatch.NormalTable"), TestExeOrder(1), Trait("Category", "NormalTable")]
         public void NormalTable()
         {
             string tableName = "bind_param_batch_n";
@@ -125,7 +125,7 @@ namespace Function.Test.Taosc
 
             List<TDengineMeta> actualResMeta = actualResult.ResultMeta;
             List<Object> actualResData = actualResult.ResultData;
-            
+
             // Assert retrieve data
             _output.WriteLine("Assert retrieve data");
             for (int i = 0; i < actualResData.Count; i++)
@@ -174,7 +174,7 @@ namespace Function.Test.Taosc
 
             //StmtTools.SetTableNameTags(stmt, tableName + "_s1", tags);
             StmtTools.SetSubTableName(stmt, tableName + "_s1");
-            StmtTools.SetTag(stmt,tags);
+            StmtTools.SetTag(stmt, tags);
             StmtTools.BindParamBatch(stmt, mBinds);
             StmtTools.AddBatch(stmt);
             StmtTools.StmtExecute(stmt);
@@ -209,6 +209,6 @@ namespace Function.Test.Taosc
             }
             _output.WriteLine("StmtBindParamBatch.JSONTag pass");
         }
-        
+
     }
 }

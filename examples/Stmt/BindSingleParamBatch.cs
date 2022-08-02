@@ -27,7 +27,7 @@ namespace Examples.Stmt
             }
 
             int stmtReturn = -1;
-            stmtReturn = TDengine.StmtPrepare(stmt, insertSql); 
+            stmtReturn = TDengine.StmtPrepare(stmt, insertSql);
             IfStmtSucc(stmtReturn, stmt, "StmtPrepare()");
 
             stmtReturn = TDengine.StmtSetTbname(stmt, table);
@@ -72,7 +72,7 @@ namespace Examples.Stmt
             Tools.FreeTaosRes(res);
             InitEnv.Dispose(conn);
         }
-        
+
 
         public void IfStmtSucc(int stmtReturn, IntPtr stmt, string method)
         {

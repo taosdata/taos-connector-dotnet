@@ -36,7 +36,7 @@ namespace Test.Utils.Stmt
             }
         }
 
-        public static void SetTag(IntPtr stmt, TAOS_MULTI_BIND[] tags) 
+        public static void SetTag(IntPtr stmt, TAOS_MULTI_BIND[] tags)
         {
             int res = TDengine.StmtSetTags(stmt, tags);
             if (res != 0)
@@ -62,7 +62,7 @@ namespace Test.Utils.Stmt
             if (res != 0)
             {
                 StmtClose(stmt);
-                throw new Exception($"SetSubTableName failed, reason£º{TDengine.StmtErrorStr(stmt)}");
+                throw new Exception($"SetSubTableName failed, reason:{TDengine.StmtErrorStr(stmt)}");
             }
         }
 
