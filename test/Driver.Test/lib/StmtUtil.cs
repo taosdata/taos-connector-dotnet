@@ -62,7 +62,7 @@ namespace Test.Utils.Stmt
             if (res != 0)
             {
                 StmtClose(stmt);
-                throw new Exception($"SetSubTableName failed, reason��{TDengine.StmtErrorStr(stmt)}");
+                throw new Exception($"SetSubTableName failed, reason:{TDengine.StmtErrorStr(stmt)}");
             }
         }
 

@@ -17,7 +17,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential cmake
     
-    - name: Checkout TDengine
+    - name: Checkout TDengine 3.0
       uses: actions/checkout@v3
       with:
           fetch-depth: 1
@@ -25,7 +25,7 @@ jobs:
           path: 'TDengine'
           ref: '3.0'
 
-    - name: Build TDengine
+    - name: Build TDengine 3.0
       run: |
           cd TDengine
           echo `pwd`
