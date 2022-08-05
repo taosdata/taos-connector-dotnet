@@ -68,7 +68,7 @@ namespace Examples.Stmt
             };
             IntPtr res = Tools.ExecuteQuery(conn, selectSql);
             Tools.DisplayRes(res);
-
+            TaosMultiBind.FreeTaosBind(dataBind);
             Tools.FreeTaosRes(res);
             InitEnv.Dispose(conn);
         }
