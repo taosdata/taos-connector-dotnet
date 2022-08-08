@@ -20,7 +20,6 @@ namespace TDengineTMQ
         {
             //this.tmqHandle = new TMQSafeHandle();
             LibTMQ.Initialize(null);
-            Console.WriteLine("consumer.cs 23");
             comsumer = tmqHandle.ConsumerNew(builder.Config);
         }
 

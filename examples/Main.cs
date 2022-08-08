@@ -2,6 +2,8 @@ using Examples.AsyncQuery;
 using Examples.Stmt;
 using Examples.TMQ;
 using Examples.UtilsTools;
+using Examples.Schemaless;
+using Examples.JSONTag;
 
 namespace Examples
 {
@@ -9,6 +11,7 @@ namespace Examples
     {
         static void Main(string[] args)
         {
+
             IntPtr conn = Tools.TDConnection();
 
             // Query
@@ -25,11 +28,21 @@ namespace Examples
             QueryAsync queryAsyncExample = new QueryAsync();
             queryAsyncExample.RunQueryAsync(conn, "q_tb");
 
-
+            // TMQ
             TMQExample tmqExample = new TMQExample(conn, "topic_01", "tmq_db", "s_tmq", true);
             tmqExample.RunConsumer();
 
+            // Schemaless
+            SchemalessExample schemalessExample = new SchemalessExample();
+            schemalessExample.RunSchemaless(conn);
+
+            // JSON Tag
+            JSONTagExample jSONTagExample =new JSONTagExample();
+            jSONTagExample.RunJSONTag(conn);
+
             Tools.CloseConnection(conn);
+
+
 
 
         }

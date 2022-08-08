@@ -27,7 +27,7 @@ namespace Examples.AsyncQuery
             Thread.Sleep(100);
             data.InsertData(conn, db, table, "s_04", 10);
 
-            Thread.Sleep(5000);
+            Thread.Sleep(3000);
             Console.WriteLine("QueryAsync done.");
 
             data.Drop(conn, db, null);

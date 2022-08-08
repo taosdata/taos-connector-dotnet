@@ -62,6 +62,8 @@ namespace Examples.Stmt
             Tools.DisplayRes(res);
 
             Tools.FreeTaosRes(res);
+            TaosMultiBind.FreeTaosBind(tagBind);
+            TaosMultiBind.FreeTaosBind(dataBind);
             InitEnv.Dispose(conn);
         }
 

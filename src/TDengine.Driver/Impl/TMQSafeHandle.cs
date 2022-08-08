@@ -61,7 +61,6 @@ namespace TDengineTMQ.Impl
             for (int i = 0; i < listSize; i++)
             {
                 var topic = Marshal.PtrToStringUTF8(topicIntPtr + (i * IntPtr.Size));
-                Console.WriteLine("TMQListToCArray topic[{0}]:{1}", i, topic);
                 tmp.Add(topic);
             }
             return tmp;
@@ -296,7 +295,6 @@ namespace TDengineTMQ.Impl
 
                         List<TDengineMeta> metaList = LibTaos.GetMeta(taosRes);
                         List<Object> dataList = LibTaos.ReadRawBlock(pData, metaList, numOfRows);
-                        Console.WriteLine("====={0},{1},{2},{3}", topic, vGourpId, db, table);
 
                         consumeResult.Add(new TopicPartition(topic, vGourpId, db, table), new TaosResult(metaList, dataList));
                         consumeResult.Offset = taosRes;
