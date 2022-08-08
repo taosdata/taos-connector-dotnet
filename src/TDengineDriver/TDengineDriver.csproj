@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
  <PropertyGroup>
-    <TargetFrameworks>net5;netstandard2.1;net6</TargetFrameworks>
+    <TargetFrameworks>net5;netstandard2.0;net6</TargetFrameworks>
     <PackageId>TDengine.Connector</PackageId>
     <PackageIcon>logo.jpg</PackageIcon>
     <Version>1.0.7</Version>
@@ -16,6 +16,7 @@
     </Description>
     <RepositoryUrl>https://github.com/taosdata/taos-connector-dotnet</RepositoryUrl>
     <NoWarn>CS1591</NoWarn>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <None Include="resource\logo.jpg" Pack="true" PackagePath="\" />
