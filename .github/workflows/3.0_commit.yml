@@ -35,10 +35,13 @@ jobs:
           make -j8
           sudo make install
           
-    - name: start taosd
+    - name: shell
       run: |
-        nohup sudo taosd &
-        taos -V    
+        cat >start.sh<<EOF
+        ulimit -n 65535 && TAOS_SUPPORT_VNODES=256 taosd
+        EOF
+    - name: start taosd
+      run: nohup sudo sh ./start.sh &  
         
     - name: Setup .NET
       uses: actions/setup-dotnet@v2

@@ -1,6 +1,6 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 //using TDengineDriver;
 namespace TDengineDriver.Impl
@@ -63,12 +63,10 @@ namespace TDengineDriver.Impl
             int numOfFileds = metaList.Count;
             List<Object> list = new List<Object>(numOfRows * numOfFileds);
 
-            // offset pDataPtr 12 bytes
-            pData = pData + 12 + (4 + 2) * numOfFileds;
+            pData = pData + (4 * 5) + 8 + (4 + 1) * numOfFileds;
 
             int colLengthBlockSize = sizeof(Int32) * numOfFileds;
-
-            int bitMapSize = (int)Math.Ceiling(numOfRows / 8.0);
+            int bitMapSize = (numOfRows+((1<<3)-1))>>3;
 
             for (int i = 0; i < numOfRows; i++)
             {
