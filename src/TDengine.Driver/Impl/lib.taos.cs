@@ -1,6 +1,6 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 //using TDengineDriver;
 namespace TDengineDriver.Impl
@@ -64,7 +64,8 @@ namespace TDengineDriver.Impl
             List<Object> list = new List<Object>(numOfRows * numOfFileds);
 
             // offset pDataPtr 12 bytes
-            pData = pData + 12 + (4 + 2) * numOfFileds;
+            pData = pData + (4 * 5) + 8 + (4 + 1) * numOfFileds;
+            //pData = pData + 12 + (4 + 2) * numOfFileds;
 
             int colLengthBlockSize = sizeof(Int32) * numOfFileds;
 
