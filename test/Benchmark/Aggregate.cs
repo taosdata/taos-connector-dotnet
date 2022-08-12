@@ -12,7 +12,7 @@ namespace Benchmark
         string Password { get; set; }
         readonly string db = "benchmark";
         readonly string avgStb = "select avg(d64) from stb;";
-        readonly string avgJtb = "select json_tag->\"jtag_num\" from jtb;";
+        readonly string avgJtb = "select avg(d64) from jtb;";
 
 
         public Aggregate(string host, string userName, string passwd, short port)
@@ -24,7 +24,7 @@ namespace Benchmark
         }
         public void Run(string types, int times)
         {
-            Console.WriteLine("Aggregate", types);
+            //Console.WriteLine("Aggregate {0} ...", types);
 
             IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
             IntPtr res;
@@ -63,6 +63,7 @@ namespace Benchmark
                 TDengine.FreeResult(res);
                 i++;
             }
+            //Console.WriteLine("last time:{0}", i);
         }
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)

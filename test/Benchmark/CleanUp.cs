@@ -9,7 +9,7 @@ namespace Benchmark
         short Port { get; set; }
         string Username { get; set; }
         string Password { get; set; }
-        string dropDb = $"drop database if not exists benchmark";
+        string dropDb = $"drop database if exists benchmark";
 
         public CleanUp(string host, string userName, string passwd, short port)
         {
@@ -20,7 +20,7 @@ namespace Benchmark
         }
         public void Run()
         {
-            Console.WriteLine("cleanup ...");
+            //Console.WriteLine("cleanup ...");
 
             IntPtr conn = TDengine.Connect(Host, Username, Password, "", Port);
             IntPtr res;

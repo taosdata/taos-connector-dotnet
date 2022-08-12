@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Driver.Test", "test\Driver.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "examples", "examples\examples.csproj", "{70766A53-AB56-4E59-80EC-C65743C20E31}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Benchmark\Benchmark.csproj", "{BD6333B5-B716-4DE0-AA7D-52C56CB31392}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "test\Benchmark\Benchmark.csproj", "{01D1D615-DB70-4FD1-BE81-CAC2E6365E21}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,16 +31,17 @@ Global
 		{70766A53-AB56-4E59-80EC-C65743C20E31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70766A53-AB56-4E59-80EC-C65743C20E31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70766A53-AB56-4E59-80EC-C65743C20E31}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BD6333B5-B716-4DE0-AA7D-52C56CB31392}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BD6333B5-B716-4DE0-AA7D-52C56CB31392}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BD6333B5-B716-4DE0-AA7D-52C56CB31392}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BD6333B5-B716-4DE0-AA7D-52C56CB31392}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01D1D615-DB70-4FD1-BE81-CAC2E6365E21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01D1D615-DB70-4FD1-BE81-CAC2E6365E21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01D1D615-DB70-4FD1-BE81-CAC2E6365E21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01D1D615-DB70-4FD1-BE81-CAC2E6365E21}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2EDACE6A-E4DF-466F-8E67-8F30C6A1A16C} = {AC08364F-B238-471D-8A2C-AF537BECD1A5}
+		{01D1D615-DB70-4FD1-BE81-CAC2E6365E21} = {AC08364F-B238-471D-8A2C-AF537BECD1A5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {00150F17-4325-4978-B1B3-10C6C84ADE91}

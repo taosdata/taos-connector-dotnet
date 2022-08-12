@@ -10,7 +10,7 @@ namespace Benchmark
         string Password { get; set; }
         readonly string db = "benchmark";
         readonly string queryStb = "select * from stb;";
-        readonly string queryJtb = "select" +
+        readonly string queryJtb = "select " +
                                    "ts " +
                                    ",bl " +
                                    ",i8 " +
@@ -29,7 +29,7 @@ namespace Benchmark
                                    ",json_tag->\"jtag_num\"" +
                                    ",json_tag->\"jtag_str\"" +
                                    ",json_tag->\"jtag_null\"" +
-                                   " from bkb.jtb;";
+                                   " from jtb;";
 
 
         public Query(string host, string userName, string passwd, short port)
@@ -41,7 +41,7 @@ namespace Benchmark
         }
         public void Run(string types, int times)
         {
-            Console.WriteLine("Query ... ", types);
+            // Console.WriteLine("Query {0} ... ", types);
 
             IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
             IntPtr res;
@@ -80,6 +80,7 @@ namespace Benchmark
                 TDengine.FreeResult(res);
                 i++;
             }
+            // Console.WriteLine("last time:{0}", i);
         }
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)

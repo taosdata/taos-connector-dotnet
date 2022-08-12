@@ -49,7 +49,7 @@ namespace Benchmark
         }
         public void Run(string types, int times)
         {
-            Console.WriteLine("Insert ... ", types);
+            // Console.WriteLine("Insert {0} ... ", types);
 
             IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
             IntPtr res;
@@ -75,17 +75,18 @@ namespace Benchmark
             TDengine.Close(conn);
         }
 
-        public void InsertLoop(IntPtr conn,int times, string sql)
+        public void InsertLoop(IntPtr conn, int times, string sql)
         {
             IntPtr res;
             int i = 0;
             while (i < times)
             {
-                res = TDengine.Query(conn, sql) ;
+                res = TDengine.Query(conn, sql);
                 IfTaosQuerySucc(res, sql);
                 TDengine.FreeResult(res);
                 i++;
             }
+            // Console.WriteLine("last time:{0}", i);
         }
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)

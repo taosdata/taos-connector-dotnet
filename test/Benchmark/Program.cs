@@ -5,7 +5,7 @@
         string Host = "127.0.0.1";
         string User = "root";
         string Passwd = "taosdata";
-        short Port = 6031;
+        short Port = 6030;
         string benchmarkOptions = "connect";
         string RunTimes = "1";
         string TableTypes = "normal";
@@ -25,7 +25,7 @@
             string indent = "\t\t\t";
             string indent2 = "\t\t";
 
-            Console.WriteLine("\t -s {0}{1}", indent, "Benchmark stage, \"prepare\"，\"connect\",\"insert\",\"query\",\"avg\",\"clean\",default \"connect\"");
+            Console.WriteLine("\t -s {0}{1}", indent, "Benchmark stage, \"prepare\",\"connect\",\"insert\",\"query\",\"avg\",\"batch\",\"batchcol\",\"clean\",default \"connect\"");
             Console.WriteLine("\t -t {0}{1}", indent, "Benchmark data type, table with\"json\" tag,table with \"normal\" column type,default \"normal\"");
             Console.WriteLine("\t -n {0}{1}", indent, "number of times to run");
             Console.WriteLine("\t --help {0}{1}", indent2, "Print help info");
@@ -65,17 +65,29 @@
         }
 
 
-        public void RunBenchMark(string options,string tableTypes,string times)
+        public void RunBenchMark(string options, string tableTypes, string times)
         {
-            switch (benchmarkOptions)
+            switch (options)
             {
                 case "prepare":
-                    Prepare prepare = new Prepare(this.Host,this.User,this.Passwd,this.Port);
+                    Prepare prepare = new Prepare(this.Host, this.User, this.Passwd, this.Port);
                     prepare.Run(TableTypes);
+                    break;
+                case "connect":
+                    Connect connect = new Connect(this.Host, this.User, this.Passwd, this.Port);
+                    connect.Run(int.Parse(times));
                     break;
                 case "insert":
                     Insert insert = new Insert(this.Host, this.User, this.Passwd, this.Port);
-                    insert.Run(TableTypes,int.Parse(times));
+                    insert.Run(TableTypes, int.Parse(times));
+                    break;
+                case "batch":
+                    Batch batch = new Batch(this.Host, this.User, this.Passwd, this.Port);
+                    batch.Run(TableTypes,int.Parse(times));
+                    break;
+                case "batchcol":
+                    BatchColumn batchCol = new BatchColumn(this.Host, this.User, this.Passwd, this.Port);
+                    batchCol.Run(TableTypes,int.Parse(times));
                     break;
                 case "query":
                     Query query = new Query(this.Host, this.User, this.Passwd, this.Port);
@@ -83,16 +95,14 @@
                     break;
                 case "avg":
                     Aggregate aggregate = new Aggregate(this.Host, this.User, this.Passwd, this.Port);
-                    aggregate.Run(TableTypes,int.Parse(times));
+                    aggregate.Run(TableTypes, int.Parse(times));
                     break;
                 case "clean":
                     CleanUp cleanUp = new CleanUp(this.Host, this.User, this.Passwd, this.Port);
-                    cleanUp.Run(TableTypes, int.Parse(times));
+                    cleanUp.Run();
                     break;
                 default:
-                    Connect connect = new Connect(this.Host, this.User, this.Passwd, this.Port);
-                    connect.Run(TableTypes);
-                    break;
+                    throw new Exception($"unkown stage {options}");
             }
         }
     }

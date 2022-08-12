@@ -2,6 +2,9 @@ test/Driver.Test/bin/
 test/Driver.Test/obj/
 test/Driver.Test/doc/
 test/Driver.Test/TestResults/
+test/Benchmark/bin/
+test/Benchmark/obj/
+test/Benchmark/result/
 coveragereport/
 src/bin/
 src/obj/

@@ -52,7 +52,7 @@ namespace Benchmark
                                     ", bnr binary(50)" +
                                     ",nchr nchar(50))" +
                                     "tags(json_tag json);";
-        readonly string createStb1 = "create table stb_1 using stb tags(true" +
+        readonly string createStb1 = "create table if not exists stb_1 using stb tags(true" +
                                      ",-1" +
                                      ",-2" +
                                      ",-3" +
@@ -65,7 +65,7 @@ namespace Benchmark
                                      ",3.14159265358979" +
                                      ",'bnr_tag_1'" +
                                      ",'ncr_tag_1');";
-        readonly string createJtb1 = "create table jtb_1 using jtb tags('{\"jtag_bool\":false,\"jtag_num\":3.141592653,\"jtag_str\":\"beijing\",\"jtag_null\":null}');";
+        readonly string createJtb1 = "create table if not exists jtb_1 using jtb tags('{\"jtag_bool\":false,\"jtag_num\":3.141592653,\"jtag_str\":\"beijing\",\"jtag_null\":null}');";
 
         public Prepare(string host, string userName, string passwd, short port)
         {
@@ -76,34 +76,24 @@ namespace Benchmark
         }
         public void Run(string type)
         {
-            Console.WriteLine("Prepare ... ", type);
+            // Console.WriteLine("Prepare {0}... ", type);
 
-            IntPtr conn = TDengine.Connect(Host, Username, Password, "", Port);
-            IntPtr res;
+            IntPtr conn = TDengine.Connect(Host, Username, Password, "", 0);
+
             if (conn != IntPtr.Zero)
             {
-                res = TDengine.Query(conn, $"use {db}");
-                IfTaosQuerySucc(res, $"use {db}");
-                TDengine.FreeResult(res);
+                SQLExe(conn, $"create database if not exists {db} keep 3650");
+                SQLExe(conn, $"use {db}");
 
                 if (type == "normal")
                 {
-                    res = TDengine.Query(conn, createStb);
-                    IfTaosQuerySucc(res, createStb);
-                    TDengine.FreeResult(res);
-                    res = TDengine.Query(conn, createStb1);
-                    IfTaosQuerySucc(res, createStb1);
-                    TDengine.FreeResult(res);
-
+                    SQLExe(conn, createStb);
+                    SQLExe(conn, createStb1);
                 }
                 if (type == "json")
                 {
-                    res = TDengine.Query(conn, createJtb);
-                    IfTaosQuerySucc(res, createJtb);
-                    TDengine.FreeResult(res);
-                    res = TDengine.Query(conn, createJtb1);
-                    IfTaosQuerySucc(res, createJtb1);
-                    TDengine.FreeResult(res);
+                    SQLExe(conn, createJtb);
+                    SQLExe(conn, createJtb1);
                 }
             }
             else
@@ -111,6 +101,16 @@ namespace Benchmark
                 throw new Exception("create TD connection failed");
             }
             TDengine.Close(conn);
+        }
+
+        public void SQLExe(IntPtr conn, string sql)
+        {
+            IntPtr res;
+
+            res = TDengine.Query(conn, sql);
+            IfTaosQuerySucc(res, sql);
+            TDengine.FreeResult(res);
+
         }
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
