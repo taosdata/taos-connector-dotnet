@@ -7,8 +7,11 @@
         string Passwd = "taosdata";
         short Port = 6030;
         string benchmarkOptions = "connect";
-        string RunTimes = "1";
+        int RunTimes = 1;
         string TableTypes = "normal";
+        int NumOfTable = 100;
+        int NumOfRecords = 1000;
+        int MaxSqlLength = 5000;
         // private string Rest;
         static void Main(string[] args)
         {
@@ -27,7 +30,10 @@
 
             Console.WriteLine("\t -s {0}{1}", indent, "Benchmark stage, \"prepare\",\"connect\",\"insert\",\"query\",\"avg\",\"batch\",\"batchcol\",\"clean\",default \"connect\"");
             Console.WriteLine("\t -t {0}{1}", indent, "Benchmark data type, table with\"json\" tag,table with \"normal\" column type,default \"normal\"");
-            Console.WriteLine("\t -n {0}{1}", indent, "number of times to run");
+            Console.WriteLine("\t -n {0}{1}", indent, "number of times to run.Default 1 time.");
+            Console.WriteLine("\t -r {0}{1}", indent, "number of record per table,only for insert.Default 1000 records");
+            Console.WriteLine("\t -b {0}{1}", indent, "number of target tables,only for insert.Default 100 tables");
+            Console.WriteLine("\t -l {0}{1}", indent, "Max length of SQL string,only for insert.default 5000.");
             Console.WriteLine("\t --help {0}{1}", indent2, "Print help info");
             System.Environment.Exit(0);
 
@@ -47,11 +53,23 @@
                         i++;
                         break;
                     case "-n":
-                        this.RunTimes = args[i + 1];
+                        this.RunTimes = int.Parse(args[i + 1]);
                         i++;
                         break;
                     case "-t":
                         this.TableTypes = args[i + 1];
+                        i++;
+                        break;
+                    case "-r":
+                        this.NumOfRecords = int.Parse(args[i + 1]);
+                        i++;
+                        break;
+                    case "-b":
+                        this.NumOfTable = int.Parse(args[i + 1]);
+                        i++;
+                        break;
+                    case "-l":
+                        this.MaxSqlLength = int.Parse(args[i + 1]);
                         i++;
                         break;
                     default:
@@ -59,13 +77,11 @@
                         System.Environment.Exit(0);
                         break;
                 }
-
             }
-
         }
 
 
-        public void RunBenchMark(string options, string tableTypes, string times)
+        public void RunBenchMark(string options, string tableTypes, int times)
         {
             switch (options)
             {
@@ -75,27 +91,27 @@
                     break;
                 case "connect":
                     Connect connect = new Connect(this.Host, this.User, this.Passwd, this.Port);
-                    connect.Run(int.Parse(times));
+                    connect.Run(times);
                     break;
                 case "insert":
-                    Insert insert = new Insert(this.Host, this.User, this.Passwd, this.Port);
-                    insert.Run(TableTypes, int.Parse(times));
+                    Insert insert = new Insert(this.Host, this.User, this.Passwd, this.Port, this.MaxSqlLength);
+                    insert.Run(TableTypes, NumOfRecords, NumOfTable, times);
                     break;
                 case "batch":
                     Batch batch = new Batch(this.Host, this.User, this.Passwd, this.Port);
-                    batch.Run(TableTypes,int.Parse(times));
+                    batch.Run(TableTypes, times);
                     break;
                 case "batchcol":
                     BatchColumn batchCol = new BatchColumn(this.Host, this.User, this.Passwd, this.Port);
-                    batchCol.Run(TableTypes,int.Parse(times));
+                    batchCol.Run(TableTypes, times);
                     break;
                 case "query":
                     Query query = new Query(this.Host, this.User, this.Passwd, this.Port);
-                    query.Run(TableTypes, int.Parse(times));
+                    query.Run(TableTypes, times);
                     break;
                 case "avg":
                     Aggregate aggregate = new Aggregate(this.Host, this.User, this.Passwd, this.Port);
-                    aggregate.Run(TableTypes, int.Parse(times));
+                    aggregate.Run(TableTypes, times);
                     break;
                 case "clean":
                     CleanUp cleanUp = new CleanUp(this.Host, this.User, this.Passwd, this.Port);

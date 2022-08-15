@@ -1,5 +1,6 @@
 ﻿using System;
 using TDengineDriver;
+using System.Threading;
 
 namespace Benchmark
 {
@@ -10,47 +11,21 @@ namespace Benchmark
         string Username { get; set; }
         string Password { get; set; }
         readonly string db = "benchmark";
-        readonly string insertStb = "insert into stb_1 values(1659283200000" +
-                                    ",true" +
-                                    ",-1" +
-                                    ",-2" +
-                                    ",-3" +
-                                    ",-4" +
-                                    ",1" +
-                                    ",2" +
-                                    ",3" +
-                                    ",4" +
-                                    ",3.1415" +
-                                    ",3.14159265358979" +
-                                    ",'bnr_tag_1'" +
-                                    ",'ncr_tag_1')";
-        readonly string insertJtb = "insert into jtb_1 values(1659283200000" +
-                                    ",true" +
-                                    ",-1" +
-                                    ",-2" +
-                                    ",-3" +
-                                    ",-4" +
-                                    ",1" +
-                                    ",2" +
-                                    ",3" +
-                                    ",4" +
-                                    ",3.1415" +
-                                    ",3.14159265358979" +
-                                    ",'bnr_col_1'" +
-                                    ",'ncr_col_1');";
+        readonly string stb = "stb";
+        readonly string jtb = "jtb";
+        int MaxSqlLength = 5000;
 
-
-        public Insert(string host, string userName, string passwd, short port)
+        public Insert(string host, string userName, string passwd, short port, int maxSqlLength)
         {
             Host = host;
             Username = userName;
             Password = passwd;
             Port = port;
+            MaxSqlLength = maxSqlLength;
         }
-        public void Run(string types, int times)
+        public void Run(string types, int recordNum, int tableCnt, int loopTime)
         {
             // Console.WriteLine("Insert {0} ... ", types);
-
             IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
             IntPtr res;
             if (conn != IntPtr.Zero)
@@ -61,11 +36,11 @@ namespace Benchmark
 
                 if (types == "normal")
                 {
-                    InsertLoop(conn, times, insertStb);
+                    InsertLoop(conn, tableCnt, recordNum, stb, loopTime);
                 }
                 if (types == "json")
                 {
-                    InsertLoop(conn, times, insertJtb);
+                    InsertLoop(conn, tableCnt, recordNum, jtb, loopTime);
                 }
             }
             else
@@ -75,18 +50,33 @@ namespace Benchmark
             TDengine.Close(conn);
         }
 
-        public void InsertLoop(IntPtr conn, int times, string sql)
+        public void InsertLoop(IntPtr conn, int tableCnt, int recordCnt, string prefix, int times)
         {
-            IntPtr res;
-            int i = 0;
-            while (i < times)
-            {
-                res = TDengine.Query(conn, sql);
-                IfTaosQuerySucc(res, sql);
-                TDengine.FreeResult(res);
-                i++;
-            }
+            // IntPtr res;
+            // int i = 0;
+            // while (i < times)
+            // {
+            //     res = TDengine.Query(conn, sql);
+            //     IfTaosQuerySucc(res, sql);
+            //     TDengine.FreeResult(res);
+            //     i++;
+            // }
             // Console.WriteLine("last time:{0}", i);
+            int j = 0;
+            while (j < times)
+            {
+                for (int i = 0; i < tableCnt; i++)
+                {
+                    RunContext context = new RunContext($"prefix_{i}", recordCnt, conn);
+                    InsertGenerator generator = new InsertGenerator(1659283200000, MaxSqlLength);
+                    Console.WriteLine(context.ToString());
+                    ThreadPool.QueueUserWorkItem(generator.BuildSql, context);
+                }
+                j++;
+            }
+
+
+
         }
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
