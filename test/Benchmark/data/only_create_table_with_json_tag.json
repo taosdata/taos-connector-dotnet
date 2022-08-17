@@ -1,0 +1,111 @@
+{
+	"filetype": "insert",
+	"cfgdir": "/etc/taos",
+	"host": "127.0.0.1",
+	"port": 6030,
+	"user": "root",
+	"password": "taosdata",
+	"connection_pool_size": 8,
+	"thread_count": 16,
+	"create_table_thread_count": 16,
+	"result_file": "./insert_res.txt",
+	"confirm_parameter_prompt": "no",
+	"insert_interval": 0,
+	"interlace_rows": 0,
+	"num_of_records_per_req": 30000,
+	"prepared_rand": 10000,
+	"chinese": "no",
+	"databases": [
+		{
+			"dbinfo": {
+				"name": "benchmark",
+				"drop": "no",
+				"replica": 1,
+				"precision": "ms",
+				"keep": 3650,
+				"minRows": 100,
+				"maxRows": 4096,
+				"comp": 2
+			},
+			"super_tables": [
+				{
+					"name": "jtb",
+					"child_table_exists": "no",
+					"childtable_count": 10000,
+					"childtable_prefix": "jtb_",
+					"escape_character": "yes",
+					"auto_create_table": "no",
+					"batch_create_tbl_num": 10000,
+					"data_source": "rand",
+					"insert_mode": "taosc",
+					"non_stop_mode": "no",
+					"line_protocol": "line",
+					"insert_rows": 0,
+					"childtable_limit": 10,
+					"childtable_offset": 100,
+					"interlace_rows": 0,
+					"insert_interval": 0,
+					"partial_col_num": 0,
+					"disorder_ratio": 0,
+					"disorder_range": 1000,
+					"timestamp_step": 10,
+					"start_timestamp": "2020-10-01 00:00:00.000",
+					"sample_format": "csv",
+					"sample_file": "./sample.csv",
+					"use_sample_ts": "no",
+					"tags_file": "",
+					"columns": [
+						{
+							"type": "BOOL"
+						},
+						{
+							"type": "TINYINT"
+						},
+						{
+							"type": "SMALLINT"
+						},
+						{
+							"type": "INT"
+						},
+						{
+							"type": "BIGINT"
+						},
+                        {
+							"type": "UTINYINT"
+						},
+						{
+							"type": "USMALLINT"
+						},
+						{
+							"type": "UINT"
+						},
+						{
+							"type": "UBIGINT"
+						},
+						{
+							"type": "FLOAT"
+						},
+						{
+							"type": "DOUBLE"
+						},
+						{
+							"type": "VARCHAR",
+                            "len": 20
+						},
+						{
+							"type": "NCHAR",
+                            "len": 20
+						}
+					],
+					"tags": [
+						{
+							"type": "JSON",
+                            "len": 8,
+                            "count": 4
+						}
+					]
+				}
+			]
+		}
+	]
+}

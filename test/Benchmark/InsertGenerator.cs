@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using TDengineDriver;
 namespace Benchmark
 {
     internal class InsertGenerator
@@ -104,7 +105,7 @@ namespace Benchmark
             return randomStr.ToString();
         }
 
-        public void BuildSql(object status)
+        public void RunInsertSql(object status)
         {
             RunContext context = (RunContext)status;
             //int rows = Math.Min(context.numOfRows, maxSqlLength);
@@ -113,24 +114,28 @@ namespace Benchmark
             while (numOfRecord > 0) 
             {
                 int tmpRecords = Math.Min(MaxSqlLength,numOfRecord);
-                Console.WriteLine("====Build SQL");
-                Console.WriteLine(RandomSQL(context.tableName, tmpRecords));
+                
+                string sql = RandomSQL(context.tableName, tmpRecords);
+                Console.WriteLine(sql);
+                IntPtr res = TDengine.Query(context.conn,sql);
+                IfTaosQuerySucc(res,sql);
                 numOfRecord -= tmpRecords;
+                TDengine.FreeResult(res);
             }
         }
 
+        public bool IfTaosQuerySucc(IntPtr res, string sql)
+        {
+            if (TDengine.ErrorNo(res) == 0)
+            {
+                return true;
+            }
+            else
+            {
+                throw new Exception($"execute {sql} failed,reason {TDengine.Error(res)}, code{TDengine.ErrorNo(res)}");
+            }
+        }
 
-        //public void MultiInsert(int numOfTables,int numOfRecord)
-        //{
-        //    for (int i = 0; i < numOfTables; i++)
-        //    {
-        //        RunContext context = new RunContext($"stb_{i}", numOfRecord);
-        //        ThreadPool.QueueUserWorkItem(RunSql, context);
-        //        Console.WriteLine("threadPool:{0}",ThreadPool.ThreadCount); 
-        //        Console.WriteLine("CompletedWorkItemCount:{0}", ThreadPool.CompletedWorkItemCount); 
-        //        Console.WriteLine("CompletedWorkItemCount:{0}", ThreadPool.GetMaxThreads());
-        //    }
-        //}
 
     }
 

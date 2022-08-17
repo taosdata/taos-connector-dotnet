@@ -14,6 +14,12 @@ namespace Benchmark
         readonly string stb = "stb";
         readonly string jtb = "jtb";
         int MaxSqlLength = 5000;
+        readonly int recordNum = 1;
+        readonly int loopTime = 1;
+        readonly long begineTime = 1659283200000;
+
+        int _numOfThreadsNotYetCompleted = 1;
+        ManualResetEvent _doneEvent = new ManualResetEvent(false);
 
         public Insert(string host, string userName, string passwd, short port, int maxSqlLength)
         {
@@ -23,11 +29,12 @@ namespace Benchmark
             Port = port;
             MaxSqlLength = maxSqlLength;
         }
-        public void Run(string types, int recordNum, int tableCnt, int loopTime)
+        public void Run(string types, int tableCnt)
         {
-            // Console.WriteLine("Insert {0} ... ", types);
             IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
             IntPtr res;
+
+            _numOfThreadsNotYetCompleted = tableCnt;
             if (conn != IntPtr.Zero)
             {
                 res = TDengine.Query(conn, $"use {db}");
@@ -42,41 +49,29 @@ namespace Benchmark
                 {
                     InsertLoop(conn, tableCnt, recordNum, jtb, loopTime);
                 }
+                Console.WriteLine("======TDengine.Close(conn);");
             }
             else
             {
                 throw new Exception("create TD connection failed");
             }
+
             TDengine.Close(conn);
         }
 
         public void InsertLoop(IntPtr conn, int tableCnt, int recordCnt, string prefix, int times)
         {
-            // IntPtr res;
-            // int i = 0;
-            // while (i < times)
-            // {
-            //     res = TDengine.Query(conn, sql);
-            //     IfTaosQuerySucc(res, sql);
-            //     TDengine.FreeResult(res);
-            //     i++;
-            // }
-            // Console.WriteLine("last time:{0}", i);
-            int j = 0;
-            while (j < times)
+
+
+            for (int i = 1; i <= tableCnt; i++)
             {
-                for (int i = 0; i < tableCnt; i++)
-                {
-                    RunContext context = new RunContext($"prefix_{i}", recordCnt, conn);
-                    InsertGenerator generator = new InsertGenerator(1659283200000, MaxSqlLength);
-                    Console.WriteLine(context.ToString());
-                    ThreadPool.QueueUserWorkItem(generator.BuildSql, context);
-                }
-                j++;
+                Console.WriteLine(i);
+                // Environment.Exit(1);
+
+                RunContext context = new RunContext($"{prefix}_{i}", recordCnt, conn);
+                ThreadPool.QueueUserWorkItem(RunInsertSQL, context);
             }
-
-
-
+            _doneEvent.WaitOne();
         }
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
@@ -89,6 +84,40 @@ namespace Benchmark
             {
                 throw new Exception($"execute {sql} failed,reason {TDengine.Error(res)}, code{TDengine.ErrorNo(res)}");
             }
+        }
+
+        public void RunInsertSQL(object status)
+        {
+            RunContext context = (RunContext)status;
+
+            try
+            {
+                string sql = $"insert into {context.tableName} values({begineTime},true,-1,-2,-3,-4,1,2,3,4,3.1415,3.14159265358979,'bnr_col_1','ncr_col_1')";
+                Console.WriteLine("sql:{0}", sql);
+                IntPtr res = TDengine.Query(context.conn, sql);
+                IfTaosQuerySucc(res, sql);
+                TDengine.FreeResult(res);
+            }
+            finally
+            {
+
+                if (Interlocked.Decrement(ref _numOfThreadsNotYetCompleted) == 0)
+                    _doneEvent.Set();
+            }
+
+
+        }
+    }
+
+    public struct RunManualRestContext
+    {
+        public RunContext RunContext { get; set; }
+        public ManualResetEvent ManualReset { get; set; }
+
+        public RunManualRestContext(RunContext runContext, ManualResetEvent manualResetEvent)
+        {
+            RunContext = runContext;
+            ManualReset = manualResetEvent;
         }
     }
 }

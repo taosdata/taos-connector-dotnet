@@ -52,7 +52,7 @@ namespace Benchmark
                                     ", bnr binary(50)" +
                                     ",nchr nchar(50))" +
                                     "tags(json_tag json);";
-        readonly string createStb1 = "create table if not exists stb_1 using stb tags(true" +
+        readonly string createStb1 = "create table if not exists stb_2 using stb tags(true" +
                                      ",-1" +
                                      ",-2" +
                                      ",-3" +
@@ -65,7 +65,7 @@ namespace Benchmark
                                      ",3.14159265358979" +
                                      ",'bnr_tag_1'" +
                                      ",'ncr_tag_1');";
-        readonly string createJtb1 = "create table if not exists jtb_1 using jtb tags('{\"jtag_bool\":false,\"jtag_num\":3.141592653,\"jtag_str\":\"beijing\",\"jtag_null\":null}');";
+        readonly string createJtb1 = "create table if not exists jtb_2 using jtb tags('{\"jtag_bool\":false,\"jtag_num\":3.141592653,\"jtag_str\":\"beijing\",\"jtag_null\":null}');";
 
         public Prepare(string host, string userName, string passwd, short port)
         {

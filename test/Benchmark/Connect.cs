@@ -20,7 +20,7 @@ namespace Benchmark
         }
         public void Run(int times)
         {
-            // Console.WriteLine("Connection ... ");
+            Console.WriteLine("Connection ... ");
             int i = 0;
             while (i < times)
             {
@@ -35,7 +35,7 @@ namespace Benchmark
                 }
                 i++;
             }
-            // Console.WriteLine("last time:{0}", i);
+            Console.WriteLine(" time:{0} done ...", i);
         }
     }
 }

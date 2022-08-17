@@ -10,26 +10,7 @@ namespace Benchmark
         string Password { get; set; }
         readonly string db = "benchmark";
         readonly string queryStb = "select * from stb;";
-        readonly string queryJtb = "select " +
-                                   "ts " +
-                                   ",bl " +
-                                   ",i8 " +
-                                   ",i16" +
-                                   ",i32" +
-                                   ",i64" +
-                                   ",u8 " +
-                                   ",u16" +
-                                   ",u32" +
-                                   ",u64" +
-                                   ",f32" +
-                                   ",d64" +
-                                   ",bnr" +
-                                   ",nchr" +
-                                   ",json_tag->\"jtag_bool\"" +
-                                   ",json_tag->\"jtag_num\"" +
-                                   ",json_tag->\"jtag_str\"" +
-                                   ",json_tag->\"jtag_null\"" +
-                                   " from jtb;";
+        readonly string queryJtb = "select ts ,c0 ,c1 ,c2,c3,c4,c5 ,c7,c8,c9,c10,c11, c12,jtag->\"k0\",jtag->\"k1\",jtag->\"k2\",jtag->\"k3\" from jtb;";
 
 
         public Query(string host, string userName, string passwd, short port)
