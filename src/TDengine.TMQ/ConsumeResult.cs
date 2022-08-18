@@ -82,5 +82,10 @@ namespace TDengineTMQ
                 Message.Add(topicPartition, taosRes);
             }
         }
+    
+        public void Free()
+        {
+            TDengine.FreeResult(Offset);
+        }
     }
 }

@@ -36,9 +36,8 @@ namespace Examples.TMQ
         internal void Dispose()
         {
             Tools.ExecuteUpdate(this.conn, $"drop topic if exists {this.topic}_1");
-            //Tools.ExecuteUpdate(this.conn,$"drop topic if exists {this.topic}_2");
-            //Tools.ExecuteUpdate(this.conn,$"drop topic if exists {this.topic}_3");
-            //Tools.ExecuteUpdate(this.conn, $"drop topic if exist {this.topic}");
+            Tools.ExecuteUpdate(this.conn, $"drop topic if exists {this.topic}_2");
+            Tools.ExecuteUpdate(this.conn, $"drop topic if exists {this.topic}_3");
             data.Drop(this.conn, this.db, null); ;
         }
 

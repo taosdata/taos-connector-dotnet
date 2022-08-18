@@ -17,7 +17,7 @@ namespace Examples
             // Query
             // Query.QueryData(conn, "query_db", "q", "q_01", 5);
 
-            // Stmt
+            //Stmt
             BindParamBatch bindParamBatchExample = new BindParamBatch();
             bindParamBatchExample.RunStmtBindParamBatch(conn, "bind_param_batch");
 
@@ -37,7 +37,7 @@ namespace Examples
             schemalessExample.RunSchemaless(conn);
 
             // JSON Tag
-            JSONTagExample jSONTagExample =new JSONTagExample();
+            JSONTagExample jSONTagExample = new JSONTagExample();
             jSONTagExample.RunJSONTag(conn);
 
             Tools.CloseConnection(conn);
