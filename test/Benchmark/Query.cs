@@ -23,7 +23,6 @@ namespace Benchmark
         public void Run(string types, int times)
         {
             // Console.WriteLine("Query {0} ... ", types);
-
             IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
             IntPtr res;
             if (conn != IntPtr.Zero)

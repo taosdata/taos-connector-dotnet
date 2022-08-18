@@ -49,7 +49,7 @@ namespace Benchmark
                 {
                     InsertLoop(conn, tableCnt, recordNum, jtb, loopTime);
                 }
-                Console.WriteLine("======TDengine.Close(conn);");
+
             }
             else
             {
@@ -57,18 +57,16 @@ namespace Benchmark
             }
 
             TDengine.Close(conn);
+            Console.WriteLine("======TDengine.Close(conn);");
         }
 
         public void InsertLoop(IntPtr conn, int tableCnt, int recordCnt, string prefix, int times)
         {
 
-
-            for (int i = 1; i <= tableCnt; i++)
+            _numOfThreadsNotYetCompleted = tableCnt;
+            for (int i = 0; i <tableCnt; i++)
             {
-                Console.WriteLine(i);
-                // Environment.Exit(1);
-
-                RunContext context = new RunContext($"{prefix}_{i}", recordCnt, conn);
+                RunContext context = new RunContext($"{prefix}_{i}", recordCnt, tableCnt, conn);
                 ThreadPool.QueueUserWorkItem(RunInsertSQL, context);
             }
             _doneEvent.WaitOne();
@@ -93,7 +91,7 @@ namespace Benchmark
             try
             {
                 string sql = $"insert into {context.tableName} values({begineTime},true,-1,-2,-3,-4,1,2,3,4,3.1415,3.14159265358979,'bnr_col_1','ncr_col_1')";
-                Console.WriteLine("sql:{0}", sql);
+                // Console.WriteLine("sql:{0}", sql);
                 IntPtr res = TDengine.Query(context.conn, sql);
                 IfTaosQuerySucc(res, sql);
                 TDengine.FreeResult(res);
@@ -104,7 +102,6 @@ namespace Benchmark
                 if (Interlocked.Decrement(ref _numOfThreadsNotYetCompleted) == 0)
                     _doneEvent.Set();
             }
-
 
         }
     }

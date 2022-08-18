@@ -15,7 +15,7 @@ namespace Examples
             IntPtr conn = Tools.TDConnection();
 
             // Query
-            Query.QueryData(conn, "query_db", "q", "q_01", 5);
+            // Query.QueryData(conn, "query_db", "q", "q_01", 5);
 
             // Stmt
             BindParamBatch bindParamBatchExample = new BindParamBatch();

@@ -19,7 +19,6 @@
             EntryPoint entryPoint = new EntryPoint();
             entryPoint.ReadArgs(args);
             entryPoint.RunBenchMark(entryPoint.benchmarkOptions, entryPoint.TableTypes, entryPoint.RunTimes);
-            // Console.ReadKey();
         }
 
         public void PrintHelp()
@@ -97,10 +96,10 @@
                     Insert insert = new Insert(this.Host, this.User, this.Passwd, this.Port, this.MaxSqlLength);
                     insert.Run(TableTypes, NumOfTable);
                     break;
-                // case "batch":
-                //     Batch batch = new Batch(this.Host, this.User, this.Passwd, this.Port);
-                //     batch.Run(TableTypes, times);
-                //     break;
+                case "batch":
+                    Batch batch = new Batch(this.Host, this.User, this.Passwd, this.Port, this.MaxSqlLength);
+                    batch.Run(TableTypes, NumOfRecords,NumOfTable,times);
+                    break;
                 // case "batchcol":
                 //     BatchColumn batchCol = new BatchColumn(this.Host, this.User, this.Passwd, this.Port);
                 //     batchCol.Run(TableTypes, times);

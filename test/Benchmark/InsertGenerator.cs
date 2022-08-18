@@ -6,7 +6,7 @@ namespace Benchmark
     internal class InsertGenerator
     {
         string Table { get; set; }
-        long BeginTime { get; set; }
+        public long BeginTime { get; set; }
         bool BoolVal { get; set; }
         sbyte TinyIntVal { get; set; }
         short SmallIntVal { get; set; }
@@ -19,9 +19,8 @@ namespace Benchmark
         float FloatVal { get; set; }
         double DoubleVal { get; set; }
         int StringColLength { get; set; } = 20;
-        int MaxSqlLength {get;set;} = 5000;
-
-        public InsertGenerator(long begineTime,int maxSqlLength)
+        int MaxSqlLength { get; set; } = 5000;
+        public InsertGenerator(long begineTime, int maxSqlLength)
         {
             BeginTime = begineTime;
             MaxSqlLength = maxSqlLength;
@@ -100,29 +99,11 @@ namespace Benchmark
 
             for (int i = 0; i < length; i++)
             {
-                randomStr.Append(Convert.ToChar(random.Next(65, 122)));
+                randomStr.Append(Convert.ToChar(random.Next(97, 122)));
             }
             return randomStr.ToString();
         }
-
-        public void RunInsertSql(object status)
-        {
-            RunContext context = (RunContext)status;
-            //int rows = Math.Min(context.numOfRows, maxSqlLength);
-            Console.WriteLine("====Build SQL");
-            int numOfRecord = context.numOfRows;
-            while (numOfRecord > 0) 
-            {
-                int tmpRecords = Math.Min(MaxSqlLength,numOfRecord);
-                
-                string sql = RandomSQL(context.tableName, tmpRecords);
-                Console.WriteLine(sql);
-                IntPtr res = TDengine.Query(context.conn,sql);
-                IfTaosQuerySucc(res,sql);
-                numOfRecord -= tmpRecords;
-                TDengine.FreeResult(res);
-            }
-        }
+ 
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
@@ -136,24 +117,25 @@ namespace Benchmark
             }
         }
 
-
     }
 
     public struct RunContext
     {
         public string tableName { get; set; }
         public int numOfRows { get; set; }
-        public IntPtr conn {get;set;}
-
-        public RunContext(string name, int num,IntPtr connection)
+        public int numOfTables { get; set; }
+        public IntPtr conn { get; set; }
+        public RunContext(string name, int rows, int tables, IntPtr connection)
         {
             tableName = name;
-            numOfRows = num;
+            numOfRows = rows;
+            numOfTables = tables;
             conn = connection;
+
         }
         public string ToString()
         {
-            return $"tablename:{tableName} numOfRow:{numOfRows}";
+            return $"tablename:{tableName} numOfRow:{numOfRows} numOfTable:{numOfTables}";
         }
 
     }

@@ -13,7 +13,11 @@ namespace Benchmark
         readonly string db = "benchmark";
         readonly string stb = "stb";
         readonly string jtb = "jtb";
-        int MaxSqlLength = 5000;
+        int MaxSqlLength {get;set;}= 5000;
+
+        int _numOfThreadNotYetCompleted = 1;
+        readonly long begineTime = 1659283200000;
+        ManualResetEvent _doneEvent = new ManualResetEvent(false);
 
         public Batch(string host, string userName, string passwd, short port, int maxSqlLength)
         {
@@ -23,7 +27,7 @@ namespace Benchmark
             Port = port;
             MaxSqlLength = maxSqlLength;
         }
-        public void Run(string types, int recordNum, int tableCnt, int loopTime)
+        public void  Run(string types, int recordNum, int tableCnt, int loopTime)
         {
             // Console.WriteLine("Insert {0} ... ", types);
             IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
@@ -41,44 +45,57 @@ namespace Benchmark
                 if (types == "json")
                 {
                     InsertLoop(conn, tableCnt, recordNum, jtb, loopTime);
-                }
-                Console.WriteLine("======TDengine.Close(conn);");
+                }             
             }
             else
             {
                 throw new Exception("create TD connection failed");
             }
             
-            // TDengine.Close(conn);
+            TDengine.Close(conn);
+            Console.WriteLine("======TDengine.Close(conn);");
         }
 
         public void InsertLoop(IntPtr conn, int tableCnt, int recordCnt, string prefix, int times)
         {
-            // IntPtr res;
-            // int i = 0;
-            // while (i < times)
-            // {
-            //     res = TDengine.Query(conn, sql);
-            //     IfTaosQuerySucc(res, sql);
-            //     TDengine.FreeResult(res);
-            //     i++;
-            // }
-            // Console.WriteLine("last time:{0}", i);
-            // int j = 0;
-            // while (j < times) 
-            // {
-                // for (int i = 0; i < tableCnt; i++)
-                for (int i = 1; i < 2; i++)
+                _numOfThreadNotYetCompleted = tableCnt;
+                for (int i = 0; i < tableCnt; i++)
                 {
-                    RunContext context = new RunContext($"{prefix}_{i}", recordCnt, conn);
-                    InsertGenerator generator = new InsertGenerator(1659283200000, 3);
+                    Console.WriteLine(i);
+                    RunContext context = new RunContext($"{prefix}_{i}",recordCnt,tableCnt, conn);                 
                     Console.WriteLine(context.ToString());
-                    ThreadPool.QueueUserWorkItem(generator.RunInsertSql, context);
+                    ThreadPool.QueueUserWorkItem(RunBatchInsertSql, context);
                 }
-            //     j++;
-            // }
+                _doneEvent.WaitOne();
         }    
     
+
+        public void RunBatchInsertSql(object status)
+        {
+            RunContext context = (RunContext)status;           
+            try
+            {
+                int numOfRecord = context.numOfRows;
+                InsertGenerator generator = new InsertGenerator(begineTime, MaxSqlLength);
+                while (numOfRecord > 0)
+                {
+                    int tmpRecords = Math.Min(MaxSqlLength, numOfRecord);        
+                    string sql = generator.RandomSQL(context.tableName, tmpRecords);
+                    // Console.WriteLine(sql);
+                    IntPtr res = TDengine.Query(context.conn, sql);
+                    IfTaosQuerySucc(res, sql);
+                    numOfRecord -= tmpRecords;
+                    TDengine.FreeResult(res);
+                }
+            }
+            finally
+            {
+                if (Interlocked.Decrement(ref _numOfThreadNotYetCompleted) == 0)
+                    _doneEvent.Set();
+            }
+
+        }
+
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
             if (TDengine.ErrorNo(res) == 0)
