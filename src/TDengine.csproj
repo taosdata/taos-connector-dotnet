@@ -16,6 +16,7 @@
 	</Description>
     <RepositoryUrl>https://github.com/taosdata/taos-connector-dotnet</RepositoryUrl>
     <NoWarn>CS1591</NoWarn>
+	<Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <None Include="resource\logo.jpg" Pack="true" PackagePath="\" />
