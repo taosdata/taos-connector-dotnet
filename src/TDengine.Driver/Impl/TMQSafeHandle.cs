@@ -309,7 +309,7 @@ namespace TDengineTMQ.Impl
 
                 Marshal.FreeHGlobal(numOfRowsPrt);
                 Marshal.FreeHGlobal(pDataPtr);
-                TDengine.FreeResult(taosRes);
+                //TDengine.FreeResult(taosRes);
             }
 
         }
@@ -331,6 +331,7 @@ namespace TDengineTMQ.Impl
             {
                 ErrorHandler("Sync Commit", code);
             }
+            TDengine.FreeResult(consumeResult.Offset);
         }
 
         internal void CommitAsync(IntPtr tmq, ConsumeResult consumeResult, LibTMQ.tmq_commit_cb callback, IntPtr? param)
