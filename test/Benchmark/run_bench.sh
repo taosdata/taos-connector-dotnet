@@ -41,7 +41,7 @@ echo "===== step 4 insert data with batch ..."
  --time-unit millisecond  \
  --show-output \
  --export-markdown ${RESULT_FOLDER}/${REPORT_NAME}_bath.md \
- --command-name batch_{types}_${INSERT_TABLE_NUM}_tables_${BENCHMARK_TIMES}_times
+ --command-name batch_{types}_${BATCH_TABLES}_tables_${BENCHMARK_TIMES}_times
 
 echo "===== step 5 query..."
 hyperfine -r ${BENCHMARK_TIMES} -L types normal,json \
