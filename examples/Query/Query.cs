@@ -15,6 +15,7 @@ namespace Examples
             data.Create(conn, db, tmp, !string.IsNullOrEmpty(stable));
             data.InsertData(conn, db, stable, table, numOfRows);
             IntPtr res = Tools.ExecuteQuery(conn, $"select * from {tmp} ");
+            // IntPtr res = Tools.ExecuteQuery(conn, $"select * from benchmark.stb limit 10 ");
             List<TDengineDriver.TDengineMeta> resMeta = LibTaos.GetMeta(res);
             List<Object> resData = LibTaos.GetData(res);
 
