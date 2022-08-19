@@ -218,7 +218,7 @@ namespace TDengineDriver
 
         static public IntPtr Query(IntPtr conn, string command)
         {
-            IntPtr commandBuffer = Marshal.StringToCoTaskMemUTF8(command);
+            IntPtr commandBuffer = Helper.StringToCoTaskMemUTF8(command);
             IntPtr res = Query(conn, commandBuffer);
             Marshal.FreeCoTaskMem(commandBuffer);
             return res;
@@ -475,7 +475,7 @@ namespace TDengineDriver
             // QueryAsync(taos, sqlPtr, fq, param);
             // Marshal.FreeHGlobal(sqlPtr);
 
-            IntPtr sqlPtr = Marshal.StringToCoTaskMemUTF8(sql);
+            IntPtr sqlPtr = Helper.StringToCoTaskMemUTF8(sql);
             QueryAsync(taos, sqlPtr, fq, param);
             Marshal.FreeCoTaskMem(sqlPtr);
 
