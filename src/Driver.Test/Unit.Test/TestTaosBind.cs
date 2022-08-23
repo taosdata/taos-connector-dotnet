@@ -796,7 +796,7 @@ namespace TDengineDriver.Test
 
             TDengineDriver.TAOS_BIND bind = TaosBind.BindBinary("一二两三四五六七八九十廿毛另壹贰叁肆伍陆柒捌玖拾佰仟万亿元角分零整1234567890`~!@#$%^&*()_+[]{};':<>?,./");
             int bindLengthPtr = Marshal.ReadInt32(bind.length);
-            string? bindBuffer = Marshal.PtrToStringAnsi(bind.buffer, bindLengthPtr);
+            string? bindBuffer = Marshal.PtrToStringAnsi(bind.buffer);
 
             Assert.Equal(bind.buffer_type, bufferType);
             Assert.Equal(bind.buffer_length, bufferLength);

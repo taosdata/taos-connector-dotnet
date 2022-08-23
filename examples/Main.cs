@@ -25,12 +25,12 @@ namespace AsyncQueryExample
             //SchemalessSample schemalessSample = new SchemalessSample();
             //schemalessSample.RunSchemaless();
 
-            //BasicSample basic = new BasicSample(conn,"basic");
-            //basic.Run();
-            //basic.CleanBasicSampleData();
-            
-            StmtBindSingleParamExample stmtBindSingleParamExample = new StmtBindSingleParamExample();
-            stmtBindSingleParamExample.RunStmtBindSingleParam(conn,"new_utf8");
+            BasicSample basic = new BasicSample(conn, "basic");
+            basic.Run();
+            basic.CleanBasicSampleData();
+
+            //StmtBindSingleParamExample stmtBindSingleParamExample = new StmtBindSingleParamExample();
+            //stmtBindSingleParamExample.RunStmtBindSingleParam(conn,"new_utf8");
 
             //UtilsTools.CloseConnection(conn);
         }

@@ -42,8 +42,8 @@ namespace TDengineDriver
 #else
             
             var utf8Bytes = Encoding.UTF8.GetBytes(str);
-            utf8StrLength = utf8Bytes.Length + 1;
-            byte[] targetUtf8Bytes = new byte[utf8StrLength];
+            utf8StrLength = utf8Bytes.Length;
+            byte[] targetUtf8Bytes = new byte[utf8StrLength+1];
             utf8Bytes.CopyTo(targetUtf8Bytes, 0);
 
             foreach (var b in targetUtf8Bytes)
@@ -51,8 +51,8 @@ namespace TDengineDriver
                 //Console.WriteLine("{0}",b);
             }
             
-            utf8Ptr = Marshal.AllocHGlobal(utf8StrLength);
-            Marshal.Copy(targetUtf8Bytes, 0, utf8Ptr, utf8StrLength);
+            utf8Ptr = Marshal.AllocHGlobal(utf8StrLength+1);
+            Marshal.Copy(targetUtf8Bytes, 0, utf8Ptr, utf8StrLength+1);
 #endif
         }
         public void UTF8FreePtr()
