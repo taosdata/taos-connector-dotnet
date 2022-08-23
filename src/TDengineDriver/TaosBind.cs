@@ -332,7 +332,7 @@ namespace TDengineDriver
                 Marshal.FreeHGlobal(bind.length);
                 if (bind.buffer_type == (int)TDengineDataType.TSDB_DATA_TYPE_BINARY || bind.buffer_type == (int)TDengineDataType.TSDB_DATA_TYPE_NCHAR || bind.buffer_type == (int)TDengineDataType.TSDB_DATA_TYPE_JSONTAG)
                 {
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER ||NET5_0_OR_GREATER||NETCOREAPP1_1_OR_GREATER
                     Marshal.FreeCoTaskMem(bind.buffer); 
 #else
                     Marshal.FreeHGlobal(bind.buffer);

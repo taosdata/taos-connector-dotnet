@@ -1021,6 +1021,12 @@ namespace TDengineDriver.Test
             Marshal.FreeHGlobal(bind.buffer);
             Marshal.FreeHGlobal(bind.length);
         }
+
+        /// <author>xiaolei</author>    
+        /// <Name>TestTaosBind.TestBindJSON</Name>
+        /// <describe>Unit test for binding positive JSON tag using TAOS_BIND struct through stmt.</describe>
+        /// <filename>TestTaosBind.cs</filename>
+        /// <result>pass or failed </result>
         [Fact]
         public void TestBindJSON()
         {
@@ -1042,6 +1048,12 @@ namespace TDengineDriver.Test
             Marshal.FreeHGlobal(bind.length);
         }
 
+        /// <author>xiaolei</author>    
+        /// <Name>TestTaosBind.TestBindJSONCN</Name>
+        /// <describe>Unit test for binding positive JSON tags include CN characters using TAOS_BIND struct through STMT.</describe>
+        /// <filename>TestTaosBind.cs</filename>
+        /// <result>pass or failed </result>
+        [Fact]
         public void TestBindJSONCN()
         {
             int bufferType = 15;
@@ -1053,8 +1065,12 @@ namespace TDengineDriver.Test
             int bindLengthPtr = Marshal.ReadInt32(bind.length);
             string bindBuffer = Marshal.PtrToStringAnsi(bind.buffer, bindLengthPtr);
 
+            byte[] buffByte = new byte[bindLengthPtr];
+            Marshal.Copy(bind.buffer, buffByte, 0, bindLengthPtr);
+            string bindStr = System.Text.Encoding.UTF8.GetString(buffByte);
+
             Assert.Equal(bind.buffer_type, bufferType);
-            Assert.Equal(bindBuffer, buffer);
+            Assert.Equal(bindStr, buffer);
             Assert.Equal(bind.buffer_length, bufferLength);
             Assert.Equal(bindLengthPtr, length);
 

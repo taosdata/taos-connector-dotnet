@@ -100,7 +100,7 @@ namespace Cases
 
             for (int i = 0; i < actualResData.Count; i++)
             {
-                _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
+                //_output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
                 Assert.Equal(expectResData[i], actualResData[i]);
             }
             // Assert meta data

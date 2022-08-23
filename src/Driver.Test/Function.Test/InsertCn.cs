@@ -196,7 +196,7 @@ namespace Cases
 
             for (int i = 0; i < actualResData.Count; i++)
             {
-                _output.WriteLine("expect:{0},actual:{1}", colData[i], actualResData[i]);
+                //_output.WriteLine("expect:{0},actual:{1}", colData[i], actualResData[i]);
                 Assert.Equal(colData[i].ToString(), actualResData[i]);
             }
             _output.WriteLine("InsertCNCases.TestInsertMultiNTable() passed");

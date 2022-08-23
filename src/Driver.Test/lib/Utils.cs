@@ -294,7 +294,7 @@ namespace Test.UtilsTools
         }
 
         // Generate insert sql for the with the coldata and tag data 
-        public static string ConstructInsertSql(string table, string stable, List<Object> colData, List<Object> tagData, int numOfRows)
+        public static string ConstructInsertSql(string table, string stable, List<Object> colData, List<Object>? tagData, int numOfRows)
         {
             int numOfFields = colData.Count / numOfRows;
             StringBuilder insertSql;
@@ -439,11 +439,11 @@ namespace Test.UtilsTools
                         dataRaw.Add(v5.ToString());
                         break;
                     case TDengineDataType.TSDB_DATA_TYPE_FLOAT:
-                        float v6 = (float)Marshal.PtrToStructure(data, typeof(float));
+                        float v6 = (float)Marshal.PtrToStructure(data, typeof(float))!;
                         dataRaw.Add(v6.ToString());
                         break;
                     case TDengineDataType.TSDB_DATA_TYPE_DOUBLE:
-                        double v7 = (double)Marshal.PtrToStructure(data, typeof(double));
+                        double v7 = (double)Marshal.PtrToStructure(data, typeof(double))!;
                         dataRaw.Add(v7.ToString());
                         break;
                     case TDengineDataType.TSDB_DATA_TYPE_BINARY:

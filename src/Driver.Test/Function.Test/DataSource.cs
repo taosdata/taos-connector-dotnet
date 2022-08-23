@@ -72,17 +72,17 @@ namespace Test.UtilsTools.DataSource
             for (int i = 0; i < tsArr.Length; i++)
             {
                 rowData.Add(tsArr[i].ToString());
-                rowData.Add(boolArr[i].Equals(null) ? "NULL" : boolArr[i].ToString());
-                rowData.Add(tinyIntArr[i].Equals(null) ? "NULL" : tinyIntArr[i].ToString());
-                rowData.Add(shortArr[i].Equals(null) ? "NULL" : shortArr[i].ToString());
-                rowData.Add(intArr[i].Equals(null) ? "NULL" : intArr[i].ToString());
-                rowData.Add(longArr[i].Equals(null) ? "NULL" : longArr[i].ToString());
-                rowData.Add(floatArr[i].Equals(null) ? "NULL" : floatArr[i].ToString());
-                rowData.Add(doubleArr[i].Equals(null) ? "NULL" : doubleArr[i].ToString());
-                rowData.Add(uTinyIntArr[i].Equals(null) ? "NULL" : uTinyIntArr[i].ToString());
-                rowData.Add(uShortArr[i].Equals(null) ? "NULL" : uShortArr[i].ToString());
-                rowData.Add(uIntArr[i].Equals(null) ? "NULL" : uIntArr[i].ToString());
-                rowData.Add(uLongArr[i].Equals(null) ? "NULL" : uLongArr[i].ToString());
+                rowData.Add(boolArr[i].Equals(null) ? "NULL" : boolArr[i].ToString()!);
+                rowData.Add(tinyIntArr[i].Equals(null) ? "NULL" : tinyIntArr[i].ToString()!);
+                rowData.Add(shortArr[i].Equals(null) ? "NULL" : shortArr[i].ToString()!);
+                rowData.Add(intArr[i].Equals(null) ? "NULL" : intArr[i].ToString()!);
+                rowData.Add(longArr[i].Equals(null) ? "NULL" : longArr[i].ToString()!);
+                rowData.Add(floatArr[i].Equals(null) ? "NULL" : floatArr[i].ToString()!);
+                rowData.Add(doubleArr[i].Equals(null) ? "NULL" : doubleArr[i].ToString()!);
+                rowData.Add(uTinyIntArr[i].Equals(null) ? "NULL" : uTinyIntArr[i].ToString()!);
+                rowData.Add(uShortArr[i].Equals(null) ? "NULL" : uShortArr[i].ToString()!);
+                rowData.Add(uIntArr[i].Equals(null) ? "NULL" : uIntArr[i].ToString()!);
+                rowData.Add(uLongArr[i].Equals(null) ? "NULL" : uLongArr[i].ToString()!);
                 rowData.Add(String.IsNullOrEmpty(binaryArr[i]) ? "NULL" : binaryArr[i]);
                 rowData.Add(String.IsNullOrEmpty(ncharArr[i]) ? "NULL" : ncharArr[i]);
                 rowData.AddRange(tagData);
@@ -260,17 +260,17 @@ namespace Test.UtilsTools.DataSource
             for (int i = 0; i < tsArr.Length; i++)
             {
                 rowData.Add(tsArr[i].ToString());
-                rowData.Add(boolArr[i].Equals(null) ? "NULL" : boolArr[i].ToString());
-                rowData.Add(tinyIntArr[i].Equals(null) ? "NULL" : tinyIntArr[i].ToString());
-                rowData.Add(shortArr[i].Equals(null) ? "NULL" : shortArr[i].ToString());
-                rowData.Add(intArr[i].Equals(null) ? "NULL" : intArr[i].ToString());
-                rowData.Add(longArr[i].Equals(null) ? "NULL" : longArr[i].ToString());
-                rowData.Add(floatArr[i].Equals(null) ? "NULL" : floatArr[i].ToString());
-                rowData.Add(doubleArr[i].Equals(null) ? "NULL" : doubleArr[i].ToString());
-                rowData.Add(uTinyIntArr[i].Equals(null) ? "NULL" : uTinyIntArr[i].ToString());
-                rowData.Add(uShortArr[i].Equals(null) ? "NULL" : uShortArr[i].ToString());
-                rowData.Add(uIntArr[i].Equals(null) ? "NULL" : uIntArr[i].ToString());
-                rowData.Add(uLongArr[i].Equals(null) ? "NULL" : uLongArr[i].ToString());
+                rowData.Add(boolArr[i].Equals(null) ? "NULL" : boolArr[i].ToString()!);
+                rowData.Add(tinyIntArr[i].Equals(null) ? "NULL" : tinyIntArr[i].ToString()!);
+                rowData.Add(shortArr[i].Equals(null) ? "NULL" : shortArr[i].ToString()!);
+                rowData.Add(intArr[i].Equals(null) ? "NULL" : intArr[i].ToString()!);
+                rowData.Add(longArr[i].Equals(null) ? "NULL" : longArr[i].ToString()!);
+                rowData.Add(floatArr[i].Equals(null) ? "NULL" : floatArr[i].ToString()!);
+                rowData.Add(doubleArr[i].Equals(null) ? "NULL" : doubleArr[i].ToString()!);
+                rowData.Add(uTinyIntArr[i].Equals(null) ? "NULL" : uTinyIntArr[i].ToString()!);
+                rowData.Add(uShortArr[i].Equals(null) ? "NULL" : uShortArr[i].ToString()!);
+                rowData.Add(uIntArr[i].Equals(null) ? "NULL" : uIntArr[i].ToString()!);
+                rowData.Add(uLongArr[i].Equals(null) ? "NULL" : uLongArr[i].ToString()!);
                 rowData.Add(String.IsNullOrEmpty(binaryArr[i]) ? "NULL" : binaryArr[i]);
                 rowData.Add(String.IsNullOrEmpty(ncharArr[i]) ? "NULL" : ncharArr[i]);
                 // Console.WriteLine("binaryArrCn[{0}]:{1},NcharArrCn[{0}]:{2}",i,String.IsNullOrEmpty(binaryArrCn[i]) ? "NULL" : binaryArrCn[i],String.IsNullOrEmpty(NcharArrCn[i]) ? "NULL" : NcharArrCn[i]);
@@ -308,17 +308,17 @@ namespace Test.UtilsTools.DataSource
             for (int i = 0; i < tsArr.Length; i++)
             {
                 rowData.Add(tsArr[i].ToString());
-                rowData.Add(boolArr[i].Equals(null) ? "NULL" : boolArr[i].ToString());
-                rowData.Add(tinyIntArr[i].Equals(null) ? "NULL" : tinyIntArr[i].ToString());
-                rowData.Add(shortArr[i].Equals(null) ? "NULL" : shortArr[i].ToString());
-                rowData.Add(intArr[i].Equals(null) ? "NULL" : intArr[i].ToString());
-                rowData.Add(longArr[i].Equals(null) ? "NULL" : longArr[i].ToString());
-                rowData.Add(floatArr[i].Equals(null) ? "NULL" : floatArr[i].ToString());
-                rowData.Add(doubleArr[i].Equals(null) ? "NULL" : doubleArr[i].ToString());
-                rowData.Add(uTinyIntArr[i].Equals(null) ? "NULL" : uTinyIntArr[i].ToString());
-                rowData.Add(uShortArr[i].Equals(null) ? "NULL" : uShortArr[i].ToString());
-                rowData.Add(uIntArr[i].Equals(null) ? "NULL" : uIntArr[i].ToString());
-                rowData.Add(uLongArr[i].Equals(null) ? "NULL" : uLongArr[i].ToString());
+                rowData.Add(boolArr[i].Equals(null) ? "NULL" : boolArr[i].ToString()!);
+                rowData.Add(tinyIntArr[i].Equals(null) ? "NULL" : tinyIntArr[i].ToString()!);
+                rowData.Add(shortArr[i].Equals(null) ? "NULL" : shortArr[i].ToString()!);
+                rowData.Add(intArr[i].Equals(null) ? "NULL" : intArr[i].ToString()!);
+                rowData.Add(longArr[i].Equals(null) ? "NULL" : longArr[i].ToString()!);
+                rowData.Add(floatArr[i].Equals(null) ? "NULL" : floatArr[i].ToString()!);
+                rowData.Add(doubleArr[i].Equals(null) ? "NULL" : doubleArr[i].ToString()!);
+                rowData.Add(uTinyIntArr[i].Equals(null) ? "NULL" : uTinyIntArr[i].ToString()!);
+                rowData.Add(uShortArr[i].Equals(null) ? "NULL" : uShortArr[i].ToString()!);
+                rowData.Add(uIntArr[i].Equals(null) ? "NULL" : uIntArr[i].ToString()!);
+                rowData.Add(uLongArr[i].Equals(null) ? "NULL" : uLongArr[i].ToString()!);
                 rowData.Add(String.IsNullOrEmpty(binaryArrCn[i]) ? "NULL" : binaryArrCn[i]);
                 rowData.Add(String.IsNullOrEmpty(NcharArrCn[i]) ? "NULL" : NcharArrCn[i]);
                 // Console.WriteLine("binaryArrCn[{0}]:{1},NcharArrCn[{0}]:{2}",i,String.IsNullOrEmpty(binaryArrCn[i]) ? "NULL" : binaryArrCn[i],String.IsNullOrEmpty(NcharArrCn[i]) ? "NULL" : NcharArrCn[i]);
@@ -336,17 +336,17 @@ namespace Test.UtilsTools.DataSource
             for (int i = 0; i < tsArr.Length; i++)
             {
                 columnData.Add(tsArr[i].ToString());
-                columnData.Add(boolArr[i].Equals(null) ? "NULL" : boolArr[i].ToString());
-                columnData.Add(tinyIntArr[i].Equals(null) ? "NULL" : tinyIntArr[i].ToString());
-                columnData.Add(shortArr[i].Equals(null) ? "NULL" : shortArr[i].ToString());
-                columnData.Add(intArr[i].Equals(null) ? "NULL" : intArr[i].ToString());
-                columnData.Add(longArr[i].Equals(null) ? "NULL" : longArr[i].ToString());
-                columnData.Add(floatArr[i].Equals(null) ? "NULL" : floatArr[i].ToString());
-                columnData.Add(doubleArr[i].Equals(null) ? "NULL" : doubleArr[i].ToString());
-                columnData.Add(uTinyIntArr[i].Equals(null) ? "NULL" : uTinyIntArr[i].ToString());
-                columnData.Add(uShortArr[i].Equals(null) ? "NULL" : uShortArr[i].ToString());
-                columnData.Add(uIntArr[i].Equals(null) ? "NULL" : uIntArr[i].ToString());
-                columnData.Add(uLongArr[i].Equals(null) ? "NULL" : uLongArr[i].ToString());
+                columnData.Add(boolArr[i].Equals(null) ? "NULL" : boolArr[i].ToString()!);
+                columnData.Add(tinyIntArr[i].Equals(null) ? "NULL" : tinyIntArr[i].ToString()!);
+                columnData.Add(shortArr[i].Equals(null) ? "NULL" : shortArr[i].ToString()!);
+                columnData.Add(intArr[i].Equals(null) ? "NULL" : intArr[i].ToString()!);
+                columnData.Add(longArr[i].Equals(null) ? "NULL" : longArr[i].ToString()!);
+                columnData.Add(floatArr[i].Equals(null) ? "NULL" : floatArr[i].ToString()!);
+                columnData.Add(doubleArr[i].Equals(null) ? "NULL" : doubleArr[i].ToString()!);
+                columnData.Add(uTinyIntArr[i].Equals(null) ? "NULL" : uTinyIntArr[i].ToString()!);
+                columnData.Add(uShortArr[i].Equals(null) ? "NULL" : uShortArr[i].ToString()!);
+                columnData.Add(uIntArr[i].Equals(null) ? "NULL" : uIntArr[i].ToString()!);
+                columnData.Add(uLongArr[i].Equals(null) ? "NULL" : uLongArr[i].ToString()!);
                 columnData.Add(String.IsNullOrEmpty(binaryArrCn[i]) ? "NULL" : binaryArrCn[i]);
                 columnData.Add(String.IsNullOrEmpty(NcharArrCn[i]) ? "NULL" : NcharArrCn[i]);
                 columnData.AddRange(tagData);
