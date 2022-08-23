@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace TDengineDriver
 {
@@ -247,17 +246,13 @@ namespace TDengineDriver
         {
 
             TAOS_BIND bind = new TAOS_BIND();
-            // IntPtr unmanagedBinary = Marshal.StringToHGlobalAnsi(val);
-            IntPtr c_str = UFT8Helper.StringToCoTaskMemUTF8(val);
-
-            var strToBytes = System.Text.Encoding.UTF8.GetBytes(val);
-            int length = strToBytes.Length;
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(val);
             IntPtr lenPtr = Marshal.AllocHGlobal(sizeof(ulong));
-            Marshal.WriteInt64(lenPtr, length);
+            Marshal.WriteInt64(lenPtr, utf8PtrStruct.utf8StrLength);
 
             bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BINARY;
-            bind.buffer = c_str;
-            bind.buffer_length = length;
+            bind.buffer = utf8PtrStruct.utf8Ptr;
+            bind.buffer_length = utf8PtrStruct.utf8StrLength;
             bind.length = lenPtr;
             bind.is_null = IntPtr.Zero;
 
@@ -266,18 +261,29 @@ namespace TDengineDriver
         public static TAOS_BIND BindNchar(String val)
         {
             TAOS_BIND bind = new TAOS_BIND();
-            var strToBytes = System.Text.Encoding.UTF8.GetBytes(val);
-            // IntPtr unmanagedNchar = (IntPtr)Marshal.StringToHGlobalAnsi(val);
-            IntPtr c_str = (IntPtr)UFT8Helper.StringToCoTaskMemUTF8(val);
-
-
-            int length = strToBytes.Length;
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(val);
             IntPtr lenPtr = Marshal.AllocHGlobal(sizeof(ulong));
-            Marshal.WriteInt64(lenPtr, length);
+            Marshal.WriteInt64(lenPtr, utf8PtrStruct.utf8StrLength);
 
             bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_NCHAR;
-            bind.buffer = c_str;
-            bind.buffer_length = length;
+            bind.buffer = utf8PtrStruct.utf8Ptr;
+            bind.buffer_length = utf8PtrStruct.utf8StrLength;
+            bind.length = lenPtr;
+            bind.is_null = IntPtr.Zero;
+
+            return bind;
+        }
+
+        public static TAOS_BIND BindJSON(String val)
+        {
+            TAOS_BIND bind = new TAOS_BIND();
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(val);
+            IntPtr lenPtr = Marshal.AllocHGlobal(sizeof(ulong));
+            Marshal.WriteInt64(lenPtr, utf8PtrStruct.utf8StrLength);
+
+            bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_JSONTAG;
+            bind.buffer = utf8PtrStruct.utf8Ptr;
+            bind.buffer_length = utf8PtrStruct.utf8StrLength;
             bind.length = lenPtr;
             bind.is_null = IntPtr.Zero;
 
@@ -318,15 +324,28 @@ namespace TDengineDriver
 
         }
 
+
         public static void FreeTaosBind(TAOS_BIND[] binds)
         {
             foreach (TAOS_BIND bind in binds)
             {
-                Marshal.FreeHGlobal(bind.buffer);
                 Marshal.FreeHGlobal(bind.length);
+                if (bind.buffer_type == (int)TDengineDataType.TSDB_DATA_TYPE_BINARY || bind.buffer_type == (int)TDengineDataType.TSDB_DATA_TYPE_NCHAR || bind.buffer_type == (int)TDengineDataType.TSDB_DATA_TYPE_JSONTAG)
+                {
+#if NETSTANDARD2_1_OR_GREATER
+                    Marshal.FreeCoTaskMem(bind.buffer); 
+#else
+                    Marshal.FreeHGlobal(bind.buffer);
+#endif
+                }
+                else
+                {
+                    Marshal.FreeHGlobal(bind.buffer);
+                }
+
                 if (bind.is_null != IntPtr.Zero)
                 {
-                    // Console.WriteLine(bind.is_null);
+
                     Marshal.FreeHGlobal(bind.is_null);
                 }
 

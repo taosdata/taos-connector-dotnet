@@ -26,7 +26,9 @@ namespace Test.Fixture
             TDengine.Init();
             string ENV_HOST = Environment.GetEnvironmentVariable("TEST_HOST");
             ip = string.IsNullOrEmpty(ENV_HOST) == true ? "127.0.0.1" : ENV_HOST;
-            this.conn = TDengine.Connect(ip, user, password, "", port);
+            
+            //this.conn = TDengine.Connect(ip, user, password, "", port);
+            this.conn = TDengine.Connect("my-ali-cloud", user, password, "", port);
             IntPtr res;
             if (conn != IntPtr.Zero)
             {

@@ -40,17 +40,26 @@ namespace TDengineDriver
             utf8StrLength = Encoding.UTF8.GetByteCount(str);
             utf8Ptr = Marshal.StringToCoTaskMemUTF8(str);
 #else
+            
             var utf8Bytes = Encoding.UTF8.GetBytes(str);
-            utf8StrLength = utf8Bytes.Length;
+            utf8StrLength = utf8Bytes.Length + 1;
+            byte[] targetUtf8Bytes = new byte[utf8StrLength];
+            utf8Bytes.CopyTo(targetUtf8Bytes, 0);
+
+            foreach (var b in targetUtf8Bytes)
+            {
+                //Console.WriteLine("{0}",b);
+            }
+            
             utf8Ptr = Marshal.AllocHGlobal(utf8StrLength);
-            Marshal.Copy(utf8Bytes, 0, utf8Ptr, utf8StrLength);
+            Marshal.Copy(targetUtf8Bytes, 0, utf8Ptr, utf8StrLength);
 #endif
         }
         public void UTF8FreePtr()
         {
-#if NETSTANDARD2_1
+#if NETSTANDARD2_1_OR_GREATER
             Marshal.FreeCoTaskMem(utf8Ptr);
-#else
+#else 
             Marshal.FreeHGlobal(utf8Ptr);
 #endif
         }
