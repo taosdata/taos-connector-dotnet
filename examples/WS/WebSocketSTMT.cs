@@ -86,7 +86,7 @@ namespace Examples.WS
                 tags[4] = WSMultiBind.WSBindInt(new int?[] { -3 });
                 tags[5] = WSMultiBind.WSBindBigInt(new long?[] { -4 });
                 tags[6] = WSMultiBind.WSBindUTinyInt(new byte?[] { 1 });
-                tags[7] = WSMultiBind.WSBindUSamllInt(new ushort?[] { 2 });
+                tags[7] = WSMultiBind.WSBindUSmallInt(new ushort?[] { 2 });
                 tags[8] = WSMultiBind.WSBindUInt(new uint?[] { 3 });
                 tags[9] = WSMultiBind.WSBindUBigInt(new ulong?[] { 4 });
                 tags[10] = WSMultiBind.WSBindFloat(new float?[] { 3.14125F });
@@ -109,7 +109,7 @@ namespace Examples.WS
             data[4] = WSMultiBind.WSBindInt(new int?[] { -3, -4, -5, -6, null });
             data[5] = WSMultiBind.WSBindBigInt(new long?[] { -4, -5, -7, -8, null });
             data[6] = WSMultiBind.WSBindUTinyInt(new byte?[] { 1, 2, 3, 4, null });
-            data[7] = WSMultiBind.WSBindUSamllInt(new ushort?[] { 2, 3, 4, 5, null });
+            data[7] = WSMultiBind.WSBindUSmallInt(new ushort?[] { 2, 3, 4, 5, null });
             data[8] = WSMultiBind.WSBindUInt(new uint?[] { 3, 4, 5, 6, null });
             data[9] = WSMultiBind.WSBindUBigInt(new ulong?[] { 4, 5, 6, 7, null });
             data[10] = WSMultiBind.WSBindFloat(new float?[] { 3.14125F, 3.14125F * 2, 3.14125F * 3, 3.14125F * 4, null });
