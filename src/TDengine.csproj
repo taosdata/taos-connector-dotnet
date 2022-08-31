@@ -21,9 +21,6 @@
   <ItemGroup>
     <None Include="resource\logo.jpg" Pack="true" PackagePath="\" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="TDengine.WS\" />
-  </ItemGroup>
  
 
 </Project>

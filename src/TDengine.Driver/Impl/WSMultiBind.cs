@@ -24,7 +24,7 @@ namespace TDengineWS.Impl
             return TaosMultiBind.MultiBindSmallInt(shortArr);
         }
 
-        public static TAOS_MULTI_BIND WSBindUSamllInt(ushort?[] ushortArr)
+        public static TAOS_MULTI_BIND WSBindUSmallInt(ushort?[] ushortArr)
         {
             return TaosMultiBind.MultiBindUSmallInt(ushortArr);
         }
@@ -87,5 +87,11 @@ namespace TDengineWS.Impl
         }
 
         //FRee memory method meed to implement
+
+        public static void WSFreeTaosBind(TAOS_MULTI_BIND[] wsMBinds)
+        {
+            TaosMultiBind.FreeTaosBind(wsMBinds);
+        }
+
     }
 }

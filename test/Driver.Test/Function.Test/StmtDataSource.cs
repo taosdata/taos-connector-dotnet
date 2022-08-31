@@ -1,4 +1,5 @@
 using TDengineDriver;
+using TDengineWS.Impl;
 using System;
 using System.Collections.Generic;
 namespace Test.Utils.DataSource
@@ -90,6 +91,68 @@ namespace Test.Utils.DataSource
             return mBinds;
         }
 
+
+        public static TAOS_MULTI_BIND[] GetWSTags(int seq)
+        {
+            if (seq > 3 || seq < 1)
+            {
+                throw new Exception("seq should in range from 1-3");
+            }
+
+            TAOS_MULTI_BIND[] wsMBinds = new TAOS_MULTI_BIND[13];
+            if (seq == 1)
+            {
+                wsMBinds[0] = WSMultiBind.WSBindBool(new bool?[] { true });
+                wsMBinds[1] = WSMultiBind.WSBindTinyInt(new sbyte?[] { -1 });
+                wsMBinds[2] = WSMultiBind.WSBindSmallInt(new short?[] { -2 });
+                wsMBinds[3] = WSMultiBind.WSBindInt(new int?[] { -3 });
+                wsMBinds[4] = WSMultiBind.WSBindBigInt(new long?[] { -4 });
+                wsMBinds[5] = WSMultiBind.WSBindUTinyInt(new byte?[] { 1 });
+                wsMBinds[6] = WSMultiBind.WSBindUSmallInt(new ushort?[] { 2 });
+                wsMBinds[7] = WSMultiBind.WSBindUInt(new uint?[] { 3 });
+                wsMBinds[8] = WSMultiBind.WSBindUBigInt(new ulong?[] { 4 });
+                wsMBinds[9] = WSMultiBind.WSBindFloat(new float?[] { 3.1415F });
+                wsMBinds[10] = WSMultiBind.WSBindDouble(new double?[] { 3.1415926535897932D });
+                wsMBinds[11] = WSMultiBind.WSBindBinary(new string?[] { "binary_tag_壹_Ⅰ" });
+                wsMBinds[12] = WSMultiBind.WSBindNchar(new string?[] { "nchar_tag_壹_Ⅰ" });
+            }
+            if (seq == 2)
+            {
+                wsMBinds[0] = WSMultiBind.WSBindBool(new bool?[] { false });
+                wsMBinds[1] = WSMultiBind.WSBindTinyInt(new sbyte?[] { 1 });
+                wsMBinds[2] = WSMultiBind.WSBindSmallInt(new short?[] { 2 });
+                wsMBinds[3] = WSMultiBind.WSBindInt(new int?[] { 3 });
+                wsMBinds[4] = WSMultiBind.WSBindBigInt(new long?[] { 4 });
+                wsMBinds[5] = WSMultiBind.WSBindUTinyInt(new byte?[] { 2 });
+                wsMBinds[6] = WSMultiBind.WSBindUSmallInt(new ushort?[] { 3 });
+                wsMBinds[7] = WSMultiBind.WSBindUInt(new uint?[] { 4 });
+                wsMBinds[8] = WSMultiBind.WSBindUBigInt(new ulong?[] { 5 });
+                wsMBinds[9] = WSMultiBind.WSBindFloat(new float?[] { 3.1415F * 2 });
+                wsMBinds[10] = WSMultiBind.WSBindDouble(new double?[] { 3.1415926535897932D * 2 });
+                wsMBinds[11] = WSMultiBind.WSBindBinary(new string?[] { "binary_tag_贰_Ⅱ" });
+                wsMBinds[12] = WSMultiBind.WSBindNchar(new string?[] { "nchar_tag_贰_Ⅱ" });
+            }
+            if (seq == 3)
+            {
+                wsMBinds[0] = WSMultiBind.WSBindBool(new bool?[] { true });
+                wsMBinds[1] = WSMultiBind.WSBindTinyInt(new sbyte?[] { 2 });
+                wsMBinds[2] = WSMultiBind.WSBindSmallInt(new short?[] { 3 });
+                wsMBinds[3] = WSMultiBind.WSBindInt(new int?[] { 4 });
+                wsMBinds[4] = WSMultiBind.WSBindBigInt(new long?[] { 5 });
+                wsMBinds[5] = WSMultiBind.WSBindUTinyInt(new byte?[] { 3 });
+                wsMBinds[6] = WSMultiBind.WSBindUSmallInt(new ushort?[] { 4 });
+                wsMBinds[7] = WSMultiBind.WSBindUInt(new uint?[] { 5 });
+                wsMBinds[8] = WSMultiBind.WSBindUBigInt(new ulong?[] { 6 });
+                wsMBinds[9] = WSMultiBind.WSBindFloat(new float?[] { 3.1415F * 3 });
+                wsMBinds[10] = TaosMultiBind.MultiBindDouble(new double?[] { 3.1415926535897932D * 3 });
+                wsMBinds[11] = TaosMultiBind.MultiBindBinary(new string?[] { "binary_tag_叁_Ⅲ" });
+                wsMBinds[12] = TaosMultiBind.MultiBindNchar(new string?[] { "nchar_tag_叁_Ⅲ" });
+            }
+
+            return wsMBinds;
+        }
+
+
         public static TAOS_MULTI_BIND[] GetJsonTag(int seq)
         {
             TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[1];
@@ -115,6 +178,31 @@ namespace Test.Utils.DataSource
             return mBinds;
         }
 
+        public static TAOS_MULTI_BIND[] GetWSJsonTag(int seq)
+        {
+            TAOS_MULTI_BIND[] wsMBinds = new TAOS_MULTI_BIND[1];
+            switch (seq)
+            {
+                case 1:
+                    {
+                        wsMBinds[0] = WSMultiBind.WSBindJSON(jsonTag1);
+                    }
+                    break;
+                case 2:
+                    {
+                        wsMBinds[0] = WSMultiBind.WSBindJSON(jsonTag2);
+                    }
+                    break;
+                case 3:
+                    {
+                        wsMBinds[0] = WSMultiBind.WSBindJSON(jsonTag3);
+                    }
+                    break;
+                default: throw new ArgumentOutOfRangeException("seq should in range from 1-3");
+            }
+            return wsMBinds;
+        }
+
         public static TAOS_MULTI_BIND[] GetColDataMBind()
         {
             TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[14];
@@ -134,6 +222,28 @@ namespace Test.Utils.DataSource
             mBinds[13] = TaosMultiBind.MultiBindBool(StmtDataSource.boolArr);
             return mBinds;
         }
+
+        public static TAOS_MULTI_BIND[] GetWSColDataMBind()
+        {
+            TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[14];
+            mBinds[0] = WSMultiBind.WSBindTimestamp(StmtDataSource.tsArr);
+            mBinds[1] = WSMultiBind.WSBindTinyInt(StmtDataSource.tinyIntArr);
+            mBinds[2] = WSMultiBind.WSBindSmallInt(StmtDataSource.shortArr);
+            mBinds[3] = WSMultiBind.WSBindInt(StmtDataSource.intArr);
+            mBinds[4] = WSMultiBind.WSBindBigInt(StmtDataSource.longArr);
+            mBinds[5] = WSMultiBind.WSBindUTinyInt(StmtDataSource.uTinyIntArr);
+            mBinds[6] = WSMultiBind.WSBindUSmallInt(StmtDataSource.uShortArr);
+            mBinds[7] = WSMultiBind.WSBindUInt(StmtDataSource.uIntArr);
+            mBinds[8] = WSMultiBind.WSBindUBigInt(StmtDataSource.uLongArr);
+            mBinds[9] = WSMultiBind.WSBindFloat(StmtDataSource.floatArr);
+            mBinds[10] = WSMultiBind.WSBindDouble(StmtDataSource.doubleArr);
+            mBinds[11] = WSMultiBind.WSBindBinary(StmtDataSource.binaryArr);
+            mBinds[12] = WSMultiBind.WSBindNchar(StmtDataSource.ncharArr);
+            mBinds[13] = WSMultiBind.WSBindBool(StmtDataSource.boolArr);
+            return mBinds;
+        }
+
+
 
         public static TAOS_MULTI_BIND[] GetQueryConditionMBind(List<object> conditionList)
         {

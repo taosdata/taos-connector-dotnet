@@ -8,6 +8,10 @@ namespace TDengineWS.Impl
     public static class LibTaosWS
     {
         public const string LibName = "/root/git_space/test/taos-connector-rust/target/libtaosws/libtaosws.so";
+
+        [DllImport(LibName, EntryPoint = "ws_enable_log", CallingConvention = CallingConvention.Cdecl)]
+        static extern public void WSEnableLog();
+
         [DllImport(LibName, EntryPoint = "ws_connect_with_dsn", CallingConvention = CallingConvention.Cdecl)]
         static extern public IntPtr WSConnectWithDSN(string dsn);
 
