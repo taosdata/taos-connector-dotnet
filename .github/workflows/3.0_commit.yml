@@ -37,8 +37,7 @@ jobs:
           cd TDengine
           mkdir debug
           cd debug
-          cmake .. 
-          -DWEBSOCKET=true
+          cmake ..  -DWEBSOCKET=true
           make -j8
           sudo make install
           
