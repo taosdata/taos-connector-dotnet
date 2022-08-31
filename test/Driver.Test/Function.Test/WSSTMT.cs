@@ -32,7 +32,7 @@ namespace Function.Test.TaosWS
         /// <describe>Using WebSocket STMT to insert into normal table.</describe>
         /// <filename>WSSTMT.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "WebSocket.STMT.NormalTable"), TestExeOrder(1), Trait("Category", "NormalTable")]
+        [Fact(Skip = = "WebSocket.STMT.NormalTable"), TestExeOrder(1), Trait("Category", "NormalTable")]
         public void NormalTable()
         {
             string tableName = $"{db}.bind_param_batch_n";

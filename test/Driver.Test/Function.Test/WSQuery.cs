@@ -22,11 +22,11 @@ namespace Function.Test.TaosWS
             _wsDatabase = wsDatabase;
         }
         /// <author>xiaolei</author>
-        /// <Name>WSQuery.NormalTable</Name>
+        /// <Name>WebSocket.Query.NormalTable</Name>
         /// <describe>Using WebSocket to insert data into normal table and query data.</describe>
         /// <filename>WSQuery.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "WSQuery.NormalTable"), TestExeOrder(1), Trait("Category", "NormalTable")]
+        [Fact(DisplayName = "WebSocket.Query.NormalTable"), TestExeOrder(1), Trait("Category", "NormalTable")]
         public void NormalTable()
         {
             nint wsConn = _wsDatabase.WSConn;
@@ -63,11 +63,11 @@ namespace Function.Test.TaosWS
         }
 
         /// <author>xiaolei</author>
-        /// <Name>WSQuery.STable</Name>
+        /// <Name>WebSocket.Query.STable</Name>
         /// <describe>Using WebSocket to insert data into STable table and query data.</describe>
         /// <filename>WSQuery.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "WSQuery.STable"), TestExeOrder(2), Trait("Category", "STable")]
+        [Fact(DisplayName = "WebSocket.Query.STable"), TestExeOrder(2), Trait("Category", "STable")]
         public void STable()
         {
             IntPtr wsConn = _wsDatabase.WSConn;
@@ -105,11 +105,11 @@ namespace Function.Test.TaosWS
         }
 
         /// <author>xiaolei</author>
-        /// <Name>WSQuery.JSONTag</Name>
+        /// <Name>WebSocket.Query.JSONTag</Name>
         /// <describe>Using WebSocket to insert data into table which has JSON tag and query data.</describe>
         /// <filename>WSQuery.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "WSQuery.JSONTag"), TestExeOrder(3), Trait("Category", "JSONTag")]
+        [Fact(DisplayName = "WebSocket.Query.JSONTag"), TestExeOrder(3), Trait("Category", "JSONTag")]
         public void JSONTag()
         {
             IntPtr wsConn = _wsDatabase.WSConn;
