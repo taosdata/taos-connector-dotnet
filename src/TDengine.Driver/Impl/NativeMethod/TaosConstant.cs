@@ -59,7 +59,7 @@ namespace TDengineDriver
     }
     public class TDengineMeta
     {
-        public string name;
+        public string name=string.Empty;
         public short size;
         public byte type;
         public string TypeName()
@@ -104,7 +104,7 @@ namespace TDengineDriver
 
     public class StmtFields
     {
-        internal string name { get; }
+        internal string name { get; } = String.Empty;
         internal sbyte type { get; }
         internal byte preicision { get; }
         internal byte scale { get; }

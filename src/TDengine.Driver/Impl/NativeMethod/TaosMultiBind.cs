@@ -663,7 +663,7 @@ namespace TDengineDriver
 
         private static Byte[] GetStringEncodeByte(string str)
         {
-            Byte[] strToBytes = null;
+            Byte[] strToBytes;
             if (String.IsNullOrEmpty(str))
             {
                 strToBytes = System.Text.Encoding.Default.GetBytes(String.Empty);

@@ -31,7 +31,7 @@ namespace TDengineTMQ
             }
             set
             {
-                this.SetObject("client.id", value);
+                this.SetObject("client.id", value!);
             }
         }
 
@@ -43,7 +43,7 @@ namespace TDengineTMQ
             }
             set
             {
-                this.SetObject("enable.auto.commit", value);
+                this.SetObject("enable.auto.commit", value!);
             }
         }
 
@@ -51,50 +51,50 @@ namespace TDengineTMQ
         {
             get => Get("auto.commit.interval.ms");
 
-            set => this.SetObject("auto.commit.interval.ms", value);
+            set => this.SetObject("auto.commit.interval.ms", value!);
         }
 
 
         public string? AutoOffsetReset
         {
             get => Get("auto.offset.reset");
-            set => this.SetObject("auto.offset.reset", value);
+            set => this.SetObject("auto.offset.reset", value!);
         }
 
         public string? MsgWithTableName
         {
             get => Get("msg.with.table.name");
-            set => this.SetObject("msg.with.table.name", value);
+            set => this.SetObject("msg.with.table.name", value!);
         }
 
         public string? TDConnectIp
         {
             get => Get("td.connect.ip");
-            set => this.SetObject("td.connect.ip", value);
+            set => this.SetObject("td.connect.ip", value!);
         }
 
         public string? TDConnectUser
         {
             get => Get("td.connect.ip");
-            set => this.SetObject("td.connect.ip", value);
+            set => this.SetObject("td.connect.ip", value!);
         }
 
         public string? TDConnectPasswd
         {
             get => Get("td.connect.pass");
-            set => SetObject("td.connect.pass", value);
+            set => SetObject("td.connect.pass", value!);
         }
 
         public string? TDConnectPort
         {
             get => Get("td.connect.port");
-            set => this.SetObject("td.connect.port", value);
+            set => this.SetObject("td.connect.port", value!);
         }
 
         public string? TDDatabase
         {
             get => Get("td.connect.db");
-            set => this.SetObject("td.connect.db", value);
+            set => this.SetObject("td.connect.db", value!);
         }
     }
 }
