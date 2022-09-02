@@ -48,7 +48,7 @@ namespace Examples.WS
 
                 code = LibTaosWS.WSStmtAddBatch(wsStmt);
                 ValidStmtStep(code, wsStmt, "WSStmtAddBatch");
-                nint stmtAffectRowPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(Int32)));
+                IntPtr stmtAffectRowPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(Int32)));
                 
                 code = LibTaosWS.WSStmtExecute(wsStmt, stmtAffectRowPtr);
                 ValidStmtStep(code, wsStmt, "WSStmtExecute");
@@ -56,6 +56,9 @@ namespace Examples.WS
                 Marshal.FreeHGlobal(stmtAffectRowPtr);
 
                 LibTaosWS.WSStmtClose(wsStmt);
+
+                WSMultiBind.WSFreeTaosBind(wsTags);
+                WSMultiBind.WSFreeTaosBind(data);
 
                 ChecKStmt(wsConn);
 
@@ -140,10 +143,10 @@ namespace Examples.WS
                 throw new Exception($"execute SQL failed: reason: {LibTaosWS.WSErrorStr(wsRes)}, code:{code}");
             }
         }
-        public void ChecKStmt(nint wsConn)
+        public void ChecKStmt(IntPtr wsConn)
         {
 
-            nint wsRes = IntPtr.Zero;
+            IntPtr wsRes = IntPtr.Zero;
             string select = wsPrepareData.SelectTable();
             try
             {

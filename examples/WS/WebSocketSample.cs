@@ -78,11 +78,11 @@ namespace Examples.WS
                 Display(wsRes);
                 LibTaosWS.WSFreeResult(wsRes);
 
-                //wsRes = LibTaosWS.WSQuery(wsConn, dropDB);
-                //ValidQuery(wsRes);
-                //Console.WriteLine("drop database {0} success, cost {1} nanoseconds", DB, LibTaosWS.WSTakeTiming(wsRes));
-                //Display(wsRes);
-                //LibTaosWS.WSFreeResult(wsRes);
+                wsRes = LibTaosWS.WSQuery(wsConn, dropDB);
+                ValidQuery(wsRes);
+                Console.WriteLine("drop database {0} success, cost {1} nanoseconds", DB, LibTaosWS.WSTakeTiming(wsRes));
+                Display(wsRes);
+                LibTaosWS.WSFreeResult(wsRes);
             }
             finally
             {
@@ -100,14 +100,12 @@ namespace Examples.WS
             }
             else
             {
-                // Must get fields first.
                 List<TDengineMeta> metas = LibTaosWS.WSGetFields(wsRes);
                 foreach (var meta in metas)
                 {
                     Console.Write("{0} {1}({2}) \t|\t", meta.name, meta.TypeName(), meta.size);
                 }
                 Console.WriteLine("");
-                // Get retrieved data,result set will be free after calling this interface.
                 List<object> dataSet = LibTaosWS.WSGetData(wsRes);
                 for (int i = 0; i < dataSet.Count;)
                 {
