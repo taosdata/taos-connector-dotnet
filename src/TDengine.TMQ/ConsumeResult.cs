@@ -60,6 +60,11 @@ namespace TDengineTMQ
         }
         public ConsumeResult(TopicPartition topicPartition, TaosResult taosRes, IntPtr offset)
         {
+            if (Message == null)
+            {
+                Message = new Dictionary<TopicPartition, TaosResult>();
+            }
+
             if (Message.ContainsKey(topicPartition))
             {
                 Message[topicPartition].AppendData(taosRes);
