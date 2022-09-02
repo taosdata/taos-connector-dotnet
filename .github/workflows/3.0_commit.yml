@@ -37,7 +37,7 @@ jobs:
           cd TDengine
           mkdir debug
           cd debug
-          cmake ..  -DWEBSOCKET=true
+          cmake ..  -DWEBSOCKET=true -DBUILD_HTTP=false 
           make -j8
           sudo make install
           
@@ -51,7 +51,7 @@ jobs:
    
     - name: start taosadapter
       run: |
-        nohup sudo taosdapter
+        nohup sudo taosadapter
         
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
