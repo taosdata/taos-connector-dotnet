@@ -29,7 +29,7 @@ namespace Function.Test.TaosWS
         [Fact(DisplayName = "WebSocket.Query.NormalTable"), TestExeOrder(1), Trait("Category", "NormalTable")]
         public void NormalTable()
         {
-            nint wsConn = _wsDatabase.WSConn;
+            IntPtr wsConn = _wsDatabase.WSConn;
             string tableName = $"{db}.query_tn";
             string createTable = Tools.CreateTable(tableName, false, false);
             List<Object> columns = Tools.ColumnsList(5);

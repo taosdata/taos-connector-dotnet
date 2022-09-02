@@ -43,12 +43,12 @@ namespace Function.Test.TaosWS
             List<Object> expectResData = StmtDataSource.NTableRowData();
 
             TAOS_MULTI_BIND[] wsMBinds = StmtDataSource.GetWSColDataMBind();
-            
-            nint wsConn = _wsDatabase.WSConn;
+
+            IntPtr wsConn = _wsDatabase.WSConn;
 
             WSTools.WSExecuteUpdate(wsConn,createSql);
 
-            nint wsStmt = WSSTMTTools.WSStmtInit(wsConn);
+            IntPtr wsStmt = WSSTMTTools.WSStmtInit(wsConn);
             WSSTMTTools.WSStmtPrepare(wsStmt,insertSql);
             WSSTMTTools.WSStmtSetTbname(wsStmt,tableName);
             WSSTMTTools.WSStmtBindParamBatch(wsStmt, wsMBinds,14);
@@ -101,10 +101,10 @@ namespace Function.Test.TaosWS
             List<TDengineMeta> expectResMeta = Tools.GetMetaFromDDL(createSql);
             List<Object> expectResData = StmtDataSource.STableRowData(1);
 
-            nint wsConn = _wsDatabase.WSConn;
+            IntPtr wsConn = _wsDatabase.WSConn;
             WSTools.WSExecuteUpdate(wsConn,createSql);
 
-            nint wsStmt = WSSTMTTools.WSStmtInit(wsConn);
+            IntPtr wsStmt = WSSTMTTools.WSStmtInit(wsConn);
             WSSTMTTools.WSStmtPrepare(wsStmt,insertSql);
             WSSTMTTools.WSStmtSetTbnameTags(wsStmt,$"{tableName}_s1",wsTags,wsTags.Length);
             WSSTMTTools.WSStmtBindParamBatch(wsStmt,wsMBinds,wsMBinds.Length);
@@ -157,11 +157,11 @@ namespace Function.Test.TaosWS
             List<TDengineMeta> expectResMeta = Tools.GetMetaFromDDL(createSql);
             List<Object> expectResData = StmtDataSource.JsonRowData(1);
 
-            nint wsConn = _wsDatabase.WSConn;
+            IntPtr wsConn = _wsDatabase.WSConn;
             _output.WriteLine("create:{0}",createSql);
             WSTools.WSExecuteUpdate(wsConn, createSql);
 
-            nint wsStmt = WSSTMTTools.WSStmtInit(wsConn);
+            IntPtr wsStmt = WSSTMTTools.WSStmtInit(wsConn);
             WSSTMTTools.WSStmtPrepare(wsStmt,insertSql);
             _output.WriteLine("table:{0}", $"{tableName}_s1");
             //WSSTMTTools.WSStmtSetTbname(wsStmt,$"{tableName}_s1");

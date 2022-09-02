@@ -37,7 +37,7 @@ jobs:
           cd TDengine
           mkdir debug
           cd debug
-          cmake ..  -DWEBSOCKET=true
+          cmake ..  -DBUILD_JDBC=false -DBUILD_HTTP=false -DWEBSOCKET=true
           make -j8
           sudo make install
           
@@ -48,6 +48,11 @@ jobs:
         EOF
     - name: start taosd
       run: nohup sudo sh ./start.sh &  
+   
+    - name: start taosadapter
+      run: |
+        sleep 5
+        nohup sudo taosadapter > /dev/null 2>&1 &
         
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
@@ -58,7 +63,6 @@ jobs:
       uses: actions/checkout@v3
       with:
         path: 'csharp-driver'
-        ref: '3.0'
 
     - name: Restore dependencies
       run: |

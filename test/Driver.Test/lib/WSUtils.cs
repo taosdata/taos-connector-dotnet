@@ -8,17 +8,17 @@ namespace Test.Utils
 {
     internal class WSTools
     {
-        readonly string dsn = "ws://127.0.0.1:6041/rest/sql/";
-        public nint WSConnect(string dsn)
+        readonly string dsn = "ws://127.0.0.1:6041";
+        public IntPtr WSConnect(string dsn)
         {
-            nint wsConn = LibTaosWS.WSConnectWithDSN(dsn);
+            IntPtr wsConn = LibTaosWS.WSConnectWithDSN(dsn);
             ValidWSconnect(wsConn);
             return wsConn;
         }
 
-        public static ResultSet.ResultSet WSExecuteQuery(nint wsConn, string sql)
+        public static ResultSet.ResultSet WSExecuteQuery(IntPtr wsConn, string sql)
         {
-            nint wsRes;
+            IntPtr wsRes;
             ResultSet.ResultSet resultSet;
 
 
@@ -34,9 +34,9 @@ namespace Test.Utils
 
         }
 
-        public static void WSExecuteUpdate(nint wsConn, string sql)
+        public static void WSExecuteUpdate(IntPtr wsConn, string sql)
         {
-            nint wsRes = IntPtr.Zero;
+            IntPtr wsRes = IntPtr.Zero;
             try
             {
                 wsRes = LibTaosWS.WSQuery(wsConn, sql);
@@ -48,17 +48,17 @@ namespace Test.Utils
             }
         }
 
-        public void CloseWSConnect(nint wsConn)
+        public void CloseWSConnect(IntPtr wsConn)
         {
             LibTaosWS.WSClose(wsConn);
         }
 
-        public static void FreeWSResult(nint wsRes)
+        public static void FreeWSResult(IntPtr wsRes)
         {
             LibTaosWS.WSFreeResult(wsRes);
         }
 
-        public static void ValidWSQuery(nint wsRes)
+        public static void ValidWSQuery(IntPtr wsRes)
         {
             int code = LibTaosWS.WSErrorNo(wsRes);
             if (code != 0)
@@ -67,7 +67,7 @@ namespace Test.Utils
             }
         }
 
-        public static void ValidWSconnect(nint wsConn)
+        public static void ValidWSconnect(IntPtr wsConn)
         {
             if (wsConn == IntPtr.Zero)
             {

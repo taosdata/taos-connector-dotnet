@@ -6,7 +6,7 @@ namespace Test.WSFixture
 {
     public class WSDataBaseFixture : IDisposable
     {
-        public nint WSConn { get; set; }
+        public IntPtr WSConn { get; set; }
         readonly string db = "ws_db_test";
         public WSDataBaseFixture()
         {

@@ -7,9 +7,9 @@ namespace Test.Utils
 {
     internal class WSSTMTTools
     {
-        public static nint WSStmtInit(nint wsConn)
+        public static IntPtr WSStmtInit(IntPtr wsConn)
         {
-            nint wsStmt = LibTaosWS.WSStmtInit(wsConn);
+            IntPtr wsStmt = LibTaosWS.WSStmtInit(wsConn);
             if (wsStmt == IntPtr.Zero)
             {
                 throw new Exception("init WSStmt faield");
@@ -17,43 +17,43 @@ namespace Test.Utils
             return wsStmt;
         }
 
-        public static void WSStmtPrepare(nint wsStmt, string sql)
+        public static void WSStmtPrepare(IntPtr wsStmt, string sql)
         {
             int code = LibTaosWS.WSStmtPrepare(wsStmt, sql);
             ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
         }
 
-        public static void WSStmtSetTbname(nint wsStmt, string table)
+        public static void WSStmtSetTbname(IntPtr wsStmt, string table)
         {
             int code = LibTaosWS.WSStmtSetTbname(wsStmt, table);
             ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
         }
 
-        public static void WSStmtSetTags(nint wsStmt, TAOS_MULTI_BIND[] wsMBind, int len)
+        public static void WSStmtSetTags(IntPtr wsStmt, TAOS_MULTI_BIND[] wsMBind, int len)
         {
             int code = LibTaosWS.WSStmtSetTags(wsStmt, wsMBind, len);
             ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
         }
 
-        public static void WSStmtSetTbnameTags(nint wsStmt, string table, TAOS_MULTI_BIND[] wsMBinds, int len)
+        public static void WSStmtSetTbnameTags(IntPtr wsStmt, string table, TAOS_MULTI_BIND[] wsMBinds, int len)
         {
             int code = LibTaosWS.WSStmtSetTbnameTags(wsStmt, table, wsMBinds, len);
             ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
         }
 
-        public static void WSStmtBindParamBatch(nint wsStmt, TAOS_MULTI_BIND[] wsMBind, int len)
+        public static void WSStmtBindParamBatch(IntPtr wsStmt, TAOS_MULTI_BIND[] wsMBind, int len)
         {
             int code = LibTaosWS.WSStmtBindParamBatch(wsStmt, wsMBind, len);
             ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
         }
 
-        public static void WSStmtAddBatch(nint wsStmt)
+        public static void WSStmtAddBatch(IntPtr wsStmt)
         {
             int code = LibTaosWS.WSStmtAddBatch(wsStmt);
             ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
         }
 
-        public static int WSStmtExecute(nint wsStmt)
+        public static int WSStmtExecute(IntPtr wsStmt)
         {
             IntPtr affectRowsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(Int32)));
             try
@@ -73,12 +73,12 @@ namespace Test.Utils
             WSMultiBind.WSFreeTaosBind(mBinds);
         }
 
-        public static void WSCloseSTMT(nint wsStmt)
+        public static void WSCloseSTMT(IntPtr wsStmt)
         {
             LibTaosWS.WSStmtClose(wsStmt);
         }
 
-        public static void ValidSTMTStep(int code, nint wsStmt, string stmtMethodName)
+        public static void ValidSTMTStep(int code, IntPtr wsStmt, string stmtMethodName)
         {
             if (code != 0)
             {

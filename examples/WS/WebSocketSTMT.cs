@@ -17,9 +17,8 @@ namespace Examples.WS
         public void RunSTMT(string dsn)
         {
             IntPtr wsConn = LibTaosWS.WSConnectWithDSN(dsn);
-            try
-            {
-                IntPtr wsRes = LibTaosWS.WSQuery(wsConn,wsPrepareData.CreateDB());
+            ValidWsConn(wsConn);
+            IntPtr wsRes = LibTaosWS.WSQuery(wsConn,wsPrepareData.CreateDB());
                 ValidQuery(wsRes);
                 LibTaosWS.WSFreeResult(wsRes);
 
@@ -48,7 +47,7 @@ namespace Examples.WS
 
                 code = LibTaosWS.WSStmtAddBatch(wsStmt);
                 ValidStmtStep(code, wsStmt, "WSStmtAddBatch");
-                nint stmtAffectRowPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(Int32)));
+                IntPtr stmtAffectRowPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(Int32)));
                 
                 code = LibTaosWS.WSStmtExecute(wsStmt, stmtAffectRowPtr);
                 ValidStmtStep(code, wsStmt, "WSStmtExecute");
@@ -57,13 +56,14 @@ namespace Examples.WS
 
                 LibTaosWS.WSStmtClose(wsStmt);
 
+                WSMultiBind.WSFreeTaosBind(wsTags);
+                WSMultiBind.WSFreeTaosBind(data);
+
                 ChecKStmt(wsConn);
 
-            }
-            finally
-            {
+
                 LibTaosWS.WSClose(wsConn);
-            }
+
         }
 
 
@@ -140,10 +140,10 @@ namespace Examples.WS
                 throw new Exception($"execute SQL failed: reason: {LibTaosWS.WSErrorStr(wsRes)}, code:{code}");
             }
         }
-        public void ChecKStmt(nint wsConn)
+        public void ChecKStmt(IntPtr wsConn)
         {
 
-            nint wsRes = IntPtr.Zero;
+            IntPtr wsRes = IntPtr.Zero;
             string select = wsPrepareData.SelectTable();
             try
             {
@@ -155,6 +155,14 @@ namespace Examples.WS
             finally
             {
                 LibTaosWS.WSFreeResult(wsRes);
+            }
+        }
+
+        internal void ValidWsConn(IntPtr wsConn)
+        {
+            if (wsConn == IntPtr.Zero)
+            {
+                throw new Exception($"get WS connection failed,reason:{LibTaosWS.WSErrorStr(IntPtr.Zero)} code:{LibTaosWS.WSErrorNo(IntPtr.Zero)}");
             }
         }
 
