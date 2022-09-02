@@ -8,7 +8,7 @@ namespace Test.Utils
 {
     internal class WSTools
     {
-        readonly string dsn = "ws://127.0.0.1:6041/rest/sql/";
+        readonly string dsn = "ws://127.0.0.1:6041";
         public IntPtr WSConnect(string dsn)
         {
             IntPtr wsConn = LibTaosWS.WSConnectWithDSN(dsn);

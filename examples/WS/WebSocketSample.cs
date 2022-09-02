@@ -51,43 +51,41 @@ namespace Examples.WS
         {
 
             IntPtr wsConn = LibTaosWS.WSConnectWithDSN(dsn);
-            //ValidWsConn(wsConn);
-            try
-            {
-                IntPtr wsRes = LibTaosWS.WSQuery(wsConn, createDB);
-                ValidQuery(wsRes);
-                Console.WriteLine("create database {0} success, cost {1} nanoseconds", DB, LibTaosWS.WSTakeTiming(wsRes));
-                Display(wsRes);
-                LibTaosWS.WSFreeResult(wsRes);
+            ValidWsConn(wsConn);
 
-                wsRes = LibTaosWS.WSQuery(wsConn, createTable);
-                ValidQuery(wsRes);
-                Console.WriteLine("create table {0} success, cost {1} nanoseconds", Table, LibTaosWS.WSTakeTiming(wsRes));
-                Display(wsRes);
-                LibTaosWS.WSFreeResult(wsRes);
+            IntPtr wsRes = LibTaosWS.WSQuery(wsConn, createDB);
+            ValidQuery(wsRes);
+            Console.WriteLine("create database {0} success, cost {1} nanoseconds", DB, LibTaosWS.WSTakeTiming(wsRes));
+            Display(wsRes);
+            LibTaosWS.WSFreeResult(wsRes);
 
-                wsRes = LibTaosWS.WSQuery(wsConn, insert);
-                ValidQuery(wsRes);
-                Console.WriteLine("insert table {0}_01 success, cost {1} nanoseconds", Table, LibTaosWS.WSTakeTiming(wsRes));
-                Display(wsRes);
-                LibTaosWS.WSFreeResult(wsRes);
+            wsRes = LibTaosWS.WSQuery(wsConn, createTable);
+            ValidQuery(wsRes);
+            Console.WriteLine("create table {0} success, cost {1} nanoseconds", Table, LibTaosWS.WSTakeTiming(wsRes));
+            Display(wsRes);
+            LibTaosWS.WSFreeResult(wsRes);
 
-                wsRes = LibTaosWS.WSQueryTimeout(wsConn, select, 1);
-                ValidQuery(wsRes);
-                Console.WriteLine("select table {0} success, cost {1} nanoseconds", Table, LibTaosWS.WSTakeTiming(wsRes));
-                Display(wsRes);
-                LibTaosWS.WSFreeResult(wsRes);
+            wsRes = LibTaosWS.WSQuery(wsConn, insert);
+            ValidQuery(wsRes);
+            Console.WriteLine("insert table {0}_01 success, cost {1} nanoseconds", Table, LibTaosWS.WSTakeTiming(wsRes));
+            Display(wsRes);
+            LibTaosWS.WSFreeResult(wsRes);
 
-                wsRes = LibTaosWS.WSQuery(wsConn, dropDB);
-                ValidQuery(wsRes);
-                Console.WriteLine("drop database {0} success, cost {1} nanoseconds", DB, LibTaosWS.WSTakeTiming(wsRes));
-                Display(wsRes);
-                LibTaosWS.WSFreeResult(wsRes);
-            }
-            finally
-            {
-                LibTaosWS.WSClose(wsConn);
-            }
+            wsRes = LibTaosWS.WSQueryTimeout(wsConn, select, 1);
+            ValidQuery(wsRes);
+            Console.WriteLine("select table {0} success, cost {1} nanoseconds", Table, LibTaosWS.WSTakeTiming(wsRes));
+            Display(wsRes);
+            LibTaosWS.WSFreeResult(wsRes);
+
+            wsRes = LibTaosWS.WSQuery(wsConn, dropDB);
+            ValidQuery(wsRes);
+            Console.WriteLine("drop database {0} success, cost {1} nanoseconds", DB, LibTaosWS.WSTakeTiming(wsRes));
+            Display(wsRes);
+            LibTaosWS.WSFreeResult(wsRes);
+
+
+            LibTaosWS.WSClose(wsConn);
+
 
         }
 

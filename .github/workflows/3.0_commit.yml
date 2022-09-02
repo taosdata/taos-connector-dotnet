@@ -48,6 +48,11 @@ jobs:
         EOF
     - name: start taosd
       run: nohup sudo sh ./start.sh &  
+   
+    - name: start taosadapter
+      run: |
+        nohup sudo taosd &
+        taos -V  
         
     - name: Setup .NET
       uses: actions/setup-dotnet@v2

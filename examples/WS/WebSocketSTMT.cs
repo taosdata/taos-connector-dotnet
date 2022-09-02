@@ -17,9 +17,8 @@ namespace Examples.WS
         public void RunSTMT(string dsn)
         {
             IntPtr wsConn = LibTaosWS.WSConnectWithDSN(dsn);
-            try
-            {
-                IntPtr wsRes = LibTaosWS.WSQuery(wsConn,wsPrepareData.CreateDB());
+            ValidWsConn(wsConn);
+            IntPtr wsRes = LibTaosWS.WSQuery(wsConn,wsPrepareData.CreateDB());
                 ValidQuery(wsRes);
                 LibTaosWS.WSFreeResult(wsRes);
 
@@ -62,11 +61,9 @@ namespace Examples.WS
 
                 ChecKStmt(wsConn);
 
-            }
-            finally
-            {
+
                 LibTaosWS.WSClose(wsConn);
-            }
+
         }
 
 
@@ -158,6 +155,14 @@ namespace Examples.WS
             finally
             {
                 LibTaosWS.WSFreeResult(wsRes);
+            }
+        }
+
+        internal void ValidWsConn(IntPtr wsConn)
+        {
+            if (wsConn == IntPtr.Zero)
+            {
+                throw new Exception($"get WS connection failed,reason:{LibTaosWS.WSErrorStr(IntPtr.Zero)} code:{LibTaosWS.WSErrorNo(IntPtr.Zero)}");
             }
         }
 
