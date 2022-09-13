@@ -113,7 +113,7 @@ namespace Cases
             List<TDengineMeta> expectResMeta = DataSource.GetMetaFromDDL(createTb);
 
             List<Object> expectResData = UtilsTools.CombineColAndTagData(colData, tagData, 9);
-
+            _output.WriteLine("drop table:{0}", dropTb);
             UtilsTools.ExecuteUpdate(conn, dropTb, _output);
             UtilsTools.ExecuteUpdate(conn, createTb, _output);
             UtilsTools.ExecuteUpdate(conn, insertSql, _output);
@@ -196,7 +196,7 @@ namespace Cases
 
             for (int i = 0; i < actualResData.Count; i++)
             {
-                // _output.WriteLine("expect:{0},actual:{1}", expectResData[i], actualResData[i]);
+                //_output.WriteLine("expect:{0},actual:{1}", colData[i], actualResData[i]);
                 Assert.Equal(colData[i].ToString(), actualResData[i]);
             }
             _output.WriteLine("InsertCNCases.TestInsertMultiNTable() passed");

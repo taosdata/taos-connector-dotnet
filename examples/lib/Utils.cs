@@ -1,8 +1,7 @@
 using System;
-using TDengineDriver;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using TDengineDriver;
 namespace Sample.UtilsTools
 {
     public class UtilsTools
@@ -191,7 +190,10 @@ namespace Sample.UtilsTools
             dataRaw = QueryRes(res, meta);
             return dataRaw;
         }
-
+        public static void FreeResult(IntPtr res)
+        {
+            TDengine.FreeResult(res);
+        }
         private static List<Object> QueryRes(IntPtr res, List<TDengineMeta> meta)
         {
             IntPtr taosRow;

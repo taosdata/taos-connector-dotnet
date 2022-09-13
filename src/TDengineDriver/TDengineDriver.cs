@@ -218,9 +218,10 @@ namespace TDengineDriver
 
         static public IntPtr Query(IntPtr conn, string command)
         {
-            IntPtr commandBuffer = Marshal.StringToCoTaskMemUTF8(command);
-            IntPtr res = Query(conn, commandBuffer);
-            Marshal.FreeCoTaskMem(commandBuffer);
+            //IntPtr commandBuffer = UFT8Helper.StringToCoTaskMemUTF8(command);
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(command);
+            IntPtr res = Query(conn, utf8PtrStruct.utf8Ptr);
+            utf8PtrStruct.UTF8FreePtr();
             return res;
         }
 
@@ -254,8 +255,6 @@ namespace TDengineDriver
                 meta.size = Marshal.ReadInt16(fieldsPtr + offset + (int)TaosField.BYTES_OFFSET);
                 metaList.Add(meta);
             }
-
-
             return metaList;
         }
 
@@ -295,7 +294,14 @@ namespace TDengineDriver
         /// <param name="length">no used</param>
         /// <returns>0 for success, non-zero for failure.</returns>
         [DllImport("taos", EntryPoint = "taos_stmt_prepare", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int StmtPrepare(IntPtr stmt, string sql);
+        static extern public int _StmtPrepare(IntPtr stmt, IntPtr sql);
+        static public int StmtPrepare(IntPtr stmt, string sql) 
+        {
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(sql);
+            int stmtResponseCode = _StmtPrepare(stmt, utf8PtrStruct.utf8Ptr);
+            utf8PtrStruct.UTF8FreePtr();
+            return stmtResponseCode;
+        }
 
         /// <summary>
         /// For INSERT only. Used to bind table name as a parmeter for the input stmt object.
@@ -469,16 +475,9 @@ namespace TDengineDriver
         static public void QueryAsync(IntPtr taos, string sql, QueryAsyncCallback fq, IntPtr param)
         {
 
-            // byte[] sqlUTF8Byte = Encoding.UTF8.GetBytes(sql);
-            // IntPtr sqlPtr = Marshal.AllocHGlobal(sqlUTF8Byte.Length);
-            // Marshal.Copy(sqlUTF8Byte, 0, sqlPtr, sqlUTF8Byte.Length);
-            // QueryAsync(taos, sqlPtr, fq, param);
-            // Marshal.FreeHGlobal(sqlPtr);
-
-            IntPtr sqlPtr = Marshal.StringToCoTaskMemUTF8(sql);
-            QueryAsync(taos, sqlPtr, fq, param);
-            Marshal.FreeCoTaskMem(sqlPtr);
-
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(sql);
+            QueryAsync(taos, utf8PtrStruct.utf8Ptr, fq, param);
+            utf8PtrStruct.UTF8FreePtr();
         }
 
         /// <summary>
@@ -512,7 +511,7 @@ namespace TDengineDriver
         /// until the interval exceeds this period.</param>
         /// <returns>Return null for failure, return subscribe object for success.</returns>
         [DllImport("taos", EntryPoint = "taos_subscribe", CallingConvention = CallingConvention.Cdecl)]
-        static extern private IntPtr Subscribe(IntPtr taos, int restart, string topic, string sql, SubscribeCallback fq, IntPtr param, int interval);
+        static extern private IntPtr Subscribe(IntPtr taos, int restart, string topic, IntPtr sql, SubscribeCallback fq, IntPtr param, int interval);
         static public IntPtr Subscribe(IntPtr taos, bool restart, string topic, string sql, SubscribeCallback fq, IntPtr param, int interval)
         {
             if (taos == IntPtr.Zero)
@@ -522,7 +521,9 @@ namespace TDengineDriver
             }
             else
             {
-                IntPtr subPtr = Subscribe(taos, restart == true ? 1 : 0, topic, sql, fq, param, interval);
+                UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(sql);
+                IntPtr subPtr = Subscribe(taos, restart == true ? 1 : 0, topic, utf8PtrStruct.utf8Ptr, fq, param, interval);
+                utf8PtrStruct.UTF8FreePtr();
                 return subPtr;
             }
         }

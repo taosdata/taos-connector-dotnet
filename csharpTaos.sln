@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TDengineDriver", "src\TDeng
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Driver.Test", "src\Driver.Test\Driver.Test.csproj", "{91379500-EF58-41D7-8706-B504213E9C7C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "examples", "examples\examples.csproj", "{543EF44D-554F-43A8-AC9F-93F8AF1CE123}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,18 @@ Global
 		{91379500-EF58-41D7-8706-B504213E9C7C}.Release|x64.Build.0 = Release|Any CPU
 		{91379500-EF58-41D7-8706-B504213E9C7C}.Release|x86.ActiveCfg = Release|Any CPU
 		{91379500-EF58-41D7-8706-B504213E9C7C}.Release|x86.Build.0 = Release|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Debug|x64.Build.0 = Debug|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Debug|x86.Build.0 = Debug|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Release|Any CPU.Build.0 = Release|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Release|x64.ActiveCfg = Release|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Release|x64.Build.0 = Release|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Release|x86.ActiveCfg = Release|Any CPU
+		{543EF44D-554F-43A8-AC9F-93F8AF1CE123}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5BED7402-0A65-4ED9-A491-C56BFB518045} = {A1FB5B66-E32F-4789-9BE9-042E5BD21087}

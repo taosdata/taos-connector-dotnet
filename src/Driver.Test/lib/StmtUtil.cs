@@ -11,9 +11,7 @@ namespace Test.UtilsTools
             IntPtr stmt = TDengine.StmtInit(conn);
             if (stmt == IntPtr.Zero)
             {
-                Console.WriteLine("Init stmt failed");
-                TDengine.Close(conn);
-                UtilsTools.ExitProgram();
+                throw new Exception("Init stmt failed");
             }
             else
             {
@@ -31,8 +29,7 @@ namespace Test.UtilsTools
             }
             else
             {
-                Console.WriteLine("stmt prepare failed " + TDengine.StmtErrorStr(stmt));
-                StmtClose(stmt);
+                throw new Exception("stmt prepare failed " + TDengine.StmtErrorStr(stmt));
             }
         }
 
@@ -45,8 +42,7 @@ namespace Test.UtilsTools
             }
             else
             {
-                Console.Write("set_tbname failed, " + TDengine.StmtErrorStr(stmt));
-                StmtClose(stmt);
+                throw new Exception("set_tbname failed, " + TDengine.StmtErrorStr(stmt));
             }
         }
 
@@ -60,8 +56,7 @@ namespace Test.UtilsTools
             }
             else
             {
-                Console.Write("set tbname && tags failed, " + TDengine.StmtErrorStr(stmt));
-                StmtClose(stmt);
+                throw new Exception("set tbname && tags failed, " + TDengine.StmtErrorStr(stmt));
             }
         }
 
@@ -74,8 +69,7 @@ namespace Test.UtilsTools
             }
             else
             {
-                Console.Write("set subtable name failed, " + TDengine.StmtErrorStr(stmt));
-                StmtClose(stmt);
+                throw new Exception("set subtable name failed, " + TDengine.StmtErrorStr(stmt));
             }
 
         }
@@ -89,8 +83,7 @@ namespace Test.UtilsTools
             }
             else
             {
-                Console.Write("bind  para failed, " + TDengine.StmtErrorStr(stmt));
-                StmtClose(stmt);
+                throw new Exception("bind  para failed, " + TDengine.StmtErrorStr(stmt));
             }
         }
 
@@ -103,8 +96,8 @@ namespace Test.UtilsTools
             }
             else
             {
-                Console.Write("single bind  batch failed: " + TDengine.StmtErrorStr(stmt));
-                StmtClose(stmt);
+                //Console.Write("single bind  batch failed: " + TDengine.StmtErrorStr(stmt));
+                throw new Exception("single bind  batch failed: " + TDengine.StmtErrorStr(stmt) + $" {res}");
             }
         }
 
@@ -117,8 +110,7 @@ namespace Test.UtilsTools
             }
             else
             {
-                Console.WriteLine("bind  parameter batch failed, " + TDengine.StmtErrorStr(stmt));
-                StmtClose(stmt);
+                throw new Exception("bind  parameter batch failed, " + TDengine.StmtErrorStr(stmt));
             }
         }
 
@@ -131,8 +123,7 @@ namespace Test.UtilsTools
             }
             else
             {
-                Console.Write("stmt add batch failed,reason: " + TDengine.StmtErrorStr(stmt));
-                StmtClose(stmt);
+                throw new Exception("stmt add batch failed,reason: " + TDengine.StmtErrorStr(stmt));
             }
         }
         public static void StmtExecute(IntPtr stmt)
@@ -144,8 +135,7 @@ namespace Test.UtilsTools
             }
             else
             {
-                Console.Write("Execute stmt failed,reason: " + TDengine.StmtErrorStr(stmt));
-                StmtClose(stmt);
+                throw new Exception("Execute stmt failed,reason: " + TDengine.StmtErrorStr(stmt));
             }
         }
         public static void StmtClose(IntPtr stmt)
@@ -157,8 +147,7 @@ namespace Test.UtilsTools
             }
             else
             {
-                Console.WriteLine("close stmt failed, " + TDengine.StmtErrorStr(stmt));
-                StmtClose(stmt);
+                throw new Exception("close stmt failed, " + TDengine.StmtErrorStr(stmt));
             }
         }
 
@@ -169,10 +158,8 @@ namespace Test.UtilsTools
             {
                 if (res != IntPtr.Zero)
                 {
-                    Console.Write("reason: " + TDengine.Error(res));
+                    throw new Exception("reason: " + TDengine.Error(res));
                 }
-                Console.WriteLine("");
-                StmtClose(stmt);
             }
             else
             {

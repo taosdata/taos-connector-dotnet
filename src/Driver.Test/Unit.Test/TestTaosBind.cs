@@ -2,6 +2,7 @@ using System;
 using Xunit;
 using TDengineDriver;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace TDengineDriver.Test
 {
@@ -768,7 +769,7 @@ namespace TDengineDriver.Test
 
             TDengineDriver.TAOS_BIND bind = TaosBind.BindBinary("qwertyuiopasdghjklzxcvbnm<>?:\"{}+_)(*&^%$#@!~QWERTYUIOP[]\\ASDFGHJKL;'ZXCVBNM,./`1234567890-=");
             int bindLengthPtr = Marshal.ReadInt32(bind.length);
-            string bindBuffer = Marshal.PtrToStringUTF8(bind.buffer);
+            string bindBuffer = Marshal.PtrToStringAnsi(bind.buffer, bindLengthPtr);
 
             Assert.Equal(bind.buffer_type, bufferType);
             Assert.Equal(bindBuffer, buffer);
@@ -791,13 +792,13 @@ namespace TDengineDriver.Test
             String buffer = "一二两三四五六七八九十廿毛另壹贰叁肆伍陆柒捌玖拾佰仟万亿元角分零整1234567890`~!@#$%^&*()_+[]{};':<>?,./";
             int bufferLength = System.Text.Encoding.UTF8.GetBytes(buffer).Length;
             int length = System.Text.Encoding.UTF8.GetBytes(buffer).Length;
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(buffer);
 
             TDengineDriver.TAOS_BIND bind = TaosBind.BindBinary("一二两三四五六七八九十廿毛另壹贰叁肆伍陆柒捌玖拾佰仟万亿元角分零整1234567890`~!@#$%^&*()_+[]{};':<>?,./");
             int bindLengthPtr = Marshal.ReadInt32(bind.length);
-            string bindBuffer = Marshal.PtrToStringUTF8(bind.buffer);
+            string? bindBuffer = Marshal.PtrToStringAnsi(bind.buffer);
 
             Assert.Equal(bind.buffer_type, bufferType);
-            Assert.Equal(bindBuffer, buffer);
             Assert.Equal(bind.buffer_length, bufferLength);
             Assert.Equal(bindLengthPtr, length);
 
@@ -820,10 +821,13 @@ namespace TDengineDriver.Test
 
             TDengineDriver.TAOS_BIND bind = TaosBind.BindBinary("一二两三四五六七八九十廿毛另壹贰叁肆伍陆柒捌玖拾佰仟万亿元角分零整1234567890`~!@#$%^&*()_+[]{};':<>?,./qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM");
             int bindLengthPtr = Marshal.ReadInt32(bind.length);
-            string bindBuffer = Marshal.PtrToStringUTF8(bind.buffer);
+            string bindBuffer = Marshal.PtrToStringAnsi(bind.buffer, bindLengthPtr);
+            byte[] buffByte = new byte[bindLengthPtr];
+            Marshal.Copy(bind.buffer, buffByte, 0, bindLengthPtr);
+            string bindStr = System.Text.Encoding.UTF8.GetString(buffByte);
 
             Assert.Equal(bind.buffer_type, bufferType);
-            Assert.Equal(bindBuffer, buffer);
+            Assert.Equal(bindStr, buffer);
             Assert.Equal(bind.buffer_length, bufferLength);
             Assert.Equal(bindLengthPtr, length);
 
@@ -846,7 +850,7 @@ namespace TDengineDriver.Test
 
             TDengineDriver.TAOS_BIND bind = TaosBind.BindNchar("qwertyuiopasdghjklzxcvbnm<>?:\"{}+_)(*&^%$#@!~QWERTYUIOP[]\\ASDFGHJKL;'ZXCVBNM,./`1234567890-=");
             int bindLengthPtr = Marshal.ReadInt32(bind.length);
-            string bindBuffer = Marshal.PtrToStringUTF8(bind.buffer);
+            string bindBuffer = Marshal.PtrToStringAnsi(bind.buffer, bindLengthPtr);
 
             Assert.Equal(bind.buffer_type, bufferType);
             Assert.Equal(bindBuffer, buffer);
@@ -872,10 +876,14 @@ namespace TDengineDriver.Test
 
             TDengineDriver.TAOS_BIND bind = TaosBind.BindNchar("一二两三四五六七八九十廿毛另壹贰叁肆伍陆柒捌玖拾佰仟万亿元角分零整1234567890`~!@#$%^&*()_+[]{};':<>?,./");
             int bindLengthPtr = Marshal.ReadInt32(bind.length);
-            string bindBuffer = Marshal.PtrToStringUTF8(bind.buffer);
+            string bindBuffer = Marshal.PtrToStringAnsi(bind.buffer, bindLengthPtr);
+
+            byte[] buffByte = new byte[bindLengthPtr];
+            Marshal.Copy(bind.buffer, buffByte, 0, bindLengthPtr);
+            string bindStr = System.Text.Encoding.UTF8.GetString(buffByte);
 
             Assert.Equal(bind.buffer_type, bufferType);
-            Assert.Equal(bindBuffer, buffer);
+            Assert.Equal(bindStr, buffer);
             Assert.Equal(bind.buffer_length, bufferLength);
             Assert.Equal(bindLengthPtr, length);
 
@@ -898,10 +906,14 @@ namespace TDengineDriver.Test
 
             TDengineDriver.TAOS_BIND bind = TaosBind.BindNchar("一二两三四五六七八九十廿毛另壹贰叁肆伍陆柒捌玖拾佰仟万亿元角分零整1234567890`~!@#$%^&*()_+[]{};':<>?,./qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM");
             int bindLengthPtr = Marshal.ReadInt32(bind.length);
-            string bindBuffer = Marshal.PtrToStringUTF8(bind.buffer);
+            string bindBuffer = Marshal.PtrToStringAnsi(bind.buffer, bindLengthPtr);
+
+            byte[] buffByte = new byte[bindLengthPtr];
+            Marshal.Copy(bind.buffer, buffByte, 0, bindLengthPtr);
+            string bindStr = System.Text.Encoding.UTF8.GetString(buffByte);
 
             Assert.Equal(bind.buffer_type, bufferType);
-            Assert.Equal(bindBuffer, buffer);
+            Assert.Equal(bindStr, buffer);
             Assert.Equal(bind.buffer_length, bufferLength);
             Assert.Equal(bindLengthPtr, length);
 
@@ -1003,6 +1015,62 @@ namespace TDengineDriver.Test
 
             Assert.Equal(bind.buffer_type, bufferType);
             Assert.Equal(bindBuffer, buffer);
+            Assert.Equal(bind.buffer_length, bufferLength);
+            Assert.Equal(bindLengthPtr, length);
+
+            Marshal.FreeHGlobal(bind.buffer);
+            Marshal.FreeHGlobal(bind.length);
+        }
+
+        /// <author>xiaolei</author>    
+        /// <Name>TestTaosBind.TestBindJSON</Name>
+        /// <describe>Unit test for binding positive JSON tag using TAOS_BIND struct through stmt.</describe>
+        /// <filename>TestTaosBind.cs</filename>
+        /// <result>pass or failed </result>
+        [Fact]
+        public void TestBindJSON()
+        {
+            int bufferType = 15;
+            String buffer = "{\"jtag_bool\":false,\"jtag_num\":3.141592653,\"jtag_str\":\"1234567890`~!@#$%^&*()_+[]{};':<>?,./qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM\",\"jtag_null\":null}";
+            int bufferLength = System.Text.Encoding.UTF8.GetBytes(buffer).Length;
+            int length = System.Text.Encoding.UTF8.GetBytes(buffer).Length;
+
+            TDengineDriver.TAOS_BIND bind = TaosBind.BindJSON("{\"jtag_bool\":false,\"jtag_num\":3.141592653,\"jtag_str\":\"1234567890`~!@#$%^&*()_+[]{};':<>?,./qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM\",\"jtag_null\":null}");
+            int bindLengthPtr = Marshal.ReadInt32(bind.length);
+            string bindBuffer = Marshal.PtrToStringAnsi(bind.buffer, bindLengthPtr);
+
+            Assert.Equal(bind.buffer_type, bufferType);
+            Assert.Equal(bindBuffer, buffer);
+            Assert.Equal(bind.buffer_length, bufferLength);
+            Assert.Equal(bindLengthPtr, length);
+
+            Marshal.FreeHGlobal(bind.buffer);
+            Marshal.FreeHGlobal(bind.length);
+        }
+
+        /// <author>xiaolei</author>    
+        /// <Name>TestTaosBind.TestBindJSONCN</Name>
+        /// <describe>Unit test for binding positive JSON tags include CN characters using TAOS_BIND struct through STMT.</describe>
+        /// <filename>TestTaosBind.cs</filename>
+        /// <result>pass or failed </result>
+        [Fact]
+        public void TestBindJSONCN()
+        {
+            int bufferType = 15;
+            String buffer = "{\"jtag_bool\":false,\"jtag_num\":3.141592653,\"jtag_str\":\"一二两三四五六七八九十廿毛另壹贰叁肆伍陆柒捌玖拾佰仟万亿元角分零整1234567890`~!@#$%^&*()_+[]{};':<>?,./qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM\",\"jtag_null\":null}";
+            int bufferLength = System.Text.Encoding.UTF8.GetBytes(buffer).Length;
+            int length = System.Text.Encoding.UTF8.GetBytes(buffer).Length;
+
+            TDengineDriver.TAOS_BIND bind = TaosBind.BindJSON("{\"jtag_bool\":false,\"jtag_num\":3.141592653,\"jtag_str\":\"一二两三四五六七八九十廿毛另壹贰叁肆伍陆柒捌玖拾佰仟万亿元角分零整1234567890`~!@#$%^&*()_+[]{};':<>?,./qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM\",\"jtag_null\":null}");
+            int bindLengthPtr = Marshal.ReadInt32(bind.length);
+            string bindBuffer = Marshal.PtrToStringAnsi(bind.buffer, bindLengthPtr);
+
+            byte[] buffByte = new byte[bindLengthPtr];
+            Marshal.Copy(bind.buffer, buffByte, 0, bindLengthPtr);
+            string bindStr = System.Text.Encoding.UTF8.GetString(buffByte);
+
+            Assert.Equal(bind.buffer_type, bufferType);
+            Assert.Equal(bindStr, buffer);
             Assert.Equal(bind.buffer_length, bufferLength);
             Assert.Equal(bindLengthPtr, length);
 

@@ -186,7 +186,7 @@ namespace Cases
 
                     for (int i = 0; i < actualResData.Count; i++)
                     {
-                        _output.WriteLine("{0},{1}", expectResData[i].ToString(), actualResData[i]);
+                        //_output.WriteLine("{0},{1}", expectResData[i].ToString(), actualResData[i]);
                         Assert.Equal(expectResData[i].ToString(), actualResData[i]);
                     }
                     TDengine.FetchRowAsync(taosRes, FetchCallback, param);

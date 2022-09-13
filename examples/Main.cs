@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using TDengineDriver;
 using Example;
 using System.Collections.Generic;
+using examples;
 
 namespace AsyncQueryExample
 {
@@ -19,10 +20,15 @@ namespace AsyncQueryExample
             SubscribeSample subscribeSample = new SubscribeSample();
             subscribeSample.RunSubscribeWithCallback(conn, "subscribe_with_callback");
             subscribeSample.RunSubscribeWithoutCallback(conn, "subscribe_without_callback");
-            UtilsTools.CloseConnection(conn);
 
             SchemalessSample schemalessSample = new SchemalessSample();
             schemalessSample.RunSchemaless();
+
+            BasicSample basic = new BasicSample(conn, "basic");
+            basic.Run();
+            basic.CleanBasicSampleData();
+
+            UtilsTools.CloseConnection(conn);
         }
     }
 }
