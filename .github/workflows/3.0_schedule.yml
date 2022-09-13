@@ -32,11 +32,10 @@ jobs:
       - name: Build TDengine 3.0
         run: |
           cd TDengine
-          echo `pwd`
           mkdir debug
           cd debug
           cmake ..  -DBUILD_JDBC=false -DBUILD_HTTP=false -DWEBSOCKET=true
-          make -j
+          make -j8
           sudo make install
 
       - name: shell
