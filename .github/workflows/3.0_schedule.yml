@@ -1,77 +1,85 @@
-
 # In order to test compatibility with latest TDengine, this workflow will be triggered everyday at mid night.
-name: 3.0 compatibility 
+name: 3.0 compatibility
 
 on:
   schedule:
-    - cron: '0 2,14 * * *'
+    - cron: "0 2,14 * * *"
     # runner timezone is utc-0
 jobs:
   schedule_test:
     runs-on: ubuntu-20.04
 
     steps:
-      
-    - name: Build Tools
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake
-    
-    - name: Checkout TDengine 3.0
-      uses: actions/checkout@v3
-      with:
-          fetch-depth: 1
-          repository: 'taosdata/TDengine'
-          path: 'TDengine'
-          ref: '3.0'
+      - name: Build Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake
 
-    - name: Build TDengine 3.0
-      run: |
+      - name: Set up Rust
+        id: setup-rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Checkout TDengine 3.0
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          repository: "taosdata/TDengine"
+          path: "TDengine"
+          ref: "3.0"
+
+      - name: Build TDengine 3.0
+        run: |
           cd TDengine
           echo `pwd`
           mkdir debug
           cd debug
-          cmake .. -DBUILD_JDBC=false -DBUILD_TOOLS=false
+          cmake ..  -DBUILD_JDBC=false -DBUILD_HTTP=false -DWEBSOCKET=true
           make -j
           sudo make install
-          cd ../../
+
+      - name: shell
+        run: |
+          cat >start.sh<<EOF
+          ulimit -n 65535 && TAOS_SUPPORT_VNODES=256 taosd
+          EOF
+
+      - name: start taosd
+        run: nohup sudo sh ./start.sh &
+
+      - name: start taosadapter
+        run: |
+          sleep 5
+          nohup sudo taosadapter > /dev/null 2>&1 &
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 6.0.x
+
+      - name: checkout taos-connector-dotnet
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          path: "csharp-driver"
+          ref: "3.0"
+
+      - name: Restore dependencies
+        run: |
+          cd csharp-driver
           echo `pwd`
-        
-    - name: shell
-      run: |
-        cat >start.sh<<EOF
-        ulimit -n 65535 && TAOS_SUPPORT_VNODES=256 taosd
-        EOF
-    - name: start taosd
-      run: nohup sudo sh ./start.sh &  
-        
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: 6.0.x
-    
-    - name: checkout taos-connector-dotnet 
-      uses: actions/checkout@v3
-      with:
-        path: 'csharp-driver'
-        ref: '3.0'
+          ls -al
+          dotnet restore
 
-    - name: Restore dependencies
-      run: |
-        cd csharp-driver
-        echo `pwd`
-        ls -al
-        dotnet restore
+      - name: Build C# Driver
+        run: |
+          cd csharp-driver
+          dotnet build --no-restore
+          echo `pwd`
+          ls -al
 
-    - name: Build C# Driver
-      run: |
-       cd csharp-driver
-       dotnet build --no-restore
-       echo `pwd`
-       ls -al
-
-    - name: Test C# Driver
-      run: |
-       cd csharp-driver
-       sudo dotnet test --no-build --logger "console;verbosity=detailed"
-       
+      - name: Test C# Driver
+        run: |
+          cd csharp-driver
+          sudo dotnet test --no-build --logger "console;verbosity=detailed"
