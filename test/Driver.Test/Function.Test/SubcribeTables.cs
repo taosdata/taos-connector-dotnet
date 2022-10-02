@@ -29,7 +29,7 @@ namespace Function.Test.TMQ
         /// <describe>Subscribe a table and consume from beginning.</describe>
         /// <filename>SubscribeTable.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "SubscribeTable.NormalTable()"), TestExeOrder(1), Trait("Category", "NormalTable")]
+        [Fact(Skip = "SubscribeTable.NormalTable()"), TestExeOrder(1), Trait("Category", "NormalTable")]
         public void NormalTable()
         {
             IntPtr conn = database.Conn;
@@ -109,7 +109,7 @@ namespace Function.Test.TMQ
         /// <describe>Subscribe table from the last progress.</describe>
         /// <filename>Subscribe.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "SubscribeTable.MultiTables()"), TestExeOrder(2), Trait("Category", "MultiTables")]
+        [Fact(Skip = "SubscribeTable.MultiTables()"), TestExeOrder(2), Trait("Category", "MultiTables")]
         public void MultiTables()
         {
             IntPtr conn = database.Conn;
