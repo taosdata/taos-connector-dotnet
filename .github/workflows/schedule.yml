@@ -1,6 +1,6 @@
 
 # In order to test compatibility with latest TDengine, this workflow will be triggered everyday at mid night.
-name: compatibility test 
+name: develop compatibility 
 
 on:
   schedule:

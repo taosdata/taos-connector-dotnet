@@ -51,7 +51,7 @@ jobs:
       with:
         fetch-depth: 1
         path: 'csharp-driver'
-        ref: 'develop'
+
 
     - name: Restore dependencies
       run: |
