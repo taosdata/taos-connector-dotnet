@@ -143,7 +143,7 @@ namespace Function.Test.TaosWS
         /// <describe>Using WebSocket STMT to insert into stable, which has JSON tag. </describe>
         /// <filename>WSSTMT.cs</filename>
         /// <result>pass or failed </result>
-        [Fact(Skip = "WebSocket.STMT.JSONTag"), TestExeOrder(3), Trait("Category", "JSONTag")]
+        [Fact(DisplayName = "WebSocket.STMT.JSONTag"), TestExeOrder(3), Trait("Category", "JSONTag")]
         public void JSONTag()
         {
             string tableName = $"{db}.bind_param_batch_j";

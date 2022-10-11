@@ -197,7 +197,10 @@ namespace TDengineDriver.Impl
             string data;
             if (length != -1)
             {
-                data = Marshal.PtrToStringUTF8(blockHead, length);
+                // need to decode with UTF-8
+                Byte[] bytes = new Byte[length];
+                Marshal.Copy(blockHead, bytes, 0, length);
+                data = Encoding.UTF8.GetString(bytes);
             }
             else
             {

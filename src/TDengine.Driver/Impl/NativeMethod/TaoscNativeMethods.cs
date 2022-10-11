@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using TDengineHelper;
 
 namespace TDengineDriver
 {
@@ -36,10 +37,9 @@ namespace TDengineDriver
         static public IntPtr Query(IntPtr conn, string command)
         {
             IntPtr res = IntPtr.Zero;
-
-            IntPtr commandBuffer = Marshal.StringToCoTaskMemUTF8(command);
-            res = Query(conn, commandBuffer);
-            Marshal.FreeCoTaskMem(commandBuffer);
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(command);
+            res = Query(conn, utf8PtrStruct.utf8Ptr);
+            utf8PtrStruct.UTF8FreePtr();
             return res;
         }
 
@@ -68,7 +68,7 @@ namespace TDengineDriver
                 int offset = i * (int)TaosField.STRUCT_SIZE;
                 TDengineMeta meta = new TDengineMeta();
 
-                meta.name = Marshal.PtrToStringUTF8(fieldsPtr + offset);
+                meta.name = Marshal.PtrToStringAnsi(fieldsPtr + offset);
                 meta.type = Marshal.ReadByte(fieldsPtr + offset + (int)TaosField.TYPE_OFFSET);
                 meta.size = Marshal.ReadInt16(fieldsPtr + offset + (int)TaosField.BYTES_OFFSET);
 
@@ -142,13 +142,14 @@ namespace TDengineDriver
         /// <param name="length">no used</param>
         /// <returns>0 for success, non-zero for failure.</returns>
         [DllImport(DLLName, EntryPoint = "taos_stmt_prepare", CallingConvention = CallingConvention.Cdecl)]
-        static extern private int _StmtPrepare(IntPtr stmt, string sql, ulong length);
+        static extern private int _StmtPrepare(IntPtr stmt, IntPtr sql, ulong length);
 
         public static int StmtPrepare(IntPtr stmt, string sql)
         {
-            //IntPtr utf8Sql = Marshal.StringToCoTaskMemUTF8(sql);
-            return _StmtPrepare(stmt, sql, (ulong)sql.Length);
-
+            UTF8PtrStruct _ = new UTF8PtrStruct(sql);
+            int code = _StmtPrepare(stmt, _.utf8Ptr, (ulong)_.utf8StrLength);
+            _.UTF8FreePtr();
+            return code;
         }
         // int taos_stmt_prepare(TAOS_STMT* stmt, const char* sql, unsigned long length);
 
@@ -164,8 +165,17 @@ namespace TDengineDriver
         /// </param>
         /// <returns>0 for success, non-zero for failure.</returns>
         [DllImport(DLLName, EntryPoint = "taos_stmt_set_tbname_tags", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int StmtSetTbnameTags(IntPtr stmt, string name, TAOS_MULTI_BIND[] tags);
+        static extern private int StmtSetTbnameTags(IntPtr stmt, IntPtr name, TAOS_MULTI_BIND[] tags);
         //int taos_stmt_set_tbname_tags(TAOS_STMT* stmt, const char* name, TAOS_MULTI_BIND *tags);
+        static public int StmtSetTbnameTags(IntPtr stmt, string name, TAOS_MULTI_BIND[] tags)
+        {
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(name);
+            int code = StmtSetTbnameTags(stmt, utf8PtrStruct.utf8Ptr, tags);
+            utf8PtrStruct.UTF8FreePtr();
+
+            return code;
+        }
+
 
         /// <summary>
         /// For INSERT only. Used to bind table name as a parmeter for the input stmt object.
@@ -174,8 +184,20 @@ namespace TDengineDriver
         /// <param name="name">table name you want to  bind</param>
         /// <returns>0 for success, non-zero for failure.</returns>
         [DllImport(DLLName, EntryPoint = "taos_stmt_set_tbname", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int StmtSetTbname(IntPtr stmt, string name);
+        static extern private int _StmtSetTbname(IntPtr stmt, IntPtr name);
         //int  taos_stmt_set_tbname(TAOS_STMT *stmt, const char *name);
+        static public int StmtSetTbname(IntPtr stmt, string tableName)
+        {
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(tableName);
+            try
+            {
+                return _StmtSetTbname(stmt, utf8PtrStruct.utf8Ptr);
+            }
+            finally
+            {
+                utf8PtrStruct.UTF8FreePtr();
+            }
+        }
 
         [DllImport(DLLName, EntryPoint = "taos_stmt_set_tags", CallingConvention = CallingConvention.Cdecl)]
         static extern public int StmtSetTags(IntPtr stmt, TAOS_MULTI_BIND[] tags);
@@ -191,8 +213,20 @@ namespace TDengineDriver
         /// <param name="name">table name which is belong to an stable</param>
         /// <returns>0 for success, non-zero for failure.</returns>
         [DllImport(DLLName, EntryPoint = "taos_stmt_set_sub_tbname", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int StmtSetSubTbname(IntPtr stmt, string name);
+        static extern public int _StmtSetSubTbname(IntPtr stmt, IntPtr name);
         //int taos_stmt_set_sub_tbname(TAOS_STMT *stmt, const char *name);
+        static public int StmtSetSubTbname(IntPtr stmt, string chileTableName)
+        {
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(chileTableName);
+            try
+            {
+                return _StmtSetSubTbname(stmt, utf8PtrStruct.utf8Ptr);
+            }
+            finally
+            {
+                utf8PtrStruct.UTF8FreePtr();
+            }
+        }
 
         [DllImport(DLLName, EntryPoint = "taos_stmt_get_tag_fields", CallingConvention = CallingConvention.Cdecl)]
         static extern public int StmtGetTagFields(IntPtr stmt, IntPtr fieldNum, IntPtr fields);
@@ -299,7 +333,7 @@ namespace TDengineDriver
         static public string StmtErrorStr(IntPtr stmt)
         {
             IntPtr stmtErrPrt = StmtErrPtr(stmt);
-            return Marshal.PtrToStringUTF8(stmtErrPrt);
+            return Marshal.PtrToStringAnsi(stmtErrPrt);
         }
 
         [DllImport(DLLName, EntryPoint = "taos_stmt_affected_rows", CallingConvention = CallingConvention.Cdecl)]
@@ -322,7 +356,14 @@ namespace TDengineDriver
         /// <param name="fq">User-defined callback function. <see cref="QueryAsyncCallback"/></param>
         /// <param name="param">the parameter for callback</param>       
         [DllImport(DLLName, EntryPoint = "taos_query_a", CallingConvention = CallingConvention.Cdecl)]
-        static extern public void QueryAsync(IntPtr taos, string sql, QueryAsyncCallback fq, IntPtr param);
+        static extern private void _QueryAsync(IntPtr taos, IntPtr sql, QueryAsyncCallback fq, IntPtr param);
+
+        static public void QueryAsync(IntPtr taos, string sql, QueryAsyncCallback fq, IntPtr param)
+        {
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(sql);
+            _QueryAsync(taos, utf8PtrStruct.utf8Ptr, fq, param);
+            utf8PtrStruct.UTF8FreePtr();
+        }
 
         // rawblock way
         [DllImport(DLLName, EntryPoint = "taos_fetch_raw_block_a", CallingConvention = CallingConvention.Cdecl)]
@@ -338,7 +379,19 @@ namespace TDengineDriver
         // ================================add =========================
         //int taos_select_db(TAOS *taos, const char *db);
         [DllImport(DLLName, EntryPoint = "taos_select_db", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int SelectDatabase(IntPtr taos, string database);
+        static extern private int _SelectDatabase(IntPtr taos, IntPtr database);
+        static public int SelectDatabase(IntPtr taos, string database)
+        {
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(database);
+            try
+            {
+                return _SelectDatabase(taos, utf8PtrStruct.utf8Ptr);
+            }
+            finally
+            {
+                utf8PtrStruct.UTF8FreePtr();
+            }
+        }
 
         //int taos_print_row(char *str, TAOS_ROW row, TAOS_FIELD *fields, int num_fields);
 
@@ -352,7 +405,15 @@ namespace TDengineDriver
 
         //int taos_validate_sql(TAOS *taos, const char *sql);
         [DllImport(DLLName, EntryPoint = "taos_validate_sql", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int ValidateSQL(IntPtr taos, string sql);
+        static extern private int _ValidateSQL(IntPtr taos, IntPtr sql);
+
+        static public int ValidateSQL(IntPtr taos, string sql)
+        {
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(sql);
+            int code = _ValidateSQL(taos, utf8PtrStruct.utf8Ptr);
+            utf8PtrStruct.UTF8FreePtr();
+            return code;
+        }
 
         // void taos_reset_current_db(TAOS *taos);
         [DllImport(DLLName, EntryPoint = "taos_reset_current_db", CallingConvention = CallingConvention.Cdecl)]
@@ -366,7 +427,7 @@ namespace TDengineDriver
         static public string GetServerInfo(IntPtr taos)
         {
             IntPtr serverInfoPtr = _GetServerInfo(taos);
-            return Marshal.PtrToStringUTF8(serverInfoPtr);
+            return Marshal.PtrToStringAnsi(serverInfoPtr);
         }
 
         // char *taos_get_client_info();
@@ -375,7 +436,7 @@ namespace TDengineDriver
         static public string GetClientInfo()
         {
             IntPtr clientInfoPtr = _GetClientInfo();
-            return Marshal.PtrToStringUTF8(clientInfoPtr);
+            return Marshal.PtrToStringAnsi(clientInfoPtr);
         }
 
         // ====================== 3.0 =====================
@@ -397,7 +458,21 @@ namespace TDengineDriver
 
         // TSDB_SERVER_STATUS taos_check_server_status(const char *fqdn, int port, char *details, int maxlen);
         [DllImport(DLLName, EntryPoint = "taos_check_server_status", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int CheckServerStatus(string fqdn, int port, string detail, int maxlength);
+        static extern private int _CheckServerStatus(IntPtr fqdn, int port, string detail, int maxlength);
+        static public int CheckServerStatus(string fqdn, int port, string detail, int maxlength)
+        {
+            UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(fqdn);
+            try
+            {
+                return _CheckServerStatus(utf8PtrStruct.utf8Ptr, port, detail, maxlength);
+            }
+            finally
+            {
+                utf8PtrStruct.UTF8FreePtr();
+            }
+
+        }
+
     }
 
 

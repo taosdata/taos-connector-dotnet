@@ -17,7 +17,7 @@ namespace TDengineTMQ.Impl
         }
         private void ErrorHandler(string errMsg, int code)
         {
-            string errStr = Marshal.PtrToStringUTF8(LibTMQ.err2str(code));
+            string errStr = Marshal.PtrToStringAnsi(LibTMQ.err2str(code));
             throw new Exception($"TDengine TMQ Error:{errMsg} failed,reason:{errStr} \t code: {code}");
         }
         internal IntPtr NewTopicList()
@@ -60,7 +60,7 @@ namespace TDengineTMQ.Impl
             IntPtr topicIntPtr = LibTMQ.tmq_list_to_c_array(topicList);
             for (int i = 0; i < listSize; i++)
             {
-                var topic = Marshal.PtrToStringUTF8(topicIntPtr + (i * IntPtr.Size));
+                var topic = Marshal.PtrToStringAnsi(topicIntPtr + (i * IntPtr.Size));
                 tmp.Add(topic);
             }
             return tmp;
@@ -76,7 +76,7 @@ namespace TDengineTMQ.Impl
         internal string GetTopicName(IntPtr message)
         {
             NullReferenceHandler(message);
-            string topicName = Marshal.PtrToStringUTF8(LibTMQ.tmq_get_topic_name(message));
+            string topicName = Marshal.PtrToStringAnsi(LibTMQ.tmq_get_topic_name(message));
             return topicName;
         }
 
@@ -88,14 +88,14 @@ namespace TDengineTMQ.Impl
         internal string GetDBName(IntPtr message)
         {
             NullReferenceHandler(message);
-            string db = Marshal.PtrToStringUTF8(LibTMQ.tmq_get_db_name(message));
+            string db = Marshal.PtrToStringAnsi(LibTMQ.tmq_get_db_name(message));
             return db;
         }
 
         internal string GetTableName(IntPtr message)
         {
             NullReferenceHandler(message);
-            string tableName = Marshal.PtrToStringUTF8(LibTMQ.tmq_get_table_name(message));
+            string tableName = Marshal.PtrToStringAnsi(LibTMQ.tmq_get_table_name(message));
             return tableName;
         }
 
@@ -168,7 +168,7 @@ namespace TDengineTMQ.Impl
                 if (consumer == IntPtr.Zero)
                 {
                     // read Error string 
-                    string errStr = Marshal.PtrToStringUTF8(errStrPtr, errStringLength);
+                    string errStr = Marshal.PtrToStringAnsi(errStrPtr, errStringLength);
                     throw new Exception($"Create new Consumer failed, reason:{errStr}");
                 }
                 else
@@ -230,7 +230,7 @@ namespace TDengineTMQ.Impl
 
                     for (int i = 0; i < c_array_leng; i++)
                     {
-                        string tmpStr = Marshal.PtrToStringUTF8(Marshal.ReadIntPtr(c_array_ptr + (i * offset)));
+                        string tmpStr = Marshal.PtrToStringAnsi(Marshal.ReadIntPtr(c_array_ptr + (i * offset)));
                         topics.Add(tmpStr);
                     }
                     return topics;
@@ -291,7 +291,7 @@ namespace TDengineTMQ.Impl
                         string topic = this.GetTopicName(taosRes);
                         Int32 vGourpId = this.GetVGroupID(taosRes);
                         string db = this.GetDBName(taosRes);
-                        string? table = this.GetTableName(taosRes);
+                        string table = this.GetTableName(taosRes);
 
                         List<TDengineMeta> metaList = LibTaos.GetMeta(taosRes);
                         List<Object> dataList = LibTaos.ReadRawBlock(pData, metaList, numOfRows);

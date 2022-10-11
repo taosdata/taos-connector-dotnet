@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\src\TDengine.csproj" />
+    <ProjectReference Include="..\..\src\TDengine.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
