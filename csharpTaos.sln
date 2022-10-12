@@ -15,8 +15,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{2A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net6Examples", "examples\NET6Examples\Net6Examples.csproj", "{DF4F8FD6-F495-49C0-8F77-30B84B9622BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrameWork45", "examples\FrameWork45\FrameWork45.csproj", "{1B5FA1A4-6572-4F1C-9104-7AA62D980080}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,10 +37,6 @@ Global
 		{DF4F8FD6-F495-49C0-8F77-30B84B9622BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF4F8FD6-F495-49C0-8F77-30B84B9622BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF4F8FD6-F495-49C0-8F77-30B84B9622BE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1B5FA1A4-6572-4F1C-9104-7AA62D980080}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1B5FA1A4-6572-4F1C-9104-7AA62D980080}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1B5FA1A4-6572-4F1C-9104-7AA62D980080}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1B5FA1A4-6572-4F1C-9104-7AA62D980080}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,7 +45,6 @@ Global
 		{2EDACE6A-E4DF-466F-8E67-8F30C6A1A16C} = {AC08364F-B238-471D-8A2C-AF537BECD1A5}
 		{01D1D615-DB70-4FD1-BE81-CAC2E6365E21} = {AC08364F-B238-471D-8A2C-AF537BECD1A5}
 		{DF4F8FD6-F495-49C0-8F77-30B84B9622BE} = {2A6F8400-BE2C-4C8B-9692-78E7D4DB643E}
-		{1B5FA1A4-6572-4F1C-9104-7AA62D980080} = {2A6F8400-BE2C-4C8B-9692-78E7D4DB643E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {00150F17-4325-4978-B1B3-10C6C84ADE91}
