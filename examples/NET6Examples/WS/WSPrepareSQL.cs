@@ -63,7 +63,6 @@ namespace Examples.WS
 
         public string InsertTable(int numOfRow, string? childTable, long begin = 1656677700000)
         {
-            string sql;
             long ts = begin;
             string cTable;
             if (IfStable == true)

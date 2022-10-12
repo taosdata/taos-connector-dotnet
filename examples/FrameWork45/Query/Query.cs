@@ -8,7 +8,7 @@ namespace FrameWork45.Examples
 {
     internal static class Query
     {
-        public static void QueryData(IntPtr conn, string db, string? stable, string? table, int numOfRows)
+        public static void QueryData(IntPtr conn, string db, string stable, string table, int numOfRows)
         {
             InitData data = new InitData();
             string tmp = String.IsNullOrEmpty(stable) ? table : stable;

@@ -63,8 +63,8 @@ namespace Benchmark
                 {
                     Console.WriteLine(i);
                     RunContext context = new RunContext($"{prefix}_{i}",recordCnt,tableCnt, conn);                 
-                    Console.WriteLine(context.ToString());
-                    ThreadPool.QueueUserWorkItem(RunBatchInsertSql, context);
+                    Console.WriteLine(context.Display());
+                    ThreadPool.QueueUserWorkItem(RunBatchInsertSql!, context);
                 }
                 _doneEvent.WaitOne();
         }    

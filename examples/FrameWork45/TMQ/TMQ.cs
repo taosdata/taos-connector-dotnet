@@ -2,6 +2,7 @@
 using FrameWork45.UtilTools;
 using System;
 using TDengineTMQ;
+using System.Collections.Generic;
 
 namespace FrameWork45.TMQ
 {

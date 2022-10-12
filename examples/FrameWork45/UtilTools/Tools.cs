@@ -13,7 +13,6 @@ namespace FrameWork45.UtilTools
         static string password = "taosdata";
         static string db = "";
         static short port = 0;
-        static string globalDbName = "csharp_example_db";
         //get a TDengine connection
         public static IntPtr TDConnection()
         {

@@ -5,7 +5,6 @@ namespace Benchmark
 {
     internal class InsertGenerator
     {
-        string Table { get; set; }
         public long BeginTime { get; set; }
         bool BoolVal { get; set; }
         sbyte TinyIntVal { get; set; }
@@ -133,7 +132,7 @@ namespace Benchmark
             conn = connection;
 
         }
-        public string ToString()
+        public string Display()
         {
             return $"tablename:{tableName} numOfRow:{numOfRows} numOfTable:{numOfTables}";
         }

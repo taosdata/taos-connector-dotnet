@@ -93,8 +93,8 @@ namespace FrameWork45.Stmt
             mBinds[8] = TaosMultiBind.MultiBindUBigInt(new ulong?[] { 4 });
             mBinds[9] = TaosMultiBind.MultiBindFloat(new float?[] { 18.58f });
             mBinds[10] = TaosMultiBind.MultiBindDouble(new double?[] { 2020.05071858d });
-            mBinds[11] = TaosMultiBind.MultiBindBinary(new string?[] { "taosdata" });
-            mBinds[12] = TaosMultiBind.MultiBindNchar(new string?[] { "TDenginge" });
+            mBinds[11] = TaosMultiBind.MultiBindBinary(new string[] { "taosdata" });
+            mBinds[12] = TaosMultiBind.MultiBindNchar(new string[] { "TDenginge" });
 
             return mBinds;
         }

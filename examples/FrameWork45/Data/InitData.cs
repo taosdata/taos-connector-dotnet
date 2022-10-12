@@ -17,7 +17,7 @@ namespace FrameWork45.Data
 
 
         //
-        private void initSql(string db, string? stable, string? table)
+        private void initSql(string db, string stable, string table)
         {
             StringBuilder sb = new StringBuilder();
             string tableName = String.IsNullOrEmpty(stable) ? table : stable;
@@ -116,7 +116,7 @@ namespace FrameWork45.Data
             }
         }
 
-        internal void Drop(IntPtr conn, string? db, string? table)
+        internal void Drop(IntPtr conn, string db, string table)
         {
             var sql = new StringBuilder();
             if (string.IsNullOrEmpty(db) && (!string.IsNullOrEmpty(table)))
@@ -137,7 +137,7 @@ namespace FrameWork45.Data
             }
         }
 
-        internal void InsertData(IntPtr conn, string? db, string? stable, string table, int numOfRows, long begin = 1656677700000)
+        internal void InsertData(IntPtr conn, string db, string stable, string table, int numOfRows, long begin = 1656677700000)
         {
             StringBuilder sb = new StringBuilder();
             long ts = begin;

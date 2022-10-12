@@ -61,9 +61,8 @@ namespace FrameWork45.WS
             return sql;
         }
 
-        public string InsertTable(int numOfRow, string? childTable, long begin = 1656677700000)
+        public string InsertTable(int numOfRow, string childTable, long begin = 1656677700000)
         {
-            string sql;
             long ts = begin;
             string cTable;
             if (IfStable == true)
@@ -82,7 +81,7 @@ namespace FrameWork45.WS
             return BuildInsert(numOfRow, cTable, ref ts);
         }
 
-        public string InsertJTable(int numOfRows, string? childTable, long begin = 1656677700000)
+        public string InsertJTable(int numOfRows, string childTable, long begin = 1656677700000)
         {
 
             StringBuilder sb = new StringBuilder();
@@ -141,7 +140,7 @@ namespace FrameWork45.WS
             return sb.ToString();
         }
 
-        private string BuildInsert(int numOfRows, string? childTable, ref long begin)
+        private string BuildInsert(int numOfRows, string childTable, ref long begin)
         {
             StringBuilder sb = new StringBuilder();
             long ts = begin;
