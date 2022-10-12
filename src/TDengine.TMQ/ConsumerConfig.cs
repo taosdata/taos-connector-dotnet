@@ -23,7 +23,7 @@ namespace TDengineTMQ
                 this.SetObject("group.id", value);
             }
         }
-        public string? ClientId
+        public string ClientId
         {
             get
             {
@@ -31,11 +31,11 @@ namespace TDengineTMQ
             }
             set
             {
-                this.SetObject("client.id", value!);
+                this.SetObject("client.id", value);
             }
         }
 
-        public string? EnableAutoCommit
+        public string EnableAutoCommit
         {
             get
             {
@@ -43,58 +43,58 @@ namespace TDengineTMQ
             }
             set
             {
-                this.SetObject("enable.auto.commit", value!);
+                this.SetObject("enable.auto.commit", value);
             }
         }
 
-        public string? AutoCommitIntervalMs
+        public string AutoCommitIntervalMs
         {
             get => Get("auto.commit.interval.ms");
 
-            set => this.SetObject("auto.commit.interval.ms", value!);
+            set => this.SetObject("auto.commit.interval.ms", value);
         }
 
 
-        public string? AutoOffsetReset
+        public string AutoOffsetReset
         {
             get => Get("auto.offset.reset");
-            set => this.SetObject("auto.offset.reset", value!);
+            set => this.SetObject("auto.offset.reset", value);
         }
 
-        public string? MsgWithTableName
+        public string MsgWithTableName
         {
             get => Get("msg.with.table.name");
-            set => this.SetObject("msg.with.table.name", value!);
+            set => this.SetObject("msg.with.table.name", value);
         }
 
-        public string? TDConnectIp
+        public string TDConnectIp
         {
             get => Get("td.connect.ip");
-            set => this.SetObject("td.connect.ip", value!);
+            set => this.SetObject("td.connect.ip", value);
         }
 
-        public string? TDConnectUser
+        public string TDConnectUser
         {
             get => Get("td.connect.ip");
-            set => this.SetObject("td.connect.ip", value!);
+            set => this.SetObject("td.connect.ip", value);
         }
 
-        public string? TDConnectPasswd
+        public string TDConnectPasswd
         {
             get => Get("td.connect.pass");
-            set => SetObject("td.connect.pass", value!);
+            set => SetObject("td.connect.pass", value);
         }
 
-        public string? TDConnectPort
+        public string TDConnectPort
         {
             get => Get("td.connect.port");
-            set => this.SetObject("td.connect.port", value!);
+            set => this.SetObject("td.connect.port", value);
         }
 
-        public string? TDDatabase
+        public string TDDatabase
         {
             get => Get("td.connect.db");
-            set => this.SetObject("td.connect.db", value!);
+            set => this.SetObject("td.connect.db", value);
         }
     }
 }

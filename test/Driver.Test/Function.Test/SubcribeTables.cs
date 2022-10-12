@@ -29,7 +29,7 @@ namespace Function.Test.TMQ
         /// <describe>Subscribe a table and consume from beginning.</describe>
         /// <filename>SubscribeTable.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(Skip = "SubscribeTable.NormalTable()"), TestExeOrder(1), Trait("Category", "NormalTable")]
+        [Fact(DisplayName = "SubscribeTable.NormalTable()"), TestExeOrder(1), Trait("Category", "NormalTable")]
         public void NormalTable()
         {
             IntPtr conn = database.Conn;

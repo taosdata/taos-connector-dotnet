@@ -56,7 +56,7 @@ namespace Function.Test.TaosWS
             _output.WriteLine("WS Assert Data ");
             for (int i = 0; i < columns.Count; i++)
             {
-                _output.WriteLine("{0},{1},{2}", i, columns[i], rows[i]);
+                // _output.WriteLine("{0},{1},{2}", i, columns[i], rows[i]);
                 Assert.Equal(columns[i], rows[i]);
             }
 
@@ -98,7 +98,7 @@ namespace Function.Test.TaosWS
             _output.WriteLine("Assert data");
             for (int i = 0; i < expectResData.Count; i++)
             {
-                _output.WriteLine("{0},{1},{2}", i, expectResData[i], rows[i]);
+                // _output.WriteLine("{0},{1},{2}", i, expectResData[i], rows[i]);
                 Assert.Equal(expectResData[i], rows[i]);
             }
 
@@ -140,7 +140,7 @@ namespace Function.Test.TaosWS
             _output.WriteLine("Assert data");
             for (int i = 0; i < expectResData.Count; i++)
             {
-                _output.WriteLine("{0},{1},{2}", i, expectResData[i], rows[i]);
+                // _output.WriteLine("{0},{1},{2}", i, expectResData[i], rows[i]);
                 Assert.Equal(expectResData[i], rows[i]);
             }
 

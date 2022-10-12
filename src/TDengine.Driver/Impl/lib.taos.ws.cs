@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using TDengineHelper;
 using TDengineDriver;
 
 namespace TDengineWS.Impl
@@ -14,7 +15,19 @@ namespace TDengineWS.Impl
         static extern public void WSEnableLog();
 
         [DllImport(LibName, EntryPoint = "ws_connect_with_dsn", CallingConvention = CallingConvention.Cdecl)]
-        static extern public IntPtr WSConnectWithDSN(string dsn);
+        static extern public IntPtr _WSConnectWithDSN(IntPtr dsn);
+        static public IntPtr WSConnectWithDSN(string dsn)
+        {
+            UTF8PtrStruct uTF8PtrStruct = new UTF8PtrStruct(dsn);
+            try
+            {
+                return _WSConnectWithDSN(uTF8PtrStruct.utf8Ptr);
+            }
+            finally
+            {
+                uTF8PtrStruct.UTF8FreePtr();
+            }
+        }
 
         [DllImport(LibName, EntryPoint = "ws_get_server_info", CallingConvention = CallingConvention.Cdecl)]
         static extern public string WSGetServerInfo(IntPtr wsTaos);
@@ -23,13 +36,52 @@ namespace TDengineWS.Impl
         static extern public void WSClose(IntPtr wsTaos);
 
         [DllImport(LibName, EntryPoint = "ws_query", CallingConvention = CallingConvention.Cdecl)]
-        static extern public IntPtr WSQuery(IntPtr wsTaos, string sql);
+        static extern private IntPtr _WSQuery(IntPtr wsTaos, IntPtr sql);
+
+        static public IntPtr WSQuery(IntPtr wsTaos, string sql)
+        {
+            UTF8PtrStruct uTF8PtrStruct = new UTF8PtrStruct(sql);
+            try
+            {
+                return _WSQuery(wsTaos, uTF8PtrStruct.utf8Ptr);
+            }
+            finally
+            {
+                uTF8PtrStruct.UTF8FreePtr();
+            }
+        }
 
         [DllImport(LibName, EntryPoint = "ws_stop_query", CallingConvention = CallingConvention.Cdecl)]
-        static extern public void WSStopQuery(IntPtr wsTaos, string sql);
+        static extern private void _WSStopQuery(IntPtr wsTaos, IntPtr sql);
+
+        static public void WSStopQuery(IntPtr wsTaos, string sql)
+        {
+            UTF8PtrStruct uTF8PtrStruct = new UTF8PtrStruct(sql);
+            try
+            {
+                _WSStopQuery(wsTaos, uTF8PtrStruct.utf8Ptr);
+            }
+            finally
+            {
+                uTF8PtrStruct.UTF8FreePtr();
+            }
+        }
 
         [DllImport(LibName, EntryPoint = "ws_query_timeout", CallingConvention = CallingConvention.Cdecl)]
-        static extern public IntPtr WSQueryTimeout(IntPtr wsTaos, string sql, uint seconds);
+        static extern private IntPtr _WSQueryTimeout(IntPtr wsTaos, IntPtr sql, uint seconds);
+
+        static public IntPtr WSQueryTimeout(IntPtr wsTaos, string sql, uint seconds)
+        {
+            UTF8PtrStruct uTF8PtrStruct = new UTF8PtrStruct(sql);
+            try
+            {
+                return _WSQueryTimeout(wsTaos, uTF8PtrStruct.utf8Ptr, seconds);
+            }
+            finally
+            {
+                uTF8PtrStruct.UTF8FreePtr();
+            }
+        }
 
         [DllImport(LibName, EntryPoint = "ws_take_timing", CallingConvention = CallingConvention.Cdecl)]
         static extern public Int64 WSTakeTiming(IntPtr wsRes);
@@ -72,7 +124,7 @@ namespace TDengineWS.Impl
                 int offset = i * (int)TaosField.STRUCT_SIZE;
                 TDengineMeta meta = new TDengineMeta();
 
-                meta.name = Marshal.PtrToStringUTF8(fieldsPtr + offset)!;
+                meta.name = Marshal.PtrToStringAnsi(fieldsPtr + offset);
                 meta.type = Marshal.ReadByte(fieldsPtr + offset + (int)TaosField.TYPE_OFFSET);
                 meta.size = Marshal.ReadInt16(fieldsPtr + offset + (int)TaosField.BYTES_OFFSET);
 
@@ -160,17 +212,55 @@ namespace TDengineWS.Impl
         static extern public IntPtr WSStmtInit(IntPtr wsTaos);
 
         [DllImport(LibName, EntryPoint = "ws_stmt_prepare", CallingConvention = CallingConvention.Cdecl)]
-        static extern private int ws_stmt_prepare(IntPtr wsStmt, string sql, UInt64 len);
+        static extern private int _ws_stmt_prepare(IntPtr wsStmt, IntPtr sql, UInt64 len);
+
         static public int WSStmtPrepare(IntPtr wsStmt, string sql)
         {
-            return ws_stmt_prepare(wsStmt, sql, (UInt64)sql.Length);
+            UTF8PtrStruct uTF8PtrStruct = new UTF8PtrStruct(sql);
+            try
+            {
+                return _ws_stmt_prepare(wsStmt, uTF8PtrStruct.utf8Ptr, (UInt64)uTF8PtrStruct.utf8StrLength);
+            }
+            finally
+            {
+                uTF8PtrStruct.UTF8FreePtr();
+            }
         }
 
         [DllImport(LibName, EntryPoint = "ws_stmt_set_tbname", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int WSStmtSetTbname(IntPtr wsStmt, string tableName);
+        static extern public int _WSStmtSetTbname(IntPtr wsStmt, IntPtr tableName);
+
+        static public int WSStmtSetTbname(IntPtr wsStmt, string tableName)
+        {
+            UTF8PtrStruct uTF8PtrStruct = new UTF8PtrStruct(tableName);
+            try
+            {
+                return _WSStmtSetTbname(wsStmt, uTF8PtrStruct.utf8Ptr);
+            }
+            finally
+            {
+                uTF8PtrStruct.UTF8FreePtr();
+            }
+        }
 
         [DllImport(LibName, EntryPoint = "ws_stmt_set_tbname_tags", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int WSStmtSetTbnameTags(IntPtr wsStmt, string tableName, TAOS_MULTI_BIND[] wsMBinds, Int32 len);
+        static extern private int _WSStmtSetTbnameTags(IntPtr wsStmt, IntPtr tableName, TAOS_MULTI_BIND[] wsMBinds, Int32 len);
+
+        static public int WSStmtSetTbnameTags(IntPtr wsStmt, string tableName, TAOS_MULTI_BIND[] wsMBinds, Int32 len)
+        {
+            UTF8PtrStruct uTF8PtrStruct = new UTF8PtrStruct(tableName);
+            try
+            {
+
+                return _WSStmtSetTbnameTags(wsStmt, uTF8PtrStruct.utf8Ptr, wsMBinds, len);
+
+            }
+            finally
+            {
+                uTF8PtrStruct.UTF8FreePtr();
+            }
+
+        }
 
         [DllImport(LibName, EntryPoint = "ws_stmt_is_insert", CallingConvention = CallingConvention.Cdecl)]
         static extern public int WSStmtIsInsert(IntPtr wsStmt, IntPtr isInsertPtr);
@@ -222,19 +312,19 @@ namespace TDengineWS.Impl
                     data = Marshal.ReadInt64(dataPtr);
                     break;
                 case TDengineDataType.TSDB_DATA_TYPE_FLOAT:
-                    data = Marshal.PtrToStructure(dataPtr, typeof(float))!;
+                    data = Marshal.PtrToStructure(dataPtr, typeof(float));
                     break;
                 case TDengineDataType.TSDB_DATA_TYPE_DOUBLE:
-                    data = Marshal.PtrToStructure(dataPtr, typeof(double))!;
+                    data = Marshal.PtrToStructure(dataPtr, typeof(double));
                     break;
                 case TDengineDataType.TSDB_DATA_TYPE_BINARY:
-                    data = Marshal.PtrToStringUTF8(dataPtr, len);
+                    data = Marshal.PtrToStringAnsi(dataPtr, len);
                     break;
                 case TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP:
                     data = Marshal.ReadInt64(dataPtr);
                     break;
                 case TDengineDataType.TSDB_DATA_TYPE_NCHAR:
-                    data = Marshal.PtrToStringUTF8(dataPtr, len);
+                    data = Marshal.PtrToStringAnsi(dataPtr, len);
                     break;
                 case TDengineDataType.TSDB_DATA_TYPE_UTINYINT:
                     data = Marshal.ReadByte(dataPtr);
@@ -249,7 +339,7 @@ namespace TDengineWS.Impl
                     data = (ulong)Marshal.ReadInt64(dataPtr);
                     break;
                 case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
-                    data = Marshal.PtrToStringUTF8(dataPtr, len);
+                    data = Marshal.PtrToStringAnsi(dataPtr, len);
                     break;
                 default:
                     throw new ArgumentException($"unsupported TDengine type {(int)dengineDataType}");

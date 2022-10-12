@@ -13,9 +13,9 @@ namespace TDengineTMQ
         public string topic { get; set; }
         public int vGroupId { get; set; }
         public string db { get; set; }
-        public string? table { get; set; }
+        public string table { get; set; }
 
-        public TopicPartition(string topic, int vGroupId, string db, string? table)
+        public TopicPartition(string topic, int vGroupId, string db, string table)
         {
             this.topic = topic;
             this.vGroupId = vGroupId;

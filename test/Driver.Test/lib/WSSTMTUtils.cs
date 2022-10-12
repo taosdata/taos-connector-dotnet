@@ -20,37 +20,37 @@ namespace Test.Utils
         public static void WSStmtPrepare(IntPtr wsStmt, string sql)
         {
             int code = LibTaosWS.WSStmtPrepare(wsStmt, sql);
-            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
+            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod()!.Name);
         }
 
         public static void WSStmtSetTbname(IntPtr wsStmt, string table)
         {
             int code = LibTaosWS.WSStmtSetTbname(wsStmt, table);
-            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
+            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod()!.Name);
         }
 
         public static void WSStmtSetTags(IntPtr wsStmt, TAOS_MULTI_BIND[] wsMBind, int len)
         {
             int code = LibTaosWS.WSStmtSetTags(wsStmt, wsMBind, len);
-            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
+            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod()!.Name);
         }
 
         public static void WSStmtSetTbnameTags(IntPtr wsStmt, string table, TAOS_MULTI_BIND[] wsMBinds, int len)
         {
             int code = LibTaosWS.WSStmtSetTbnameTags(wsStmt, table, wsMBinds, len);
-            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
+            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod()!.Name);
         }
 
         public static void WSStmtBindParamBatch(IntPtr wsStmt, TAOS_MULTI_BIND[] wsMBind, int len)
         {
             int code = LibTaosWS.WSStmtBindParamBatch(wsStmt, wsMBind, len);
-            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
+            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod()!.Name);
         }
 
         public static void WSStmtAddBatch(IntPtr wsStmt)
         {
             int code = LibTaosWS.WSStmtAddBatch(wsStmt);
-            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
+            ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod()!.Name);
         }
 
         public static int WSStmtExecute(IntPtr wsStmt)
@@ -59,7 +59,7 @@ namespace Test.Utils
             try
             {
                 int code = LibTaosWS.WSStmtExecute(wsStmt, affectRowsPtr);
-                ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod().Name);
+                ValidSTMTStep(code, wsStmt, System.Reflection.MethodBase.GetCurrentMethod()!.Name);
                 return Marshal.ReadInt32(affectRowsPtr);
             }
             finally
@@ -78,7 +78,7 @@ namespace Test.Utils
             LibTaosWS.WSStmtClose(wsStmt);
         }
 
-        public static void ValidSTMTStep(int code, IntPtr wsStmt, string stmtMethodName)
+        public static void ValidSTMTStep(int code, IntPtr wsStmt, string ? stmtMethodName)
         {
             if (code != 0)
             {

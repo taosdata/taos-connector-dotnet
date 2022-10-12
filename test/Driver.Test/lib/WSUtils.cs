@@ -8,7 +8,7 @@ namespace Test.Utils
 {
     internal class WSTools
     {
-        readonly string dsn = "ws://127.0.0.1:6041";
+        //readonly string dsn = "ws://127.0.0.1:6041";
         public IntPtr WSConnect(string dsn)
         {
             IntPtr wsConn = LibTaosWS.WSConnectWithDSN(dsn);
@@ -20,7 +20,6 @@ namespace Test.Utils
         {
             IntPtr wsRes;
             ResultSet.ResultSet resultSet;
-
 
             wsRes = LibTaosWS.WSQuery(wsConn, sql);
             ValidWSQuery(wsRes);

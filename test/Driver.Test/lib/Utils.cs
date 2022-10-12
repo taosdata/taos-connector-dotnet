@@ -86,7 +86,7 @@ namespace Test.Utils
         }
 
         // Generate insert SQL for the with the columns' data and tags' data 
-        public static string ConstructInsertSql(string table, string stable, List<Object> colData, List<Object> tagData, int numOfRows)
+        public static string ConstructInsertSql(string table, string stable, List<Object> colData, List<Object>? tagData, int numOfRows)
         {
             int numOfFields = colData.Count / numOfRows;
             StringBuilder insertSql;
@@ -99,7 +99,7 @@ namespace Test.Utils
             {
                 insertSql = new StringBuilder($"insert into {table} using {stable} tags(");
 
-                for (int j = 0; j < tagData.Count; j++)
+                for (int j = 0; j < tagData!.Count; j++)
                 {
                     if (tagData[j] is String)
                     {

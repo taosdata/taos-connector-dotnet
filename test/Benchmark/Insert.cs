@@ -67,7 +67,7 @@ namespace Benchmark
             for (int i = 0; i <tableCnt; i++)
             {
                 RunContext context = new RunContext($"{prefix}_{i}", recordCnt, tableCnt, conn);
-                ThreadPool.QueueUserWorkItem(RunInsertSQL, context);
+                ThreadPool.QueueUserWorkItem(RunInsertSQL!, context);
             }
             _doneEvent.WaitOne();
         }

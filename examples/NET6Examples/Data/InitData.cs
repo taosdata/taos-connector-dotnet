@@ -8,19 +8,19 @@ namespace Examples.Data
 
     internal class InitData
     {
-        internal string createDB { get; set; }
-        internal string useDB { get; set; }
-        internal string createTable { get; set; }
-        internal string dropTable { get; set; }
-        internal string dropDB { get; set; }
-        internal string insert { get; set; }
+        internal string createDB { get; set; } = "";
+        internal string useDB { get; set; } = "";
+        internal string createTable { get; set; } = "";
+        internal string dropTable { get; set; } = "";
+        internal string dropDB { get; set; } = "";
+        internal string ?insert { get; set; } = "";
 
 
         //
         private void initSql(string db, string? stable, string? table)
         {
             StringBuilder sb = new StringBuilder();
-            string tableName = String.IsNullOrEmpty(stable) ? table : stable;
+            string tableName = String.IsNullOrEmpty(stable) ? table! : stable;
             Console.WriteLine($"tablename:{tableName}");
             // use db;
             sb.Append("use ");
@@ -137,7 +137,7 @@ namespace Examples.Data
             }
         }
 
-        internal void InsertData(IntPtr conn, string? db, string? stable, string table, int numOfRows, long begin = 1656677700000)
+        internal void InsertData(IntPtr conn, string? db, string? stable, string ?table, int numOfRows, long begin = 1656677700000)
         {
             StringBuilder sb = new StringBuilder();
             long ts = begin;
@@ -149,12 +149,12 @@ namespace Examples.Data
             }
             else
             {
-                sb.Append(table);
+                sb.Append(table!);
                 sb.Append(" using ");
                 sb.Append(stable);
                 sb.Append(" tags ");
                 sb.Append('(');
-                sb.Append(table.Length % 2 == 0 ? "true" : "false");
+                sb.Append(table!.Length % 2 == 0 ? "true" : "false");
                 sb.Append(',');
                 sb.Append(-1);
                 sb.Append(',');

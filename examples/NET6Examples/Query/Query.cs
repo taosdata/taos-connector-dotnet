@@ -11,7 +11,7 @@ namespace Examples
         public static void QueryData(IntPtr conn, string db, string? stable, string? table, int numOfRows)
         {
             InitData data = new InitData();
-            string tmp = String.IsNullOrEmpty(stable) ? table : stable;
+            string tmp = String.IsNullOrEmpty(stable) ? table! : stable;
             data.Create(conn, db, tmp, !string.IsNullOrEmpty(stable));
             data.InsertData(conn, db, stable, table, numOfRows);
             IntPtr res = Tools.ExecuteQuery(conn, $"select * from {tmp} ");
