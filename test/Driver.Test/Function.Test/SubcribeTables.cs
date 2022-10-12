@@ -109,7 +109,7 @@ namespace Function.Test.TMQ
         /// <describe>Subscribe table from the last progress.</describe>
         /// <filename>Subscribe.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(DisplayName = "SubscribeTable.MultiTables()"), TestExeOrder(2), Trait("Category", "MultiTables")]
+        [Fact(Skip = "SubscribeTable.MultiTables()"), TestExeOrder(2), Trait("Category", "MultiTables")]
         public void MultiTables()
         {
             IntPtr conn = database.Conn;
