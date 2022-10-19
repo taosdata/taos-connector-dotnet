@@ -5,7 +5,7 @@
     <PackageId>TDengine.Connector.test</PackageId>
     <PackageIcon>image\logo.jpg</PackageIcon>
     <PackageReadmeFile>docs\README.md</PackageReadmeFile>
-    <Version>9.0.5</Version>
+    <Version>3.0.2</Version>
     <Authors>taosdata</Authors>
     <Company>https://tdengine.com/</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
