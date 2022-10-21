@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 using TDengineHelper;
 
 namespace TDengineDriver
@@ -121,6 +122,46 @@ namespace TDengineDriver
         //================================ schemaless ====================
         [DllImport(DLLName, SetLastError = true, EntryPoint = "taos_schemaless_insert", CallingConvention = CallingConvention.Cdecl)]
         static extern public IntPtr SchemalessInsert(IntPtr taos, string[] lines, int numLines, int protocol, int precision);
+
+        [DllImport(DLLName, SetLastError = true, EntryPoint = "taos_schemaless_insert_raw", CallingConvention = CallingConvention.Cdecl)]
+        static extern private IntPtr _taos_schemaless_insert_raw(IntPtr taos, char[] lines, int length, IntPtr totalRows, int protocol, int precision);
+
+        /// <summary>
+        /// New schemaless insert interface, support string with "\0"
+        /// </summary>
+        /// <param name="taos">valid taos connect.</param>
+        /// <param name="lines">Data want to insert.</param>
+        /// <param name="protocol"></param>
+        /// <param name="precision"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        static public Int32 SchemalessInsertRaw(IntPtr taos, string[] lines, TDengineSchemalessProtocol protocol, TDengineSchemalessPrecision precision)
+        {
+            IntPtr totalRowsPtr = Marshal.AllocHGlobal(sizeof(Int32));
+            int length = 0;
+            char[] lineContent = string.Join("\n", lines).ToCharArray();
+
+            //for (int i = 0; i < lineContent.Length; i++)
+            //{
+            //    Console.WriteLine("i:{0}, {1}, ACSII:{2}", i, lineContent[i], (int)lineContent[i]);
+            //}
+            try
+            {
+                length = Encoding.UTF8.GetByteCount(lineContent); ;
+                Console.WriteLine("Length={0}", length);
+
+                IntPtr smlRes = _taos_schemaless_insert_raw(taos, lineContent, length, totalRowsPtr, (int)protocol, (int)precision);
+                if (ErrorNo(smlRes) != 0)
+                {
+                    throw new Exception($"{Error(smlRes)},{ErrorNo(smlRes)}");
+                }
+                return Marshal.ReadInt32(totalRowsPtr);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(totalRowsPtr);
+            }
+        }
 
         // ================================ stmt ==========================
         /// <summary>
