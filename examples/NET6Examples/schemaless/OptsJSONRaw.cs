@@ -7,7 +7,7 @@ namespace Examples.SchemalessRaw
     internal class OptsJSONRaw
     {
         const string table = "sml_raw_telnet";
-        string[] lines = { "[{\"metric\": \"sml_raw_telnet\", \"timestamp\": 1648432611249, \"value\": 10.3, \"tags\": {\"location\": \"Ca\0lifornia.SanFrancisco\", \"groupid\": 2}}," +
+        string[] lines = { "[{\"metric\": \"sml_raw_telnet\", \"timestamp\": 1648432611249, \"value\": 10.3, \"tags\": {\"location\": \"California.SanFrancisco\", \"groupid\": 2}}," +
                 " {\"metric\": \"sml_raw_telnet\", \"timestamp\": 1648432611249, \"value\": 219, \"tags\": {\"location\": \"Ca0lifornia.LosAngeles\", \"groupid\": 1}}, " +
                 "{\"metric\": \"sml_raw_telnet\", \"timestamp\": 1648432611250, \"value\": 12.6, \"tags\": {\"location\": \"California.SanFrancisco\", \"groupid\": 2}}," +
                 " {\"metric\": \"sml_raw_telnet\", \"timestamp\": 1648432611251, \"value\": 220, \"tags\": {\"location\": \"北京.朝阳\", \"groupid\": 3}},"+

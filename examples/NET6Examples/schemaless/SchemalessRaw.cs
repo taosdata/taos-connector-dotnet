@@ -24,10 +24,10 @@ namespace Examples.SchemalessRaw
             Tools.ExecuteUpdate(conn, $"create database if not exists {DB} keep 3650");
             Tools.ExecuteUpdate(conn, $"use {DB}");
 
-            //this.Line.RunInfluxDBLineRaw(conn);
+            this.Line.RunInfluxDBLineRaw(conn);
             //this.optsJSONRaw.RunOptsJSONRaw(conn);
-            this.optsTelnetRaw.RunOptsTelnetRaw(conn);
-            Tools.ExecuteUpdate(conn, $"drop database if exists {DB}");
+            //this.optsTelnetRaw.RunOptsTelnetRaw(conn);
+            // Tools.ExecuteUpdate(conn, $"drop database if exists {DB}");
 
         }
     }
