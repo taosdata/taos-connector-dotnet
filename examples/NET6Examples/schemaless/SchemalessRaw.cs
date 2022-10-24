@@ -1,5 +1,5 @@
 ﻿using System;
-using Examples.schemalessRaw;
+using Examples.SchemalessRaw;
 using Examples.UtilsTools;
 
 namespace Examples.SchemalessRaw
@@ -25,9 +25,9 @@ namespace Examples.SchemalessRaw
             Tools.ExecuteUpdate(conn, $"use {DB}");
 
             this.Line.RunInfluxDBLineRaw(conn);
-            //this.optsJSONRaw.RunOptsJSONRaw(conn);
-            //this.optsTelnetRaw.RunOptsTelnetRaw(conn);
-            // Tools.ExecuteUpdate(conn, $"drop database if exists {DB}");
+            this.optsJSONRaw.RunOptsJSONRaw(conn);
+            this.optsTelnetRaw.RunOptsTelnetRaw(conn);
+            Tools.ExecuteUpdate(conn, $"drop database if exists {DB}");
 
         }
     }

@@ -2,7 +2,7 @@
 using TDengineDriver;
 using TDengineDriver.Impl;
 
-namespace Examples.schemalessRaw
+namespace Examples.SchemalessRaw
 {
     internal class OptsTelnetRaw
     {

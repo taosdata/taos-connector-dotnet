@@ -6,7 +6,7 @@ namespace Examples.SchemalessRaw
 {
     internal class InfluxDBLineRaw
     {
-        const string table = "influx_line_raw";
+        const string table = "sml_line_raw";
         string[] lines =  {
                 $"{table},location=California.LosAngeles,groupid=2 current=11.8,voltage=221,phase=0.28 1648432611249",
                 $"{table},location=Ca\0l0ifornia.LosAngeles,groupid=2 current=13.4,voltage=223,phase=0.29 1648432611250",
