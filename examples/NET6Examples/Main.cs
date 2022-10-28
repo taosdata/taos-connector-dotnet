@@ -1,6 +1,7 @@
 using Examples.AsyncQuery;
 using Examples.JSONTag;
 using Examples.Schemaless;
+using Examples.SchemalessRaw;
 using Examples.Stmt;
 using Examples.TMQ;
 using Examples.UtilsTools;
@@ -46,6 +47,10 @@ namespace Examples
             // JSON Tag
             JSONTagExample jSONTagExample = new JSONTagExample();
             jSONTagExample.RunJSONTag(conn);
+
+            // SchemalessRaw
+            SchemalessRawExample schemalessRawExample = new SchemalessRawExample();
+            schemalessRawExample.RunSchemalessRaw(conn);
 
             Tools.CloseConnection(conn);
 
