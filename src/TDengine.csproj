@@ -2,9 +2,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>net5;net6;netstandard2.0;netstandard2.1;net45;net451;</TargetFrameworks>
-    <PackageId>TDengine.Connector</PackageId>
-    <PackageIcon>logo.jpg</PackageIcon>
-    <Version>3.0.0</Version>
+    <PackageId>TDengine.Connector.test</PackageId>
+    <PackageIcon>image\logo.jpg</PackageIcon>
+    <PackageReadmeFile>docs\README.md</PackageReadmeFile>
+    <Version>3.0.2</Version>
     <Authors>taosdata</Authors>
     <Company>https://tdengine.com/</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -14,13 +15,18 @@
 		This C # connector supports: Linux 64/Windows x64/Windows x86.
 		more information please visit: https://tdengine.com/
     </Description>
-    <RepositoryUrl>https://github.com/taosdata/taos-connector-dotnet</RepositoryUrl>
+    <PackageProjectUrl>https://docs.tdengine.com/reference/connector/csharp/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/taosdata/taos-connector-dotnet.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryBranch>"3.0"</RepositoryBranch>
     <NoWarn>CS1591</NoWarn>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <!--<Nullable>enable</Nullable>-->
   </PropertyGroup>
   <ItemGroup>
-    <None Include="resource\logo.jpg" Pack="true" PackagePath="\" />
+    <None Include="resource\logo.jpg" Pack="true" PackagePath="image"  />
+    <None Include="../README.md" Pack="True" PackagePath="docs" />
+    <None Include="runtimes/**" Pack="True" PackagePath="runtimes" />
   </ItemGroup>
-
 
 </Project>

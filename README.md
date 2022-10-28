@@ -2,6 +2,7 @@
 
 * This C# connector supports: Linux 64/Windows x64/Windows x86.
 * This C# connector can be downloaded and included as a normal package from [Nuget.org](https://www.nuget.org/packages/TDengine.Connector/).
+* From V3.0.2, this C# connector support WebSocket.But need additional some configurations in your project file.
 
 ## Installation preparations
 
@@ -10,26 +11,40 @@
   are located under Windows client's installation path:install_directory/examples/C#.
 * Install [.NET SDK](https://dotnet.microsoft.com/download)
 
-## Installation verification
+## Installation
 
-Run {client_installation_directory}/examples/C#/C#Checker/C#Checker.cs
+For native connection:
 
 ```cmd
-cd {client_install_directory}/examples/C\#/C#Checker
-//run c#checker.cs
-dotnet run -- -h <FQDN>
+dotnet add package TDengine.Connector
 ```
+
+For WebSocket, Need add the following ItemGroup in your project file:
+
+``` XML
+// .csproj
+<ItemGroup>
+    <PackageReference Include="TDengine.Connector" Version="3.0.*" GeneratePathProperty="true" />
+  </ItemGroup>
+  <Target Name="copyDLLDepency" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <DepDLLFiles Include="$(PkgTDengine_Connector_test)\runtimes\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DepDLLFiles)" DestinationFolder="$(OutDir)\dep_lib" />
+  </Target>
+
+```
+
+**Tips:**
+`TDengine.Connector` support WebSocket from V3.0.2. And for v1.x doesn't support WebSocket.
 
 ## Example Source Code
 
 You can find examples under follow directories:
 
 * {client_installation_directory}/examples/C#
-* [github C# example source code](https://github.com/taosdata/TDengine/tree/develop/tests/examples/C%23)
-
-**Tips:**
-"TDengineTest" is an example that includes some basic sample code like
-connect, query and so on.
+* [TDengine example source code](https://github.com/taosdata/TDengine/tree/main/docs/examples/csharp)
+* [Current repo example source code](https://github.com/taosdata/taos-connector-dotnet/tree/3.0/examples)
 
 ## Use C# connector
 
@@ -133,6 +148,11 @@ ExecuteSQL(conn,$"drop database if exists {db};");
 ### **Get Query Result**
 
 ```C#
+
+using System;
+using System.Collections.Generic;
+using TDengineDriver.Impl;
+
 // Following code is a sample that traverses retrieve data from TDengine.
 public void ExecuteQuery(IntPtr conn,string sql)
 {
@@ -150,111 +170,24 @@ public void ExecuteQuery(IntPtr conn,string sql)
          // ... do something ...
     }
 
-    // Retrieve data successfully then iterate through "res".
+    List<TDengineDriver.TDengineMeta> resMeta = LibTaos.GetMeta(res);
+    List<Object> resData = LibTaos.GetData(res);
 
-    // Fields count, num of fields, that is equal to retrieved column count.
-    int fieldCount = TDengine.FieldCount(res);
-    Console.WriteLine("field count: " + fieldCount);
-
-    // Get query result field information in list form.
-    List<TDengineMeta> metas = TDengine.FetchFields(res);
-    for(int j = 0; j < metas.Count; j++)
+    foreach (var meta in resMeta)
     {
-        TDengineMeta meta = (TDengineMeta)metas[j];
-        Console.WriteLine($"index:{j},type:{meta.type},typename:{meta.TypeName()},name:{meta.name},size:{meta.size}");
+        Console.Write($"\t|{meta.name} {meta.TypeName()} ({meta.size})\t|");
     }
-
-    // Iterate over the data from the retrieved results.
-    IntPtr rowdata;
-    StringBuilder builder = new StringBuilder();
-    while ((rowdata = TDengine.FetchRows(res)) != IntPtr.Zero)
+    Console.WriteLine("")
+    for (int i = 0; i < resData.Count; i++)
     {
-        queryRows++;
-        IntPtr colLengthPtr = TDengine.FetchLengths(res);
-        int[] colLengthArr = new int[fieldCount];
-        Marshal.Copy(colLengthPtr, colLengthArr, 0, fieldCount);
-
-        for (int fields = 0; fields < fieldCount; ++fields)
+        Console.Write($"|{resData[i].ToString()} \t");
+        //Console.WriteLine("{0},{1},{2}", i, resMeta.Count, (i) % resMeta.Count);
+        if (((i + 1) % resMeta.Count == 0))
         {
-            TDengineMeta meta = metas[fields];
-            int offset = IntPtr.Size * fields;
-            IntPtr data = Marshal.ReadIntPtr(rowdata, offset);
-
-            builder.Append("---");
-
-            if (data == IntPtr.Zero)
-            {
-                builder.Append("NULL");
-                continue;
-            }
-            switch ((TDengineDataType)meta.type)
-            {
-                case TDengineDataType.TSDB_DATA_TYPE_BOOL:
-                    bool v1 = Marshal.ReadByte(data) == 0 ? false : true;
-                    builder.Append(v1.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_TINYINT:
-                    sbyte v2 = (sbyte)Marshal.ReadByte(data);
-                    builder.Append(v2.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_SMALLINT:
-                    short v3 = Marshal.ReadInt16(data);
-                    builder.Append(v3.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_INT:
-                    int v4 = Marshal.ReadInt32(data);
-                    builder.Append(v4.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_BIGINT:
-                    long v5 = Marshal.ReadInt64(data);
-                    builder.Append(v5.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_FLOAT:
-                    float v6 = (float)Marshal.PtrToStructure(data, typeof(float));
-                    builder.Append(v6.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_DOUBLE:
-                    double v7 = (double)Marshal.PtrToStructure(data, typeof(double));
-                    builder.Append(v7.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_BINARY:
-                    string v8 = Marshal.PtrToStringUTF8(data, colLengthArr[fields]);
-                    builder.Append(v8);
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP:
-                    long v9 = Marshal.ReadInt64(data);
-                    builder.Append(v9.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_NCHAR:
-                    string v10 = Marshal.PtrToStringUTF8(data, colLengthArr[fields]);
-                    builder.Append(v10);
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_UTINYINT:
-                    byte v12 = Marshal.ReadByte(data);
-                    builder.Append(v12.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_USMALLINT:
-                    ushort v13 = (ushort)Marshal.ReadInt16(data);
-                    builder.Append(v13.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_UINT:
-                    uint v14 = (uint)Marshal.ReadInt32(data);
-                    builder.Append(v14.ToString());
-                    break;
-                case TDengineDataType.TSDB_DATA_TYPE_UBIGINT:
-                    ulong v15 = (ulong)Marshal.ReadInt64(data);
-                    builder.Append(v15.ToString());
-                    break;
-                default:
-                    builder.Append("unknown value");
-                    break;
-            }
+            Console.WriteLine("");
         }
-        builder.Append("---");
-     }
-     // Do something with the result data, like print.
-     Console.WriteLine(builder.ToString());
-
+    }
+    Console.WriteLine("")
     // Important free "res".
      TDengine.FreeResult(res);
 }
@@ -417,15 +350,29 @@ else
 }
 ```
 
-* More samples reference from [examples](https://github.com/taosdata/TDengine/tree/develop/tests/examples/C%23/).
+### Websocket Example
 
-**Note:**
+``` XML
+// modify your project file (.csproj), copy dynamic library from the nupkg into your project directory.
+<ItemGroup>
+    <PackageReference Include="TDengine.Connector" Version="3.0.*" GeneratePathProperty="true" />
+</ItemGroup>
+  <Target Name="copyDLLDepency" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <DepDLLFiles Include="$(PkgTDengine_Connector_test)\runtimes\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DepDLLFiles)" DestinationFolder="$(OutDir)\dep_lib" />
+  </Target>
+```
 
-* TDengine V2.0.3.0 supports both 32-bit and 64-bit Windows systems,
-  so when .NET project generates a .exe file, please select correspond
-  with "X86" or "x64" for the "Platform" under "Solution"/"Project".
-* This .NET interface has been verified in Visual Studio 2015/2017,
-  other VS versions have not been verified yet.
+* [WebSocket basic use](https://github.com/taosdata/taos-connector-dotnet/blob/3.0/examples/NET6Examples/WS/WebSocketSample.cs).
+* [WebSocket STMT](https://github.com/taosdata/taos-connector-dotnet/blob/3.0/examples/NET6Examples/WS/WebSocketSTMT.cs).
+* More samples reference from [examples](https://github.com/taosdata/taos-connector-dotnet/tree/3.0/examples/NET6Examples/WS).
+
+**Note：**
+
+* For WebSocket need copy dynamic library from the nupkg into your project directory.
+  
 * Since this. NET connector interface requires the taos.dll file, so before
   executing the application, copy the taos.dll file in the
   Windows {client_install_directory}/driver directory to the folder where the
