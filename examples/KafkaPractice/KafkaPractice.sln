@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32804.467
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KafkaPractice", "KafkaPractice\KafkaPractice.csproj", "{391FEDF6-8689-490E-87E0-C29F5F41FF99}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Producer", "Producer\Producer.csproj", "{BF612AF9-055A-4578-B154-F8F9C0841FDC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Consumer", "Consumer\Consumer.csproj", "{ACA3843A-ACFC-466E-B1A7-B7D71590966B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{391FEDF6-8689-490E-87E0-C29F5F41FF99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{391FEDF6-8689-490E-87E0-C29F5F41FF99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{391FEDF6-8689-490E-87E0-C29F5F41FF99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{391FEDF6-8689-490E-87E0-C29F5F41FF99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF612AF9-055A-4578-B154-F8F9C0841FDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF612AF9-055A-4578-B154-F8F9C0841FDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF612AF9-055A-4578-B154-F8F9C0841FDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF612AF9-055A-4578-B154-F8F9C0841FDC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACA3843A-ACFC-466E-B1A7-B7D71590966B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACA3843A-ACFC-466E-B1A7-B7D71590966B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACA3843A-ACFC-466E-B1A7-B7D71590966B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACA3843A-ACFC-466E-B1A7-B7D71590966B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AE4250EF-517E-4B56-A533-6B9B171B4520}
+	EndGlobalSection
+EndGlobal
