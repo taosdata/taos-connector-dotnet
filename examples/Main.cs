@@ -5,6 +5,7 @@ using TDengineDriver;
 using Example;
 using System.Collections.Generic;
 using examples;
+using Examples.SchemalessRaw;
 
 namespace AsyncQueryExample
 {
@@ -23,6 +24,9 @@ namespace AsyncQueryExample
 
             SchemalessSample schemalessSample = new SchemalessSample();
             schemalessSample.RunSchemaless();
+
+            SchemalessRawExample schemalessSampleRaw = new SchemalessRawExample();
+            schemalessSampleRaw.RunSchemalessRaw(conn);
 
             BasicSample basic = new BasicSample(conn, "basic");
             basic.Run();
