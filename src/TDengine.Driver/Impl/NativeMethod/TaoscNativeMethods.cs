@@ -485,7 +485,7 @@ namespace TDengineDriver
 
         //int taos_fetch_block(TAOS_RES *res, TAOS_ROW *rows)
         [DllImport(DLLName, EntryPoint = "taos_fetch_block", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int taos_fetch_block(IntPtr res, IntPtr rows);
+        static extern public int FetchBlock(IntPtr res, IntPtr rows);
 
         //int taos_fetch_raw_block(TAOS_RES *res, int* numOfRows, void** pData);
         [DllImport(DLLName, EntryPoint = "taos_fetch_raw_block", CallingConvention = CallingConvention.Cdecl)]
