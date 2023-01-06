@@ -127,11 +127,11 @@ namespace TDengineDriver
         static extern private IntPtr _taos_schemaless_insert_raw(IntPtr taos, byte[] lines, int length, IntPtr totalRows, int protocol, int precision);
 
         /// <summary>
-        /// New schemaless insert interface,INFLUX_LINE_PROTOCOL AND OPTS_TELNET_PROTOCAL support '\0'(ASCII code 0) other is same as "TDengine.SchemalessInsert"
+        /// New schemaless insert interface,INFLUX_LINE_PROTOCOL AND OPTS_TELNET_PROTOCOL support '\0'(ASCII code 0) other is same as "TDengine.SchemalessInsert"
         /// </summary>
         /// <param name="taos">valid taos connect.</param>
         /// <param name="lines">Data want to insert.</param>
-        /// <param name="protocol">Only INFLUX_LINE_PROTOCOL AND OPTS_TELNET_PROTOCAL support '\0'(ASCII code 0) input</param>
+        /// <param name="protocol">Only INFLUX_LINE_PROTOCOL AND OPTS_TELNET_PROTOCOL support '\0'(ASCII code 0) input</param>
         /// <param name="precision"></param>
         /// <returns>Return number of rows have been inserted </returns>
         /// <exception cref="Exception"></exception>
@@ -167,7 +167,7 @@ namespace TDengineDriver
         /// </summary>
         /// <param name=DLLName>a valid taos connection</param>
         /// <returns>
-        /// Not NULL returned for success, NULL for failure. And it should be freed with taos_stmt_close. 
+        /// Not NULL returned for success, NULL for failure. And it should be freed with taos_stmt_close.
         /// </returns>
         [DllImport(DLLName, EntryPoint = "taos_stmt_init", CallingConvention = CallingConvention.Cdecl)]
         static extern public IntPtr StmtInit(IntPtr taos);
@@ -194,7 +194,7 @@ namespace TDengineDriver
 
         /// <summary>
         /// For INSERT only.
-        /// set a table name for binding table name as parameter and tag values for all  tag parameters. 
+        /// set a table name for binding table name as parameter and tag values for all  tag parameters.
         /// </summary>
         /// <param name="stmt">could be the value returned by 'StmtInit', that may be a valid object or NULL.</param>
         /// <param name="name">use to set table name</param>
@@ -217,7 +217,7 @@ namespace TDengineDriver
 
 
         /// <summary>
-        /// For INSERT only. Used to bind table name as a parmeter for the input stmt object.
+        /// For INSERT only. Used to bind table name as a parameter for the input stmt object.
         /// </summary>
         /// <param name="stmt">could be the value returned by 'StmtInit', that may be a valid object or NULL.</param>
         /// <param name="name">table name you want to  bind</param>
@@ -243,9 +243,9 @@ namespace TDengineDriver
         //int taos_stmt_set_tags(TAOS_STMT *stmt, TAOS_MULTI_BIND *tags);
 
         /// <summary>
-        /// For INSERT only. 
-        /// Set a table name for binding table name as parameter. Only used for binding all tables 
-        /// in one stable, user application must call 'loadTableInfo' API to load all table 
+        /// For INSERT only.
+        /// Set a table name for binding table name as parameter. Only used for binding all tables
+        /// in one stable, user application must call 'loadTableInfo' API to load all table
         /// meta before calling this API. If the table meta is not cached locally, it will return error.
         /// </summary>
         /// <param name="stmt">could be the value returned by 'StmtInit', that may be a valid object or NULL.</param>
@@ -289,12 +289,12 @@ namespace TDengineDriver
 
         /// <summary>
         /// for INSERT only
-        /// bind one or multiple lines data. The parameter 'bind'  
+        /// bind one or multiple lines data. The parameter 'bind'
         /// </summary>
         /// <param name="stmt">could be the value returned by 'StmtInit', that may be a valid object or NULL.</param>
         /// <param name="bind">
         /// points to an array contains one or more lines data.Each item in array represents a column's value(s),
-        /// the item number and sequence should keep consistence with columns in sql statement. 
+        /// the item number and sequence should keep consistence with columns in sql statement.
         /// </param>
         /// <returns>0 for success, non-zero for failure.</returns>
         [DllImport(DLLName, EntryPoint = "taos_stmt_bind_param_batch", CallingConvention = CallingConvention.Cdecl)]
@@ -302,7 +302,7 @@ namespace TDengineDriver
         //int taos_stmt_bind_param_batch(TAOS_STMT* stmt, TAOS_MULTI_BIND* bind);
 
         /// <summary>
-        /// bind a single column's data, INTERNAL used and for INSERT only. 
+        /// bind a single column's data, INTERNAL used and for INSERT only.
         /// </summary>
         /// <param name="stmt">could be the value returned by 'StmtInit', that may be a valid object or NULL.</param>
         /// <param name="bind">points to a column's data which could be the one or more lines. </param>
@@ -314,9 +314,9 @@ namespace TDengineDriver
 
         /// <summary>
         /// For INSERT only.
-        /// add all current bound parameters to batch process. Must be called after each call to 
-        /// StmtBindParam/StmtBindSingleParamBatch, or all columns binds for one or more lines 
-        /// with StmtBindSingleParamBatch. User application can call any bind parameter 
+        /// add all current bound parameters to batch process. Must be called after each call to
+        /// StmtBindParam/StmtBindSingleParamBatch, or all columns binds for one or more lines
+        /// with StmtBindSingleParamBatch. User application can call any bind parameter
         /// API again to bind more data lines after calling to this API.
         /// </summary>
         /// <param name="stmt">could be the value returned by 'StmtInit', that may be a valid object or NULL.</param>
@@ -326,7 +326,7 @@ namespace TDengineDriver
         //int taos_stmt_add_batch(TAOS_STMT *stmt);
 
         /// <summary>
-        /// actually execute the INSERT/SELECT sql statement. 
+        /// actually execute the INSERT/SELECT sql statement.
         /// User application can continue to bind new data after calling to this API.
         /// </summary>
         /// <param name="stmt">could be the value returned by 'StmtInit', that may be a valid object or NULL.</param>
@@ -354,7 +354,7 @@ namespace TDengineDriver
         //int taos_stmt_close(TAOS_STMT *stmt);
 
         /// <summary>
-        /// get detail error message when got failure for any stmt API call. If not failure, the result 
+        /// get detail error message when got failure for any stmt API call. If not failure, the result
         /// returned in this API is unknown.
         /// </summary>
         /// <param name="stmt">could be the value returned by 'StmtInit', that may be a valid object or NULL.</param>
@@ -364,7 +364,7 @@ namespace TDengineDriver
         // char* taos_stmt_errstr(TAOS_STMT* stmt);
 
         /// <summary>
-        /// get detail error message when got failure for any stmt API call. If not failure, the result 
+        /// get detail error message when got failure for any stmt API call. If not failure, the result
         /// returned in this API is unknown.
         /// </summary>
         /// <param name="stmt">could be the value returned by 'StmtInit', that may be a valid object or NULL.</param>
@@ -386,14 +386,14 @@ namespace TDengineDriver
         // ========================== Async Query====================
         /// <summary>
         /// This API uses non-blocking call mode.
-        /// Application can open multiple tables and manipulate(query or insert) opened table concurrently. 
+        /// Application can open multiple tables and manipulate(query or insert) opened table concurrently.
         /// So applications must ensure that opetations on the same table is completely serialized.
         /// Because that will cause some query and insert operations cannot be performed.
         /// </summary>
         /// <param name=DLLName> A taos connection return by Connect()</param>
         /// <param name="sql">sql command need to execute</param>
         /// <param name="fq">User-defined callback function. <see cref="QueryAsyncCallback"/></param>
-        /// <param name="param">the parameter for callback</param>       
+        /// <param name="param">the parameter for callback</param>
         [DllImport(DLLName, EntryPoint = "taos_query_a", CallingConvention = CallingConvention.Cdecl)]
         static extern private void _QueryAsync(IntPtr taos, IntPtr sql, QueryAsyncCallback fq, IntPtr param);
 

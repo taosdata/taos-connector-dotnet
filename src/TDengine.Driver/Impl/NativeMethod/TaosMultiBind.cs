@@ -12,7 +12,7 @@ namespace TDengineDriver
             int elementCount = arr.Length;
             //the size of buffer array element
             int typeSize = sizeof(bool);
-            //size of int 
+            //size of int
             int intSize = sizeof(int);
             int byteSize = sizeof(byte);
 
@@ -49,7 +49,7 @@ namespace TDengineDriver
             //the size of buffer array element
             int typeSize = sizeof(byte);
             int byteSize = sizeof(byte);
-            //size of int 
+            //size of int
             int intSize = sizeof(int);
 
             //TAOS_MULTI_BIND.buffer
@@ -87,7 +87,7 @@ namespace TDengineDriver
             int elementCount = arr.Length;
             //the size of buffer array element
             int typeSize = sizeof(short);
-            //size of int 
+            //size of int
             int intSize = sizeof(int);
             int byteSize = sizeof(byte);
 
@@ -196,7 +196,7 @@ namespace TDengineDriver
             int typeSize = sizeof(float);
             int intSize = sizeof(int);
             int byteSize = sizeof(byte);
-            //used to replace null 
+            //used to replace null
             float[] arrTmp = new float[elementCount];
 
             //TAOS_MULTI_BIND.buffer
@@ -235,7 +235,7 @@ namespace TDengineDriver
             int typeSize = sizeof(double);
             int intSize = sizeof(int);
             int byteSize = sizeof(byte);
-            //used to replace null 
+            //used to replace null
             double[] arrTmp = new double[elementCount];
 
             //TAOS_MULTI_BIND.buffer
@@ -274,7 +274,7 @@ namespace TDengineDriver
             int typeSize = sizeof(byte);
             int intSize = sizeof(int);
             int byteSize = sizeof(byte);
-            //used to replace null 
+            //used to replace null
 
             //TAOS_MULTI_BIND.buffer
             IntPtr c_unsigned_tinyint_ptr = Marshal.AllocHGlobal(typeSize * elementCount);
@@ -312,7 +312,7 @@ namespace TDengineDriver
             int typeSize = sizeof(ushort);
             int intSize = sizeof(int);
             int byteSize = sizeof(byte);
-            //used to replace null 
+            //used to replace null
 
             //TAOS_MULTI_BIND.buffer
             IntPtr c_unsigned_smallint_ptr = Marshal.AllocHGlobal(typeSize * elementCount);
@@ -354,7 +354,7 @@ namespace TDengineDriver
             int typeSize = sizeof(uint);
             int intSize = sizeof(int);
             int byteSize = sizeof(byte);
-            //used to replace null 
+            //used to replace null
 
             //TAOS_MULTI_BIND.buffer
             IntPtr c_unsigned_int_ptr = Marshal.AllocHGlobal(typeSize * elementCount);
@@ -396,7 +396,7 @@ namespace TDengineDriver
             int typeSize = sizeof(ulong);
             int intSize = sizeof(int);
             int byteSize = sizeof(byte);
-            //used to replace null 
+            //used to replace null
 
             //TAOS_MULTI_BIND.buffer
             IntPtr c_unsigned_bigint_ptr = Marshal.AllocHGlobal(typeSize * elementCount);
@@ -435,11 +435,11 @@ namespace TDengineDriver
         {
             TAOS_MULTI_BIND multiBind = new TAOS_MULTI_BIND();
             int elementCount = arr.Length;
-            //TypeSize represent the Max element length of the comming arr
+            //TypeSize represent the Max element length of the coming arr
             //The size of the buffer is typeSize * elementCount
             //This buffer is used to store TAOS_MULTI_BIND.buffer
             int typeSize = MaxElementLength(arr);
-            //This intSize is used to calculate buffer size of the struct TAOS_MULTI_BIND's 
+            //This intSize is used to calculate buffer size of the struct TAOS_MULTI_BIND's
             //length. The buffer is intSize * elementCount,which is used to store TAOS_MULTI_BIND.length
             int intSize = sizeof(int);
             //This byteSize is used to calculate the buffer size of the struct TAOS_MULTI_BIND.is_null
@@ -469,7 +469,7 @@ namespace TDengineDriver
                 }
                 //Set TAOS_MULTI_BIND.length
                 Marshal.WriteInt32(lengthArr, intSize * i, itemLength);
-                //Set TAOS_MULTI_BIND.is_null 
+                //Set TAOS_MULTI_BIND.is_null
                 Marshal.WriteByte(nullArr, byteSize * i, Convert.ToByte(String.IsNullOrEmpty(arr[i]) ? 1 : 0));
             }
             //Config TAOS_MULTI_BIND
@@ -491,11 +491,11 @@ namespace TDengineDriver
         {
             TAOS_MULTI_BIND multiBind = new TAOS_MULTI_BIND();
             int elementCount = arr.Length;
-            //TypeSize represent the Max element length of the comming arr
+            //TypeSize represent the Max element length of the coming arr
             //The size of the buffer is typeSize * elementCount
             //This buffer is used to store TAOS_MULTI_BIND.buffer
             int typeSize = MaxElementLength(arr);
-            //This intSize is used to calculate buffer size of the struct TAOS_MULTI_BIND's 
+            //This intSize is used to calculate buffer size of the struct TAOS_MULTI_BIND's
             //length. The buffer is intSize * elementCount,which is used to store TAOS_MULTI_BIND.length
             int intSize = sizeof(int);
             //This byteSize is used to calculate the buffer size of the struct TAOS_MULTI_BIND.is_null
@@ -524,7 +524,7 @@ namespace TDengineDriver
                 }
                 //Set TAOS_MULTI_BIND.length
                 Marshal.WriteInt32(lengthArr, intSize * i, itemLength);
-                //Set TAOS_MULTI_BIND.is_null 
+                //Set TAOS_MULTI_BIND.is_null
                 Marshal.WriteByte(nullArr, byteSize * i, Convert.ToByte(String.IsNullOrEmpty(arr[i]) ? 1 : 0));
             }
             //Config TAOS_MULTI_BIND
@@ -542,11 +542,11 @@ namespace TDengineDriver
         {
             TAOS_MULTI_BIND multiBind = new TAOS_MULTI_BIND();
             int elementCount = jsonStr.Length;
-            //TypeSize represent the Max element length of the comming arr
+            //TypeSize represent the Max element length of the coming arr
             //The size of the buffer is typeSize * elementCount
             //This buffer is used to store TAOS_MULTI_BIND.buffer
             int typeSize = MaxElementLength(jsonStr);
-            //This intSize is used to calculate buffer size of the struct TAOS_MULTI_BIND's 
+            //This intSize is used to calculate buffer size of the struct TAOS_MULTI_BIND's
             //length. The buffer is intSize * elementCount,which is used to store TAOS_MULTI_BIND.length
             int intSize = sizeof(int);
             //This byteSize is used to calculate the buffer size of the struct TAOS_MULTI_BIND.is_null
@@ -576,7 +576,7 @@ namespace TDengineDriver
                 }
                 //Set TAOS_MULTI_BIND.length
                 Marshal.WriteInt32(lengthArr, intSize * i, itemLength);
-                //Set TAOS_MULTI_BIND.is_null 
+                //Set TAOS_MULTI_BIND.is_null
                 Marshal.WriteByte(nullArr, byteSize * i, Convert.ToByte(String.IsNullOrEmpty(jsonStr[i]) ? 1 : 0));
             }
             //Config TAOS_MULTI_BIND

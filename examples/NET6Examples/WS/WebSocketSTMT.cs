@@ -38,7 +38,7 @@ namespace Examples.WS
                 TAOS_MULTI_BIND[] wsTags = WSTags(false);
                 TAOS_MULTI_BIND[] data = WSData();
 
-                // Length Need to know 
+                // Length Need to know
                 code = LibTaosWS.WSStmtSetTbnameTags(wsStmt, $"{wsPrepareData.DB}.{wsPrepareData.Table}_01", wsTags, 14);
                 ValidStmtStep(code, wsStmt, "WSStmtSetTbnameTags");
 
@@ -48,7 +48,7 @@ namespace Examples.WS
                 code = LibTaosWS.WSStmtAddBatch(wsStmt);
                 ValidStmtStep(code, wsStmt, "WSStmtAddBatch");
                 IntPtr stmtAffectRowPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(Int32)));
-                
+
                 code = LibTaosWS.WSStmtExecute(wsStmt, stmtAffectRowPtr);
                 ValidStmtStep(code, wsStmt, "WSStmtExecute");
                 Console.WriteLine("WS STMT affect rows:{0}", Marshal.ReadInt32(stmtAffectRowPtr));
@@ -59,7 +59,7 @@ namespace Examples.WS
                 WSMultiBind.WSFreeTaosBind(wsTags);
                 WSMultiBind.WSFreeTaosBind(data);
 
-                ChecKStmt(wsConn);
+                CheckStmt(wsConn);
 
 
                 LibTaosWS.WSClose(wsConn);
@@ -140,7 +140,7 @@ namespace Examples.WS
                 throw new Exception($"execute SQL failed: reason: {LibTaosWS.WSErrorStr(wsRes)}, code:{code}");
             }
         }
-        public void ChecKStmt(IntPtr wsConn)
+        public void CheckStmt(IntPtr wsConn)
         {
 
             IntPtr wsRes = IntPtr.Zero;
@@ -150,7 +150,7 @@ namespace Examples.WS
                 Console.WriteLine(select);
                 wsRes = LibTaosWS.WSQuery(wsConn, select);
                 ValidQuery(wsRes);
-                Display(wsRes);             
+                Display(wsRes);
             }
             finally
             {

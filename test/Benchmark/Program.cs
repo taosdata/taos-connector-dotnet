@@ -117,7 +117,7 @@
                     cleanUp.Run();
                     break;
                 default:
-                    throw new Exception($"unkown stage {options}");
+                    throw new Exception($"unknown stage {options}");
             }
         }
     }
