@@ -21,7 +21,7 @@ namespace Function.Test.SML
         }
 
         /// <author>xiaolei</author>
-        /// <Name>SMLRaw.LineProtocal</Name>
+        /// <Name>SMLRaw.LineProtocol</Name>
         /// <describe>Insert data through TSDB_SML_LINE_PROTOCOL protocol.</describe>
         /// <filename>SMLRaw.cs</filename>
         /// <result>pass or failed </result> 
@@ -45,7 +45,7 @@ namespace Function.Test.SML
         }
 
         /// <author>xiaolei</author>
-        /// <Name>SMLRaw.TelnetProtocal</Name>
+        /// <Name>SMLRaw.TelnetProtocol</Name>
         /// <describe>Insert data through TSDB_SML_TELNET_PROTOCOL protocol.</describe>
         /// <filename>SMLRaw.cs</filename>
         /// <result>pass or failed </result> 
@@ -69,7 +69,7 @@ namespace Function.Test.SML
         }
 
         /// <author>xiaolei</author>
-        /// <Name>SMLRaw.JSONProtocal</Name>
+        /// <Name>SMLRaw.JSONProtocol</Name>
         /// <describe>Insert data TSDB_SML_JSON_PROTOCOL protocol.</describe>
         /// <filename>SMLRaw.cs</filename>
         /// <result>pass or failed </result> 

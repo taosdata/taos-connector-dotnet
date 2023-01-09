@@ -27,7 +27,7 @@ namespace TDengineDriver.Impl
                         throw new Exception($"fetch_raw_block failed,code {code} reason:{TDengine.Error(taosRes)}");
                     }
                     int numOfRows = Marshal.ReadInt32(numOfRowsPrt);
-                    int numOfFileds = TDengine.FieldCount(taosRes);
+                    int numOfFields = TDengine.FieldCount(taosRes);
                     if (numOfRows == 0)
                     {
                         break;
@@ -35,7 +35,7 @@ namespace TDengineDriver.Impl
                     else
                     {
 
-                        //list = new List<Object>(numOfRows * numOfFileds);
+                        //list = new List<Object>(numOfRows * numOfFields);
                         pData = Marshal.ReadIntPtr(pDataPtr);
                         list.AddRange(ReadRawBlock(pData, metaList, numOfRows));
                         //return list;
@@ -60,19 +60,19 @@ namespace TDengineDriver.Impl
         public static List<object> ReadRawBlock(IntPtr pData, List<TDengineMeta> metaList, int numOfRows)
         {
 
-            int numOfFileds = metaList.Count;
-            List<Object> list = new List<Object>(numOfRows * numOfFileds);
+            int numOfFields = metaList.Count;
+            List<Object> list = new List<Object>(numOfRows * numOfFields);
 
-            pData = pData + (4 * 5) + 8 + (4 + 1) * numOfFileds;
+            pData = pData + (4 * 5) + 8 + (4 + 1) * numOfFields;
 
-            int colLengthBlockSize = sizeof(Int32) * numOfFileds;
+            int colLengthBlockSize = sizeof(Int32) * numOfFields;
             int bitMapSize = (numOfRows+((1<<3)-1))>>3;
 
             for (int i = 0; i < numOfRows; i++)
             {
                 IntPtr colBlockHead = pData + colLengthBlockSize;
                 IntPtr colDataHead = colBlockHead;
-                for (int j = 0; j < numOfFileds; j++)
+                for (int j = 0; j < numOfFields; j++)
                 {
                     //solid length Type
                     if (_IsVarData(metaList[j]) == ColType.SOLID)

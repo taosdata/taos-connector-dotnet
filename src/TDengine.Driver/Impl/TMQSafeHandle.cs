@@ -278,7 +278,7 @@ namespace TDengineTMQ.Impl
                         throw new Exception($"TMQ fetch_raw_block failed,code {code} reason:{TDengine.Error(taosRes)}");
                     }
                     int numOfRows = Marshal.ReadInt32(numOfRowsPrt);
-                    int numOfFileds = TDengine.FieldCount(taosRes);
+                    int numOfFields = TDengine.FieldCount(taosRes);
                     pData = Marshal.ReadIntPtr(pDataPtr);
 
                     if (numOfRows == 0)

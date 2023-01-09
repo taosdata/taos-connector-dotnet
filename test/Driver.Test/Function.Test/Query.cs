@@ -47,7 +47,7 @@ namespace Function.Test.Taosc
             // assert 
             IntPtr res = Tools.ExecuteQuery(conn, selectSql, _output);
             List<TDengineMeta> actualResMeta = LibTaos.GetMeta(res);
-            List<object> acutalResData = LibTaos.GetData(res);
+            List<object> actualResData = LibTaos.GetData(res);
 
             _output.WriteLine("Assert meta");
             expectResMeta.ForEach(meta =>
@@ -60,8 +60,8 @@ namespace Function.Test.Taosc
             _output.WriteLine("Assert data");
             for (int i = 0; i < columns.Count; i++)
             {
-                //_output.WriteLine("{0},{1},{2}",i, columns[i], acutalResData[i]);
-                Assert.Equal(columns[i], acutalResData[i]);
+                //_output.WriteLine("{0},{1},{2}",i, columns[i], actualResData[i]);
+                Assert.Equal(columns[i], actualResData[i]);
             }
             Tools.FreeResult(res);
         }

@@ -8,7 +8,7 @@ namespace TDengineTMQ
     internal class Consumer : IConsumer
     {
         private TMQSafeHandle tmqHandle = new TMQSafeHandle();
-        private IntPtr comsumer = IntPtr.Zero;
+        private IntPtr consumer = IntPtr.Zero;
 
         // construct Consumer with incoming configuration
 
@@ -20,42 +20,42 @@ namespace TDengineTMQ
         {
             //this.tmqHandle = new TMQSafeHandle();
             LibTMQ.Initialize(null);
-            comsumer = tmqHandle.ConsumerNew(builder.Config);
+            consumer = tmqHandle.ConsumerNew(builder.Config);
         }
 
         public List<string> Subscription()
         {
-            return tmqHandle.Subscription(this.comsumer);
+            return tmqHandle.Subscription(this.consumer);
         }
 
         public void Close()
         {
-            tmqHandle.ConsumerClose(this.comsumer);
+            tmqHandle.ConsumerClose(this.consumer);
         }
 
         public ConsumeResult Consume(int millisecondsTimeout)
         {
-            return tmqHandle.ConsumerPoll(this.comsumer, millisecondsTimeout);
+            return tmqHandle.ConsumerPoll(this.consumer, millisecondsTimeout);
         }
 
         public void Subscribe(IEnumerable<string> topics)
         {
-            tmqHandle.Subscribe(this.comsumer, topics);
+            tmqHandle.Subscribe(this.consumer, topics);
         }
 
         public void Subscribe(string topic)
         {
-            tmqHandle.Subscribe(this.comsumer, new[] { topic });
+            tmqHandle.Subscribe(this.consumer, new[] { topic });
         }
 
         public void Unsubscribe()
         {
-            tmqHandle.Unsubscribe(this.comsumer);
+            tmqHandle.Unsubscribe(this.consumer);
         }
 
         public void Commit(ConsumeResult consumerResult)
         {
-            tmqHandle.CommitSync(this.comsumer, consumerResult);
+            tmqHandle.CommitSync(this.consumer, consumerResult);
         }
 
         public void CommitAsync(ConsumeResult consumerResult, Delegate Callback)

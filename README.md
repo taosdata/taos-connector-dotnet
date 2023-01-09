@@ -26,7 +26,7 @@ For WebSocket, Need add the following ItemGroup in your project file:
 <ItemGroup>
     <PackageReference Include="TDengine.Connector" Version="3.0.*" GeneratePathProperty="true" />
   </ItemGroup>
-  <Target Name="copyDLLDepency" BeforeTargets="BeforeBuild">
+  <Target Name="copyDLLDependency" BeforeTargets="BeforeBuild">
     <ItemGroup>
       <DepDLLFiles Include="$(PkgTDengine_Connector_test)\runtimes\**\*.*" />
     </ItemGroup>
@@ -357,7 +357,7 @@ else
 <ItemGroup>
     <PackageReference Include="TDengine.Connector" Version="3.0.*" GeneratePathProperty="true" />
 </ItemGroup>
-  <Target Name="copyDLLDepency" BeforeTargets="BeforeBuild">
+  <Target Name="copyDLLDependency" BeforeTargets="BeforeBuild">
     <ItemGroup>
       <DepDLLFiles Include="$(PkgTDengine_Connector_test)\runtimes\**\*.*" />
     </ItemGroup>

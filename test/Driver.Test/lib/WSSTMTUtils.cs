@@ -12,7 +12,7 @@ namespace Test.Utils
             IntPtr wsStmt = LibTaosWS.WSStmtInit(wsConn);
             if (wsStmt == IntPtr.Zero)
             {
-                throw new Exception("init WSStmt faield");
+                throw new Exception("init WSStmt failed");
             }
             return wsStmt;
         }

@@ -61,7 +61,7 @@ namespace FrameWork45.WS
             WSMultiBind.WSFreeTaosBind(wsTags);
             WSMultiBind.WSFreeTaosBind(data);
 
-            ChecKStmt(wsConn);
+            CheckStmt(wsConn);
 
 
             LibTaosWS.WSClose(wsConn);
@@ -142,7 +142,7 @@ namespace FrameWork45.WS
                 throw new Exception($"execute SQL failed: reason: {LibTaosWS.WSErrorStr(wsRes)}, code:{code}");
             }
         }
-        public void ChecKStmt(IntPtr wsConn)
+        public void CheckStmt(IntPtr wsConn)
         {
 
             IntPtr wsRes = IntPtr.Zero;
