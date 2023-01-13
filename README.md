@@ -28,7 +28,7 @@ For WebSocket, Need add the following ItemGroup in your project file:
   </ItemGroup>
   <Target Name="copyDLLDependency" BeforeTargets="BeforeBuild">
     <ItemGroup>
-      <DepDLLFiles Include="$(PkgTDengine_Connector_test)\runtimes\**\*.*" />
+      <DepDLLFiles Include="$(PkgTDengine_Connector)\runtimes\**\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(DepDLLFiles)" DestinationFolder="$(OutDir)\dep_lib" />
   </Target>
