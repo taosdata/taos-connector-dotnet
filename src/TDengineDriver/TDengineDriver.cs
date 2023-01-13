@@ -280,11 +280,11 @@ namespace TDengineDriver
         static extern private IntPtr _taos_schemaless_insert_raw(IntPtr taos, byte[] lines, int length, IntPtr totalRows, int protocol, int precision);
 
         /// <summary>
-        /// New schemaless insert interface,INFLUX_LINE_PROTOCOL AND OPTS_TELNET_PROTOCAL support '\0'(ASCII code 0) other is same as "TDengine.SchemalessInsert"
+        /// New schemaless insert interface,INFLUX_LINE_PROTOCOL AND OPTS_TELNET_PROTOCOL support '\0'(ASCII code 0) other is same as "TDengine.SchemalessInsert"
         /// </summary>
         /// <param name="taos">valid taos connect.</param>
         /// <param name="lines">Data want to insert.</param>
-        /// <param name="protocol">Only INFLUX_LINE_PROTOCOL AND OPTS_TELNET_PROTOCAL support '\0'(ASCII code 0) input</param>
+        /// <param name="protocol">Only INFLUX_LINE_PROTOCOL AND OPTS_TELNET_PROTOCOL support '\0'(ASCII code 0) input</param>
         /// <param name="precision"></param>
         /// <returns>Return number of rows have been inserted </returns>
         /// <exception cref="Exception"></exception>
@@ -343,7 +343,7 @@ namespace TDengineDriver
         }
 
         /// <summary>
-        /// For INSERT only. Used to bind table name as a parmeter for the input stmt object.
+        /// For INSERT only. Used to bind table name as a parameter for the input stmt object.
         /// </summary>
         /// <param name="stmt">could be the value returned by 'StmtInit', that may be a valid object or NULL.</param>
         /// <param name="name">table name you want to  bind</param>
