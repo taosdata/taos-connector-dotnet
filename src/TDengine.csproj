@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net5;net6;netstandard2.0;netstandard2.1;net45;net451;</TargetFrameworks>
-    <PackageId>TDengine.Connector.test</PackageId>
+    <PackageId>TDengine.Connector</PackageId>
     <PackageIcon>image\logo.jpg</PackageIcon>
     <PackageReadmeFile>docs\README.md</PackageReadmeFile>
     <Version>3.0.2</Version>
