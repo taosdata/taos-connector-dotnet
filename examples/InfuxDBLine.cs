@@ -18,7 +18,7 @@ namespace Examples.Schemaless
         public void RunInfuxDBLine(IntPtr conn)
         {
             Console.WriteLine("RunInfuxDBLine ...");
-            
+
             // InfluxdbLine protocol
             IntPtr res = TDengine.SchemalessInsert(conn, lines, lines.Length, (int)TDengineSchemalessProtocol.TSDB_SML_LINE_PROTOCOL, (int)TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_MILLI_SECONDS);
             if (TDengine.ErrorNo(res) != 0)

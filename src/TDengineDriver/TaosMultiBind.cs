@@ -573,7 +573,7 @@ namespace TDengineDriver
         {
             foreach (TAOS_MULTI_BIND bind in mBinds)
             {
-                
+
                 Marshal.FreeHGlobal(bind.length);
                 Marshal.FreeHGlobal(bind.is_null);
 #if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP1_1_OR_GREATER

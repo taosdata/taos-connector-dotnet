@@ -32,7 +32,7 @@ namespace examples
         }
         public void CleanBasicSampleData()
         {
-            UtilsTools.ExecuteUpdate(conn,dropDB);
+            UtilsTools.ExecuteUpdate(conn, dropDB);
         }
     }
 }

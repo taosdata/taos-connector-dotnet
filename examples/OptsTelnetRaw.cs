@@ -22,7 +22,7 @@ namespace Examples.SchemalessRaw
         {
             Console.WriteLine("RunOptsTelnetRaw ...");
 
-            int rows = TDengine.SchemalessInsertRaw(conn, lines,TDengineSchemalessProtocol.TSDB_SML_TELNET_PROTOCOL,TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NOT_CONFIGURED);
+            int rows = TDengine.SchemalessInsertRaw(conn, lines, TDengineSchemalessProtocol.TSDB_SML_TELNET_PROTOCOL, TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NOT_CONFIGURED);
             Console.WriteLine("SchemalessInsertRaw using TSDB_SML_TELNET_PROTOCOL insert {0} rows...", rows);
 
             //check insert

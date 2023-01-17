@@ -334,7 +334,7 @@ namespace TDengineDriver
         /// <returns>0 for success, non-zero for failure.</returns>
         [DllImport("taos", EntryPoint = "taos_stmt_prepare", CallingConvention = CallingConvention.Cdecl)]
         static extern public int _StmtPrepare(IntPtr stmt, IntPtr sql);
-        static public int StmtPrepare(IntPtr stmt, string sql) 
+        static public int StmtPrepare(IntPtr stmt, string sql)
         {
             UTF8PtrStruct utf8PtrStruct = new UTF8PtrStruct(sql);
             int stmtResponseCode = _StmtPrepare(stmt, utf8PtrStruct.utf8Ptr);

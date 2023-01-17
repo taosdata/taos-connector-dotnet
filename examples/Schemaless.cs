@@ -8,7 +8,7 @@ namespace Examples.Schemaless
         InfuxDBLine Line { get; set; }
         OptsTelnet Telnet { get; set; }
         OptsJSON JSON { get; set; }
-        
+
         public SchemalessExample()
         {
             this.Line = new InfuxDBLine();
