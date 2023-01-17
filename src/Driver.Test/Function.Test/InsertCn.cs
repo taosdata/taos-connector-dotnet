@@ -161,7 +161,7 @@ namespace Cases
                           1637064044000,5,"涛思数据5","!广场路中部123","Tokyo","JP",
                           1637064045000,6,"taos涛思数据6","青年广场123号！","Washin","DC",
                           1637064046000,7,"7涛思数据taos","asdf#壮年广场%#endregion","NewYork","US",
-                          1637064047000,8,"8&涛思数据taos","incluse阿斯顿发","NewYork","US",
+                          1637064047000,8,"8&涛思数据taos","include阿斯顿发","NewYork","US",
                           1637064048000,9,"&涛思数据taos9","123黑化肥werq会挥……&¥%发！afsdfa","NewYork","US",
                           };
 
@@ -221,7 +221,7 @@ namespace Cases
                           1637064044000,5,"涛思数据5","!广场路中部123","Tokyo","JP",
                           1637064045000,6,"taos涛思数据6","青年广场123号！","Washin","DC",
                           1637064046000,7,"7涛思数据taos","asdf#壮年广场%#endregion","NewYork","US",
-                          1637064047000,8,"8&涛思数据taos","incluse阿斯顿发","NewYork","US",
+                          1637064047000,8,"8&涛思数据taos","include阿斯顿发","NewYork","US",
                           1637064048000,9,"&涛思数据taos9","123黑化肥werq会挥……&¥%发！afsdfa","NewYork","US",
                           };
             var tagData = new List<Object> { 1, "涛思数据", "中国北方&南方长江黄河！49wq", "tdengine" };

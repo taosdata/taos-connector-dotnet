@@ -435,7 +435,7 @@ namespace TDengineDriver
         {
             TAOS_MULTI_BIND multiBind = new TAOS_MULTI_BIND();
             int elementCount = arr.Length;
-            //TypeSize represent the Max element length of the comming arr
+            //TypeSize represent the Max element length of the coming arr
             //The size of the buffer is typeSize * elementCount
             //This buffer is used to store TAOS_MULTI_BIND.buffer
             int typeSize = MaxElementLength(arr);
@@ -487,7 +487,7 @@ namespace TDengineDriver
         {
             TAOS_MULTI_BIND multiBind = new TAOS_MULTI_BIND();
             int elementCount = arr.Length;
-            //TypeSize represent the Max element length of the comming arr
+            //TypeSize represent the Max element length of the coming arr
             //The size of the buffer is typeSize * elementCount
             //This buffer is used to store TAOS_MULTI_BIND.buffer
             int typeSize = MaxElementLength(arr);
@@ -573,7 +573,7 @@ namespace TDengineDriver
         {
             foreach (TAOS_MULTI_BIND bind in mBinds)
             {
-                
+
                 Marshal.FreeHGlobal(bind.length);
                 Marshal.FreeHGlobal(bind.is_null);
 #if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP1_1_OR_GREATER

@@ -5,6 +5,8 @@ using TDengineDriver;
 using Example;
 using System.Collections.Generic;
 using examples;
+using Examples.SchemalessRaw;
+using Examples.Schemaless;
 
 namespace AsyncQueryExample
 {
@@ -21,8 +23,11 @@ namespace AsyncQueryExample
             subscribeSample.RunSubscribeWithCallback(conn, "subscribe_with_callback");
             subscribeSample.RunSubscribeWithoutCallback(conn, "subscribe_without_callback");
 
-            SchemalessSample schemalessSample = new SchemalessSample();
-            schemalessSample.RunSchemaless();
+            SchemalessExample schemalessSample = new SchemalessExample();
+            schemalessSample.RunSchemaless(conn);
+
+            SchemalessRawExample schemalessSampleRaw = new SchemalessRawExample();
+            schemalessSampleRaw.RunSchemalessRaw(conn);
 
             BasicSample basic = new BasicSample(conn, "basic");
             basic.Run();

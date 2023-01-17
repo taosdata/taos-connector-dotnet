@@ -299,7 +299,7 @@ namespace Test.UtilsTools
             int numOfFields = colData.Count / numOfRows;
             StringBuilder insertSql;
 
-            if (stable == "" || tagData==null)
+            if (stable == "" || tagData == null)
             {
                 insertSql = new StringBuilder($"insert into {table} values(");
             }
