@@ -90,7 +90,7 @@ namespace TDengineTMQ
     
         public void Free()
         {
-            TDengine.FreeResult(Offset);
+            TDengineDriver.TDengine.FreeResult(Offset);
         }
     }
 }

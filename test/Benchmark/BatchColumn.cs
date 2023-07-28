@@ -22,15 +22,15 @@ namespace Benchmark
         public void Run(string types, int times)
         {
             IntPtr res;
-            IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
+            IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, db, Port);
             if (conn != IntPtr.Zero)
             {
-                res = TDengine.Query(conn, $"use {db}");
+                res = TDengineDriver.TDengine.Query(conn, $"use {db}");
                 IfTaosQuerySucc(res, $"use {db}");
-                TDengine.FreeResult(res);
+                TDengineDriver.TDengine.FreeResult(res);
 
                 // begin stmt
-                IntPtr stmt = TDengine.StmtInit(conn);
+                IntPtr stmt = TDengineDriver.TDengine.StmtInit(conn);
                 if (stmt != IntPtr.Zero)
                 {
                     int i = 0;
@@ -51,35 +51,35 @@ namespace Benchmark
                 {
                     throw new Exception("init stmt failed.");
                 }
-                TDengine.StmtClose(stmt);
+                TDengineDriver.TDengine.StmtClose(stmt);
             }
             else
             {
                 throw new Exception("create TD connection failed");
             }
-            TDengine.Close(conn);
+            TDengineDriver.TDengine.Close(conn);
         }
 
         public void StmtBindBatch(IntPtr stmt, string sql, string table)
         {
-            int stmtRes = TDengine.StmtPrepare(stmt, sql);
+            int stmtRes = TDengineDriver.TDengine.StmtPrepare(stmt, sql);
             IfStmtSucc(stmtRes, stmt, "StmtPrepare");
 
-            stmtRes = TDengine.StmtSetTbname(stmt, table);
+            stmtRes = TDengineDriver.TDengine.StmtSetTbname(stmt, table);
             IfStmtSucc(stmtRes, stmt, "StmtSetTbname");
 
             TAOS_MULTI_BIND[] dataBind = StmtData();
 
             for (int i = 0; i < dataBind.Length; i++)
             {
-                stmtRes = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[i],i);
+                stmtRes = TDengineDriver.TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[i],i);
                 IfStmtSucc(stmtRes, stmt, "StmtBindParamBatch");
             }
             
-            stmtRes = TDengine.StmtAddBatch(stmt);
+            stmtRes = TDengineDriver.TDengine.StmtAddBatch(stmt);
             IfStmtSucc(stmtRes, stmt, "StmtAddBatch");
 
-            stmtRes = TDengine.StmtExecute(stmt);
+            stmtRes = TDengineDriver.TDengine.StmtExecute(stmt);
             IfStmtSucc(stmtRes, stmt, "StmtExecute");
 
             TaosMultiBind.FreeTaosBind(dataBind);
@@ -87,13 +87,13 @@ namespace Benchmark
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengine.ErrorNo(res) == 0)
+            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengine.Error(res)}, code{TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
             }
         }
 
@@ -101,7 +101,7 @@ namespace Benchmark
         {
             if (stmtReturn != 0)
             {
-                throw new Exception($"{method} failed,reason:{TDengine.StmtErrorStr(stmt)}");
+                throw new Exception($"{method} failed,reason:{TDengineDriver.TDengine.StmtErrorStr(stmt)}");
             }
         }
 

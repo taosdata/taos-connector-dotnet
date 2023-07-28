@@ -83,10 +83,10 @@ string port = 0
  * Default: charset, locale, timezone same to system.
  * Current supports options:TSDB_OPTION_LOCALE, TSDB_OPTION_CHARSET, TSDB_OPTION_TIMEZONE, TSDB_OPTION_CONFIGDIR.
 */
-TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR,configDir);
+TDengineDriver.TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR,configDir);
 
 // Get an TDengine connection
-InPtr conn = TDengine.Connect(host, user, taosdata, db, port);
+InPtr conn = TDengineDriver.TDengine.Connect(host, user, taosdata, db, port);
 
 // Check if get connection success
 if (conn == IntPtr.Zero)
@@ -101,11 +101,11 @@ else
 // Close TDengine Connection
 if (conn != IntPtr.Zero)
 {
-    TDengine.Close(this.conn);
+    TDengineDriver.TDengine.Close(this.conn);
 }
 
 // Suggest to clean environment, before exit your application.
-TDengine.Cleanup();
+TDengineDriver.TDengine.Cleanup();
 ```
 
 ### **Execute SQL**
@@ -114,24 +114,24 @@ TDengine.Cleanup();
 // Suppose conn is a valid tdengine connection from previous Connection sample
 public static void ExecuteSQL(IntPtr conn, string sql)
 {
-    IntPtr res = TDengine.Query(conn, sql);
+    IntPtr res = TDengineDriver.TDengine.Query(conn, sql);
     // Check if query success
-    if((res == IntPtr.Zero) || (TDengine.ErrorNo(res) != 0))
+    if((res == IntPtr.Zero) || (TDengineDriver.TDengine.ErrorNo(res) != 0))
     {
         Console.Write(sql + " failure, ");
         // Get error message while Res is a not null pointer.
         if (res != IntPtr.Zero)
          {
-             Console.Write("reason:" + TDengine.Error(res));
+             Console.Write("reason:" + TDengineDriver.TDengine.Error(res));
          }
     }
     else
     {
-        Console.Write(sql + " success, {0} rows affected", TDengine.AffectRows(res));
+        Console.Write(sql + " success, {0} rows affected", TDengineDriver.TDengine.AffectRows(res));
         //... do something with res ...
 
         // Important: need to free result to avoid memory leak.
-        TDengine.FreeResult(res);
+        TDengineDriver.TDengine.FreeResult(res);
     }
 }
 
@@ -153,18 +153,18 @@ using System;
 using System.Collections.Generic;
 using TDengineDriver.Impl;
 
-// Following code is a sample that traverses retrieve data from TDengine.
+// Following code is a sample that traverses retrieve data from TDengineDriver.TDengine.
 public void ExecuteQuery(IntPtr conn,string sql)
 {
     // "conn" is a valid TDengine connection which can
     // be got from previous "Connection" sample.
-    IntPrt res = TDengine.Query(conn, sql);
-    if ((res == IntPtr.Zero) || (TDengine.ErrorNo(res) != 0))
+    IntPrt res = TDengineDriver.TDengine.Query(conn, sql);
+    if ((res == IntPtr.Zero) || (TDengineDriver.TDengine.ErrorNo(res) != 0))
     {
          Console.Write(sql.ToString() + " failure, ");
          if (res != IntPtr.Zero)
          {
-             Console.Write("reason: " + TDengine.Error(res));
+             Console.Write("reason: " + TDengineDriver.TDengine.Error(res));
          }
          // Execute query sql failed
          // ... do something ...
@@ -189,7 +189,7 @@ public void ExecuteQuery(IntPtr conn,string sql)
     }
     Console.WriteLine("")
     // Important free "res".
-     TDengine.FreeResult(res);
+     TDengineDriver.TDengine.FreeResult(res);
 }
 ```
 
@@ -237,30 +237,30 @@ TaosMultiBind.FreeMBind(mBinds);
    * Structure：create stable stmtdemo (ts timestamp,b bool,v4 int,
    * v8 bigint,bin binary(100))tags(blob nchar(100));
   */
-  // This conn should be a valid connection that is returned by TDengine.Connect().
+  // This conn should be a valid connection that is returned by TDengineDriver.TDengine.Connect().
   IntPtr conn;
   IntPtr stmt = IntPtr.Zero;
   // Insert statement
   string sql = "insert into ? using stmtdemo tags(?,?,?,?,?) values(?)";
   // "use db" before stmtPrepare().
 
-  stmt = TDengine.StmtInit(conn);
-  TDengine.StmtPrepare(stmt, sql);
+  stmt = TDengineDriver.TDengine.StmtInit(conn);
+  TDengineDriver.TDengine.StmtPrepare(stmt, sql);
 
   // Use method StmtSetTbname() to config tablename,
   // but needs to create the table before.
   // Using StmtSetTbnameTags() to config table name and
   // tags' value.(create sub table based on stable automatically)
-  TDengine.StmtSetTbname_tags(stmt,"t1",binds);
+  TDengineDriver.TDengine.StmtSetTbname_tags(stmt,"t1",binds);
 
   // Binding multiple lines of data.
-  TDengine.StmtBindParamBatch(stmt,mBinds);
+  TDengineDriver.TDengine.StmtBindParamBatch(stmt,mBinds);
 
   // Add current bind parameters into batch.
-  TDengine.StmtAddBatch(stmt);
+  TDengineDriver.TDengine.StmtAddBatch(stmt);
 
   // Execute the batch instruction which has been prepared well by bind_param() method.
-  TDengine.StmtExecute(stmt);
+  TDengineDriver.TDengine.StmtExecute(stmt);
 
   // Cause we use unmanaged memory, remember to free occupied memory, after execution.
   TaosMultiBind.FreeBind(mBind);
@@ -268,7 +268,7 @@ TaosMultiBind.FreeMBind(mBinds);
 
   // Get error information if current stmt operation failed.
   // This method is appropriate for all the stmt methods to get error message.
-  TDengine.StmtError(stmt);
+  TDengineDriver.TDengine.StmtError(stmt);
 ```
 
 * Query
@@ -285,35 +285,35 @@ qparams[0] = TaosBind.bindInt(-2);
 qparams[1] = TaosBind.bindLong(4);
 
 // Bind parameters.
-TDengine.StmtBindParam(stmt, qparams);
+TDengineDriver.TDengine.StmtBindParam(stmt, qparams);
 
 // Execute
-TDengine.StmtExecute(stmt);
+TDengineDriver.TDengine.StmtExecute(stmt);
 
 // Get querying result, for SELECT only.
 // User application should be freed with API FreeResult() at the end.
-IntPtr result = TDengine.StmtUseResult(stmt);
+IntPtr result = TDengineDriver.TDengine.StmtUseResult(stmt);
 
 // This "result" cam be traversed as normal sql query result.
 // ... Do something with "result" ...
 
-TDengine.FreeResult(result);
+TDengineDriver.TDengine.FreeResult(result);
 
 // Cause we use unmanaged memory, we need to free occupied memory after execution.
 TaosMultiBind.FreeBind(qparams);
 
 // Close stmt and release resource.
-TDengine.StmtClose(stmt);
+TDengineDriver.TDengine.StmtClose(stmt);
 ```
 
 * Assert (samples about how to assert every step of stmt is succeed or failed)
 
 ```C#
 // Special  StmtInit().
-IntPtr stmt = TDengine.StmtInit(conn);
+IntPtr stmt = TDengineDriver.TDengine.StmtInit(conn);
 if ( stmt == IntPtr.Zero)
 {
-       Console.WriteLine("Init stmt failed:{0}",TDengine.StmtErrorStr(stmt));
+       Console.WriteLine("Init stmt failed:{0}",TDengineDriver.TDengine.StmtErrorStr(stmt));
        // ... do something ...
 }
 else
@@ -323,25 +323,25 @@ else
 }
 
 // For all stmt methods that return int type,we can get error message by StmtErrorStr().
-if (TDengine.StmtPrepare(this.stmt, sql) == 0)
+if (TDengineDriver.TDengine.StmtPrepare(this.stmt, sql) == 0)
 {
     Console.WriteLine("stmt prepare success");
     // Continue
 }
 else
 {
-     Console.WriteLine("stmt prepare failed:{0} " , TDengine.StmtErrorStr(stmt));
+     Console.WriteLine("stmt prepare failed:{0} " , TDengineDriver.TDengine.StmtErrorStr(stmt));
      // ... do something ...
 }
 
 // Estimate weather StmtUseResult() is successful or failed.
-// If failed, get the error message by TDengine.Error(res)
-IntPtr res = TDengine.StmtUseResult(stmt);
-if ((res == IntPtr.Zero) || (TDengine.ErrorNo(res) != 0))
+// If failed, get the error message by TDengineDriver.TDengine.Error(res)
+IntPtr res = TDengineDriver.TDengine.StmtUseResult(stmt);
+if ((res == IntPtr.Zero) || (TDengineDriver.TDengine.ErrorNo(res) != 0))
 {
       Console.Write( " StmtUseResult failure, ");
       if (res != IntPtr.Zero) {
-        Console.Write("reason: " + TDengine.Error(res));
+        Console.Write("reason: " + TDengineDriver.TDengine.Error(res));
        }
 }
 else
@@ -355,7 +355,7 @@ else
 ``` XML
 // modify your project file (.csproj), copy dynamic library from the nupkg into your project directory.
 <ItemGroup>
-    <PackageReference Include="TDengine.Connector" Version="3.0.*" GeneratePathProperty="true" />
+    <PackageReference Include="TDengineDriver.TDengine.Connector" Version="3.0.*" GeneratePathProperty="true" />
 </ItemGroup>
   <Target Name="copyDLLDependency" BeforeTargets="BeforeBuild">
     <ItemGroup>

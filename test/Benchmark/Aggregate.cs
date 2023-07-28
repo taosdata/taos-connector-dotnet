@@ -26,13 +26,13 @@ namespace Benchmark
         {
             //Console.WriteLine("Aggregate {0} ...", types);
 
-            IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
+            IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, db, Port);
             IntPtr res;
             if (conn != IntPtr.Zero)
             {
-                res = TDengine.Query(conn, $"use {db}");
+                res = TDengineDriver.TDengine.Query(conn, $"use {db}");
                 IfTaosQuerySucc(res, $"use {db}");
-                TDengine.FreeResult(res);
+                TDengineDriver.TDengine.FreeResult(res);
 
                 if (types == "normal")
                 {
@@ -47,7 +47,7 @@ namespace Benchmark
             {
                 throw new Exception("create TD connection failed");
             }
-            TDengine.Close(conn);
+            TDengineDriver.TDengine.Close(conn);
 
         }
         public void AggregateLoop(IntPtr conn, int times, string sql)
@@ -56,11 +56,11 @@ namespace Benchmark
             int i = 0;
             while (i < times)
             {
-                res = TDengine.Query(conn, sql);
+                res = TDengineDriver.TDengine.Query(conn, sql);
                 IfTaosQuerySucc(res, sql);
                 LibTaos.GetMeta(res);
                 LibTaos.GetData(res);
-                TDengine.FreeResult(res);
+                TDengineDriver.TDengine.FreeResult(res);
                 i++;
             }
             //Console.WriteLine("last time:{0}", i);
@@ -68,13 +68,13 @@ namespace Benchmark
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengine.ErrorNo(res) == 0)
+            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengine.Error(res)}, code{TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
             }
         }
     }

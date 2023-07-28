@@ -24,9 +24,13 @@
     <!--<Nullable>enable</Nullable>-->
   </PropertyGroup>
   <ItemGroup>
-    <None Include="resource\logo.jpg" Pack="true" PackagePath="image"  />
+    <None Include="resource\logo.jpg" Pack="true" PackagePath="image" />
     <None Include="../README.md" Pack="True" PackagePath="docs" />
     <None Include="runtimes/**" Pack="True" PackagePath="runtimes" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
   </ItemGroup>
 
 </Project>

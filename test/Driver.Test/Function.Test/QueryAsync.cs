@@ -48,7 +48,7 @@ namespace Function.Test.Taosc
             Tools.ExecuteUpdate(conn, insertSql, _output);
 
             QueryAsyncCallback fq = new QueryAsyncCallback(QueryCallback);
-            TDengine.QueryAsync(conn, selectSql, fq, IntPtr.Zero);
+            TDengineDriver.TDengine.QueryAsync(conn, selectSql, fq, IntPtr.Zero);
             Thread.Sleep(2000);
 
             void QueryCallback(IntPtr param, IntPtr taosRes, int code)
@@ -56,7 +56,7 @@ namespace Function.Test.Taosc
                 if (code == 0 && taosRes != IntPtr.Zero)
                 {
                     FetchRawBlockAsyncCallback fetchRowAsyncCallback = new FetchRawBlockAsyncCallback(FetchRawBlockCallback);
-                    TDengine.FetchRawBlockAsync(taosRes, fetchRowAsyncCallback, param);
+                    TDengineDriver.TDengine.FetchRawBlockAsync(taosRes, fetchRowAsyncCallback, param);
                 }
                 else
                 {
@@ -70,8 +70,8 @@ namespace Function.Test.Taosc
                 if (numOfRows > 0)
                 {
 
-                    IntPtr pdata = TDengine.GetRawBlock(taosRes);
-                    List<TDengineMeta> actualMeta = TDengine.FetchFields(taosRes);
+                    IntPtr pdata = TDengineDriver.TDengine.GetRawBlock(taosRes);
+                    List<TDengineMeta> actualMeta = TDengineDriver.TDengine.FetchFields(taosRes);
                     List<object> actualResData = LibTaos.ReadRawBlock(pdata, actualMeta, numOfRows);
 
                     //Assert Meta data
@@ -91,7 +91,7 @@ namespace Function.Test.Taosc
                         Assert.Equal(coldata[i], actualResData[i]);
                     }
 
-                    TDengine.FetchRawBlockAsync(taosRes, FetchRawBlockCallback, param);
+                    TDengineDriver.TDengine.FetchRawBlockAsync(taosRes, FetchRawBlockCallback, param);
                 }
                 else
                 {
@@ -104,7 +104,7 @@ namespace Function.Test.Taosc
                     {
                         _output.WriteLine($"FetchRowAsync callback error, error code {numOfRows}");
                     }
-                    TDengine.FreeResult(taosRes);
+                    TDengineDriver.TDengine.FreeResult(taosRes);
                 }
             }
 
@@ -134,7 +134,7 @@ namespace Function.Test.Taosc
             Tools.ExecuteUpdate(conn, insertSql, _output);
 
             QueryAsyncCallback fq = new QueryAsyncCallback(QueryCallback);
-            TDengine.QueryAsync(conn, selectSql, fq, IntPtr.Zero);
+            TDengineDriver.TDengine.QueryAsync(conn, selectSql, fq, IntPtr.Zero);
             Thread.Sleep(2000);
 
             void QueryCallback(IntPtr param, IntPtr taosRes, int code)
@@ -142,7 +142,7 @@ namespace Function.Test.Taosc
                 if (code == 0 && taosRes != IntPtr.Zero)
                 {
                     FetchRawBlockAsyncCallback fetchRowAsyncCallback = new FetchRawBlockAsyncCallback(FetchRawBlockCallback);
-                    TDengine.FetchRawBlockAsync(taosRes, fetchRowAsyncCallback, param);
+                    TDengineDriver.TDengine.FetchRawBlockAsync(taosRes, fetchRowAsyncCallback, param);
                 }
                 else
                 {
@@ -156,8 +156,8 @@ namespace Function.Test.Taosc
                 if (numOfRows > 0)
                 {
 
-                    IntPtr pdata = TDengine.GetRawBlock(taosRes);
-                    List<TDengineMeta> actualMeta = TDengine.FetchFields(taosRes);
+                    IntPtr pdata = TDengineDriver.TDengine.GetRawBlock(taosRes);
+                    List<TDengineMeta> actualMeta = TDengineDriver.TDengine.FetchFields(taosRes);
                     List<object> actualResData = LibTaos.ReadRawBlock(pdata, actualMeta, numOfRows);
 
                     //Assert Meta data
@@ -177,7 +177,7 @@ namespace Function.Test.Taosc
                         Assert.Equal(expectResData[i], actualResData[i]);
                     }
 
-                    TDengine.FetchRawBlockAsync(taosRes, FetchRawBlockCallback, param);
+                    TDengineDriver.TDengine.FetchRawBlockAsync(taosRes, FetchRawBlockCallback, param);
                 }
                 else
                 {
@@ -190,7 +190,7 @@ namespace Function.Test.Taosc
                     {
                         _output.WriteLine($"FetchRowAsync callback error, error code {numOfRows}");
                     }
-                    TDengine.FreeResult(taosRes);
+                    TDengineDriver.TDengine.FreeResult(taosRes);
                 }
             }
         }
@@ -219,7 +219,7 @@ namespace Function.Test.Taosc
             Tools.ExecuteUpdate(conn, insertSql, _output);
 
             QueryAsyncCallback fq = new QueryAsyncCallback(QueryCallback);
-            TDengine.QueryAsync(conn, selectSql, fq, IntPtr.Zero);
+            TDengineDriver.TDengine.QueryAsync(conn, selectSql, fq, IntPtr.Zero);
             Thread.Sleep(2000);
 
             void QueryCallback(IntPtr param, IntPtr taosRes, int code)
@@ -227,7 +227,7 @@ namespace Function.Test.Taosc
                 if (code == 0 && taosRes != IntPtr.Zero)
                 {
                     FetchRawBlockAsyncCallback fetchRowAsyncCallback = new FetchRawBlockAsyncCallback(FetchRawBlockCallback);
-                    TDengine.FetchRawBlockAsync(taosRes, fetchRowAsyncCallback, param);
+                    TDengineDriver.TDengine.FetchRawBlockAsync(taosRes, fetchRowAsyncCallback, param);
                 }
                 else
                 {
@@ -241,8 +241,8 @@ namespace Function.Test.Taosc
                 if (numOfRows > 0)
                 {
 
-                    IntPtr pdata = TDengine.GetRawBlock(taosRes);
-                    List<TDengineMeta> actualMeta = TDengine.FetchFields(taosRes);
+                    IntPtr pdata = TDengineDriver.TDengine.GetRawBlock(taosRes);
+                    List<TDengineMeta> actualMeta = TDengineDriver.TDengine.FetchFields(taosRes);
                     List<object> actualResData = LibTaos.ReadRawBlock(pdata, actualMeta, numOfRows);
 
                     //Assert Meta data
@@ -262,7 +262,7 @@ namespace Function.Test.Taosc
                         Assert.Equal(expectResData[i], actualResData[i]);
                     }
 
-                    TDengine.FetchRawBlockAsync(taosRes, FetchRawBlockCallback, param);
+                    TDengineDriver.TDengine.FetchRawBlockAsync(taosRes, FetchRawBlockCallback, param);
                 }
                 else
                 {
@@ -275,7 +275,7 @@ namespace Function.Test.Taosc
                     {
                         _output.WriteLine($"FetchRowAsync callback error, error code {numOfRows}");
                     }
-                    TDengine.FreeResult(taosRes);
+                    TDengineDriver.TDengine.FreeResult(taosRes);
                 }
             }
         }

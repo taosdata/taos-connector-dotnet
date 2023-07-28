@@ -30,13 +30,13 @@ namespace Benchmark
         public void  Run(string types, int recordNum, int tableCnt, int loopTime)
         {
             // Console.WriteLine("Insert {0} ... ", types);
-            IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
+            IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, db, Port);
             IntPtr res;
             if (conn != IntPtr.Zero)
             {
-                res = TDengine.Query(conn, $"use {db}");
+                res = TDengineDriver.TDengine.Query(conn, $"use {db}");
                 IfTaosQuerySucc(res, $"use {db}");
-                TDengine.FreeResult(res);
+                TDengineDriver.TDengine.FreeResult(res);
 
                 if (types == "normal")
                 {
@@ -52,8 +52,8 @@ namespace Benchmark
                 throw new Exception("create TD connection failed");
             }
             
-            TDengine.Close(conn);
-            Console.WriteLine("======TDengine.Close(conn);");
+            TDengineDriver.TDengine.Close(conn);
+            Console.WriteLine("======TDengineDriver.TDengine.Close(conn);");
         }
 
         public void InsertLoop(IntPtr conn, int tableCnt, int recordCnt, string prefix, int times)
@@ -82,10 +82,10 @@ namespace Benchmark
                     int tmpRecords = Math.Min(MaxSqlLength, numOfRecord);        
                     string sql = generator.RandomSQL(context.tableName, tmpRecords);
                     // Console.WriteLine(sql);
-                    IntPtr res = TDengine.Query(context.conn, sql);
+                    IntPtr res = TDengineDriver.TDengine.Query(context.conn, sql);
                     IfTaosQuerySucc(res, sql);
                     numOfRecord -= tmpRecords;
-                    TDengine.FreeResult(res);
+                    TDengineDriver.TDengine.FreeResult(res);
                 }
             }
             finally
@@ -98,13 +98,13 @@ namespace Benchmark
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengine.ErrorNo(res) == 0)
+            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengine.Error(res)}, code{TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
             }
         }
     }

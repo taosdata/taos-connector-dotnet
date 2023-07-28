@@ -271,14 +271,14 @@ namespace TDengineTMQ.Impl
             {
                 while (true)
                 {
-                    int code = TDengine.FetchRawBlock(taosRes, numOfRowsPrt, pDataPtr);
+                    int code = TDengineDriver.TDengine.FetchRawBlock(taosRes, numOfRowsPrt, pDataPtr);
 
                     if (code != 0)
                     {
-                        throw new Exception($"TMQ fetch_raw_block failed,code {code} reason:{TDengine.Error(taosRes)}");
+                        throw new Exception($"TMQ fetch_raw_block failed,code {code} reason:{TDengineDriver.TDengine.Error(taosRes)}");
                     }
                     int numOfRows = Marshal.ReadInt32(numOfRowsPrt);
-                    int numOfFields = TDengine.FieldCount(taosRes);
+                    int numOfFields = TDengineDriver.TDengine.FieldCount(taosRes);
                     pData = Marshal.ReadIntPtr(pDataPtr);
 
                     if (numOfRows == 0)
@@ -331,7 +331,7 @@ namespace TDengineTMQ.Impl
             {
                 ErrorHandler("Sync Commit", code);
             }
-            TDengine.FreeResult(consumeResult.Offset);
+            TDengineDriver.TDengine.FreeResult(consumeResult.Offset);
         }
 
         internal void CommitAsync(IntPtr tmq, ConsumeResult consumeResult, LibTMQ.tmq_commit_cb callback, IntPtr? param)
