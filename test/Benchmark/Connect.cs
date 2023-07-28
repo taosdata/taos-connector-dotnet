@@ -24,10 +24,10 @@ namespace Benchmark
             int i = 0;
             while (i < times)
             {
-                IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
+                IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, db, Port);
                 if (conn != IntPtr.Zero)
                 {
-                    TDengine.Close(conn);
+                    TDengineDriver.TDengine.Close(conn);
                 }
                 else
                 {

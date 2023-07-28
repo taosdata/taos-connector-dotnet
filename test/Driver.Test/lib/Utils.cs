@@ -155,7 +155,7 @@ namespace Test.Utils
         /*---------------------- warp native methods --------------*/
         public static IntPtr ExecuteQuery(IntPtr conn, String sql, ITestOutputHelper output)
         {
-            IntPtr res = TDengine.Query(conn, sql);
+            IntPtr res = TDengineDriver.TDengine.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 throw new Exception($"execute {sql} failed.");
@@ -165,7 +165,7 @@ namespace Test.Utils
 
         public static IntPtr ExecuteErrorQuery(IntPtr conn, String sql)
         {
-            IntPtr res = TDengine.Query(conn, sql);
+            IntPtr res = TDengineDriver.TDengine.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 throw new Exception($"execute {sql} failed.");
@@ -175,17 +175,17 @@ namespace Test.Utils
 
         public static void ExecuteUpdate(IntPtr conn, String sql, ITestOutputHelper output)
         {
-            IntPtr res = TDengine.Query(conn, sql);
+            IntPtr res = TDengineDriver.TDengine.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 throw new Exception($"execute {sql} failed.");
             }
-            TDengine.FreeResult(res);
+            TDengineDriver.TDengine.FreeResult(res);
         }
 
         public static void FreeResult(IntPtr res)
         {
-            TDengine.FreeResult(res);
+            TDengineDriver.TDengine.FreeResult(res);
         }
 
         /*------------------------ parse TAO_RES ---------------------*/
@@ -423,14 +423,14 @@ namespace Test.Utils
         {
             if ((res == IntPtr.Zero))
             {
-                throw new Exception($"invalid TAOS_RES,reason {TDengine.Error(res)} code:{TDengine.ErrorNo(res)}");
+                throw new Exception($"invalid TAOS_RES,reason {TDengineDriver.TDengine.Error(res)} code:{TDengineDriver.TDengine.ErrorNo(res)}");
             }
             return true;
         }
 
         public static void ExitProgram(int statusCode = 1)
         {
-            TDengine.Cleanup();
+            TDengineDriver.TDengine.Cleanup();
             System.Environment.Exit(statusCode);
         }
 

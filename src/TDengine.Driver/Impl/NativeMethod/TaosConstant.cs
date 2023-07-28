@@ -168,4 +168,15 @@ namespace TDengineDriver
         TSDB_SRV_STATUS_SERVICE_DEGRADED = 3,
         TSDB_SRV_STATUS_EXTING = 4,
     }
+    
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TaosFieldE
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 65)]
+        public string name;
+        public sbyte type;
+        public byte precision;
+        public byte scale;
+        public int bytes;
+    }
 }

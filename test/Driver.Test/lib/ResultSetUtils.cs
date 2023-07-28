@@ -13,7 +13,7 @@ namespace Test.Utils.ResultSet
 
             ResultMeta = LibTaos.GetMeta(res);
             ResultData = LibTaos.GetData(res);
-            TDengine.FreeResult(res);
+            TDengineDriver.TDengine.FreeResult(res);
         }
 
         public ResultSet(List<TDengineMeta> meta, List<Object> data)

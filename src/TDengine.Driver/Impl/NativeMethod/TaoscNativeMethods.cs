@@ -19,6 +19,9 @@ namespace TDengineDriver
 
         [DllImport(DLLName, EntryPoint = "taos_connect", CallingConvention = CallingConvention.Cdecl)]
         static extern public IntPtr Connect(string ip, string user, string password, string db, short port);
+        
+        [DllImport(DLLName, EntryPoint = "taos_connect", CallingConvention = CallingConvention.Cdecl)]
+        static extern public IntPtr Connect(string ip, string user, string password, string db, ushort port);
 
         [DllImport(DLLName, EntryPoint = "taos_errstr", CallingConvention = CallingConvention.Cdecl)]
         static extern private IntPtr taos_errstr(IntPtr res);
@@ -268,16 +271,21 @@ namespace TDengineDriver
         }
 
         [DllImport(DLLName, EntryPoint = "taos_stmt_get_tag_fields", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int StmtGetTagFields(IntPtr stmt, IntPtr fieldNum, IntPtr fields);
+        static extern public int StmtGetTagFields(IntPtr stmt, out int fieldNum, out IntPtr fields);
         //int taos_stmt_get_tag_fields(TAOS_STMT* stmt, int* fieldNum, TAOS_FIELD_E** fields);
 
         [DllImport(DLLName, EntryPoint = "taos_stmt_get_col_fields", CallingConvention = CallingConvention.Cdecl)]
-        static extern public int StmtGetColFields(IntPtr stmt, IntPtr fieldNum, IntPtr fields);
+        static extern public int StmtGetColFields(IntPtr stmt, out int fieldNum, out IntPtr fields);
         //int taos_stmt_get_col_fields(TAOS_STMT* stmt, int* fieldNum, TAOS_FIELD_E** fields);
 
         [DllImport(DLLName, EntryPoint = "taos_stmt_is_insert", CallingConvention = CallingConvention.Cdecl)]
         static extern public int StmtIsInsert(IntPtr stmt, IntPtr insert);
         //int taos_stmt_is_insert(TAOS_STMT* stmt, int* insert);
+
+        [DllImport(DLLName, EntryPoint = "taos_stmt_reclaim_fields", CallingConvention = CallingConvention.Cdecl)]
+        static extern public  void StmtReclaimFields(IntPtr stmt, IntPtr fields);
+        //  void taos_stmt_reclaim_fields(TAOS_STMT *stmt, TAOS_FIELD_E *fields);
+        
 
         [DllImport(DLLName, EntryPoint = "taos_stmt_num_params", CallingConvention = CallingConvention.Cdecl)]
         static extern public int StmtNumParams(IntPtr stmt, IntPtr num);
@@ -300,6 +308,10 @@ namespace TDengineDriver
         [DllImport(DLLName, EntryPoint = "taos_stmt_bind_param_batch", CallingConvention = CallingConvention.Cdecl)]
         static extern public int StmtBindParamBatch(IntPtr stmt, TAOS_MULTI_BIND[] bind);
         //int taos_stmt_bind_param_batch(TAOS_STMT* stmt, TAOS_MULTI_BIND* bind);
+        
+        [DllImport(DLLName, EntryPoint = "taos_stmt_bind_param", CallingConvention = CallingConvention.Cdecl)]
+        static extern public int StmtBindParam(IntPtr stmt, TAOS_MULTI_BIND[] bind);
+        //int taos_stmt_bind_param(TAOS_STMT* stmt, TAOS_MULTI_BIND* bind);
 
         /// <summary>
         /// bind a single column's data, INTERNAL used and for INSERT only.

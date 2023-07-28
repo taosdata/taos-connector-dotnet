@@ -31,15 +31,15 @@ namespace Benchmark
         }
         public void Run(string types, int tableCnt)
         {
-            IntPtr conn = TDengine.Connect(Host, Username, Password, db, Port);
+            IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, db, Port);
             IntPtr res;
 
             _numOfThreadsNotYetCompleted = tableCnt;
             if (conn != IntPtr.Zero)
             {
-                res = TDengine.Query(conn, $"use {db}");
+                res = TDengineDriver.TDengine.Query(conn, $"use {db}");
                 IfTaosQuerySucc(res, $"use {db}");
-                TDengine.FreeResult(res);
+                TDengineDriver.TDengine.FreeResult(res);
 
                 if (types == "normal")
                 {
@@ -56,8 +56,8 @@ namespace Benchmark
                 throw new Exception("create TD connection failed");
             }
 
-            TDengine.Close(conn);
-            Console.WriteLine("======TDengine.Close(conn);");
+            TDengineDriver.TDengine.Close(conn);
+            Console.WriteLine("======TDengineDriver.TDengine.Close(conn);");
         }
 
         public void InsertLoop(IntPtr conn, int tableCnt, int recordCnt, string prefix, int times)
@@ -74,13 +74,13 @@ namespace Benchmark
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengine.ErrorNo(res) == 0)
+            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengine.Error(res)}, code{TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
             }
         }
 
@@ -92,9 +92,9 @@ namespace Benchmark
             {
                 string sql = $"insert into {context.tableName} values({begineTime},true,-1,-2,-3,-4,1,2,3,4,3.1415,3.14159265358979,'bnr_col_1','ncr_col_1')";
                 // Console.WriteLine("sql:{0}", sql);
-                IntPtr res = TDengine.Query(context.conn, sql);
+                IntPtr res = TDengineDriver.TDengine.Query(context.conn, sql);
                 IfTaosQuerySucc(res, sql);
-                TDengine.FreeResult(res);
+                TDengineDriver.TDengine.FreeResult(res);
             }
             finally
             {

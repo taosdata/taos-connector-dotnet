@@ -19,30 +19,30 @@ namespace Test.Fixture
             short port = 0;
 
 
-            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
-            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "90");
-            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_LOCALE, "C");
-            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CHARSET, "UTF-8");
+            TDengineDriver.TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
+            TDengineDriver.TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "90");
+            TDengineDriver.TDengine.Options((int)TDengineInitOption.TSDB_OPTION_LOCALE, "C");
+            TDengineDriver.TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CHARSET, "UTF-8");
             string? ENV_HOST = Environment.GetEnvironmentVariable("TEST_HOST");
             ip = string.IsNullOrEmpty(ENV_HOST) == true ? "127.0.0.1" : ENV_HOST;
-            this.Conn = TDengine.Connect(ip, user, password, "", port);
+            this.Conn = TDengineDriver.TDengine.Connect(ip, user, password, "", port);
             IntPtr res;
             if (Conn != IntPtr.Zero)
             {
-                if ((res = TDengine.Query(Conn, $"create database if not exists {db} keep 3650")) != IntPtr.Zero)
+                if ((res = TDengineDriver.TDengine.Query(Conn, $"create database if not exists {db} keep 3650")) != IntPtr.Zero)
                 {
-                    if ((res = TDengine.Query(Conn, $"use {db}")) != IntPtr.Zero)
+                    if ((res = TDengineDriver.TDengine.Query(Conn, $"use {db}")) != IntPtr.Zero)
                     {
                         Console.WriteLine("Get connection success");
                     }
                     else
                     {
-                        throw new Exception(TDengine.Error(res));
+                        throw new Exception(TDengineDriver.TDengine.Error(res));
                     }
                 }
                 else
                 {
-                    throw new Exception(TDengine.Error(res));
+                    throw new Exception(TDengineDriver.TDengine.Error(res));
                 }
             }
             else
@@ -56,22 +56,22 @@ namespace Test.Fixture
 
         public void Dispose()
         {
-            //TDengine.Close(Conn);
+            //TDengineDriver.TDengine.Close(Conn);
 
             IntPtr res = IntPtr.Zero;
             if (Conn != IntPtr.Zero)
             {
-                res = TDengine.Query(Conn, $"drop database if exists {db}");
+                res = TDengineDriver.TDengine.Query(Conn, $"drop database if exists {db}");
                 if (res != IntPtr.Zero)
                 {
-                    TDengine.Close(Conn);
+                    TDengineDriver.TDengine.Close(Conn);
                     Console.WriteLine("close connection success");
 
                 }
                 else
                 {
-                    TDengine.Close(Conn);
-                    throw new Exception(TDengine.Error(res));
+                    TDengineDriver.TDengine.Close(Conn);
+                    throw new Exception(TDengineDriver.TDengine.Error(res));
                 }
             }
             else

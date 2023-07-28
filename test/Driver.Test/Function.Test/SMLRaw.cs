@@ -39,7 +39,7 @@ namespace Function.Test.SML
                 $"{table},location=北京.顺义,groupid=3 current=11.1,voltage=220,phase=0.35 1648432611252"
             };
 
-            int rows = TDengine.SchemalessInsertRaw(conn, lines, TDengineSchemalessProtocol.TSDB_SML_LINE_PROTOCOL, TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_MILLI_SECONDS);
+            int rows = TDengineDriver.TDengine.SchemalessInsertRaw(conn, lines, TDengineSchemalessProtocol.TSDB_SML_LINE_PROTOCOL, TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_MILLI_SECONDS);
             Assert.Equal(5, rows);
 
         }
@@ -64,7 +64,7 @@ namespace Function.Test.SML
                 $"{table} 1648432611249 221 location=北京.顺义 groupid=4",
                 $"{table} 1648432611250 217 location=北京.顺义 groupid=4",
             };
-            int rows = TDengine.SchemalessInsertRaw(conn, lines, TDengineSchemalessProtocol.TSDB_SML_TELNET_PROTOCOL, TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NOT_CONFIGURED);
+            int rows = TDengineDriver.TDengine.SchemalessInsertRaw(conn, lines, TDengineSchemalessProtocol.TSDB_SML_TELNET_PROTOCOL, TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NOT_CONFIGURED);
             Assert.Equal(8, rows);
         }
 
@@ -84,7 +84,7 @@ namespace Function.Test.SML
                 " {\"metric\": \"sml_raw_telnet\", \"timestamp\": 1648432611251, \"value\": 220, \"tags\": {\"location\": \"北京.朝阳\", \"groupid\": 3}},"+
                 " {\"metric\": \"sml_raw_telnet\", \"timestamp\": 1648432611252, \"value\": 220, \"tags\": {\"location\": \"北京.顺义\", \"groupid\": 3}}]"
             };
-            int rows = TDengine.SchemalessInsertRaw(conn, lines, TDengineSchemalessProtocol.TSDB_SML_JSON_PROTOCOL, TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NOT_CONFIGURED);
+            int rows = TDengineDriver.TDengine.SchemalessInsertRaw(conn, lines, TDengineSchemalessProtocol.TSDB_SML_JSON_PROTOCOL, TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NOT_CONFIGURED);
             Assert.Equal(1, rows);
         }
 

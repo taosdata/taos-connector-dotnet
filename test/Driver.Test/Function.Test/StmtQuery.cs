@@ -44,8 +44,8 @@ namespace Function.Test.Taosc
             string selectExpectSql = $"SELECT * FROM {table} where ts>1659060000000 " +
                 $"and v1>-10 and v2>-20 and v4>-30 and v8>=-40 " +
                 $"and u1>0 and u2>=1 and u4>2 and u8>3 " +
-                $"and f4>3.1415 and f8>3.1415926535897932 and bin=\'binary_col_ÁĞ_3\' " +
-                $"and nchr=\'nchar_col_ÁĞ_3\' and b=true";
+                $"and f4>3.1415 and f8>3.1415926535897932 and bin=\'binary_col_åˆ—_3\' " +
+                $"and nchr=\'nchar_col_åˆ—_3\' and b=true";
 
             string createTable = Tools.CreateTable(table, false, false);
             List<Object> columns = Tools.ColumnsList(5);
@@ -68,8 +68,8 @@ namespace Function.Test.Taosc
                 , (ulong)3
                 , 3.1415F
                 , 3.1415926535897932D
-                , "binary_col_ÁĞ_3"
-                , "nchar_col_ÁĞ_3"
+                , "binary_col_åˆ—_3"
+                , "nchar_col_åˆ—_3"
                 , true
             };
 
@@ -127,7 +127,7 @@ namespace Function.Test.Taosc
                 $"and v1>-10 and v2>-20 and v4>-30 and v8>=-40 " +
                 $"and u1>0 and u2>=1 and u4>2 and u8>3 " +
                 $"and ff>3.1415 and dd>3.1415926535897932 " +
-                $"and bb=\'binary_tag_±êÇ©_1\' and nc=\'nchar_tag_±êÇ©_1\' and bo=true";
+                $"and bb=\'binary_tag_æ ‡ç­¾_1\' and nc=\'nchar_tag_æ ‡ç­¾_1\' and bo=true";
 
 
             string createTable = Tools.CreateTable(table, true, false);
@@ -151,8 +151,8 @@ namespace Function.Test.Taosc
                 , (ulong)3
                 , 3.1415F
                 , 3.1415926535897932D
-                , "binary_tag_±êÇ©_1"
-                , "nchar_tag_±êÇ©_1"
+                , "binary_tag_æ ‡ç­¾_1"
+                , "nchar_tag_æ ‡ç­¾_1"
                 , true
             };
 
@@ -212,7 +212,7 @@ namespace Function.Test.Taosc
                 $"and v1>-10 and v2>-20 and json_tag->\'key4\'>-30 and v8>=-40 " +
                 $"and u1>0 and u2>=1 and u4>2 and u8>3 " +
                 $"and f4>3.1415 and f8>3.1415926535897932 " +
-                $"and json_tag->\'key3\'=\'TDengineÌÎË¼Êı¾İ\'and nchr=\'nchar_col_ÁĞ_3\' and json_tag->\'key5\'=false";
+                $"and json_tag->\'key3\'=\'TDengineæ¶›æ€æ•°æ®\'and nchr=\'nchar_col_åˆ—_3\' and json_tag->\'key5\'=false";
 
 
             string createTable = Tools.CreateTable(table, true, true);
@@ -240,8 +240,8 @@ namespace Function.Test.Taosc
                 , (ulong)3
                 , 3.1415F
                 , 3.1415926535897932D
-                , "TDengineÌÎË¼Êı¾İ"
-                , "nchar_col_ÁĞ_3"
+                , "TDengineæ¶›æ€æ•°æ®"
+                , "nchar_col_åˆ—_3"
                 , false
             };
 

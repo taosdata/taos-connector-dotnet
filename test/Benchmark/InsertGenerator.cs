@@ -106,13 +106,13 @@ namespace Benchmark
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengine.ErrorNo(res) == 0)
+            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengine.Error(res)}, code{TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
             }
         }
 

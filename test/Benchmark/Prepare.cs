@@ -78,7 +78,7 @@ namespace Benchmark
         {
             // Console.WriteLine("Prepare {0}... ", type);
 
-            IntPtr conn = TDengine.Connect(Host, Username, Password, "", 0);
+            IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, "", 0);
 
             if (conn != IntPtr.Zero)
             {
@@ -100,28 +100,28 @@ namespace Benchmark
             {
                 throw new Exception("create TD connection failed");
             }
-            TDengine.Close(conn);
+            TDengineDriver.TDengine.Close(conn);
         }
 
         public void SQLExe(IntPtr conn, string sql)
         {
             IntPtr res;
 
-            res = TDengine.Query(conn, sql);
+            res = TDengineDriver.TDengine.Query(conn, sql);
             IfTaosQuerySucc(res, sql);
-            TDengine.FreeResult(res);
+            TDengineDriver.TDengine.FreeResult(res);
 
         }
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengine.ErrorNo(res) == 0)
+            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengine.Error(res)}, code{TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
             }
         }
     }
