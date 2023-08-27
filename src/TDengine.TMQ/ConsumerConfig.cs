@@ -75,8 +75,8 @@ namespace TDengineTMQ
 
         public string TDConnectUser
         {
-            get => Get("td.connect.ip");
-            set => this.SetObject("td.connect.ip", value);
+            get => Get("td.connect.user");
+            set => this.SetObject("td.connect.user", value);
         }
 
         public string TDConnectPasswd
