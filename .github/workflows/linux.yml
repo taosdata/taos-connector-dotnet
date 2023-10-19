@@ -121,7 +121,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ matrix.dotnet }}
-          cache: true
     
       - name: checkout
         uses: actions/checkout@v3
@@ -182,7 +181,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ matrix.dotnet }}
-          cache: true
 
       - name: checkout
         uses: actions/checkout@v3
