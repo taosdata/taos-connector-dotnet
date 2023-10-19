@@ -1,7 +1,6 @@
-﻿using System;
-using Examples.UtilsTools;
-using TDengineDriver.Impl;
-using TDengineDriver;
+﻿using Examples.UtilsTools;
+using TDengine.Driver;
+using TDengine.Driver.Impl.NativeMethods;
 
 namespace Examples.JSONTag
 {
@@ -22,15 +21,15 @@ namespace Examples.JSONTag
 
             IntPtr res = Tools.ExecuteErrorQuery(conn, "select * from jsons1");
             Display(res);
-            TDengine.FreeResult(res);
+            NativeMethods.FreeResult(res);
 
             res = Tools.ExecuteErrorQuery(conn, "select jtag->\"tag1\",jtag->\"tag2\",jtag->\"tag3\" from jsons1; ");
             Display(res);
-            TDengine.FreeResult(res);
+            NativeMethods.FreeResult(res);
 
             res = Tools.ExecuteErrorQuery(conn, "select ts,dataint,databool,datastr,datastrbin,jtag->\"tag1\",jtag->\"tag2\",jtag->\"tag3\" from jsons1 where ts>1591060608000 and jtag->\"tag3\" is null;");
             Display(res);
-            TDengine.FreeResult(res);
+            NativeMethods.FreeResult(res);
 
             Tools.ExecuteUpdate(conn, "drop database if exists json_db");
 
@@ -38,8 +37,8 @@ namespace Examples.JSONTag
 
         public void Display(IntPtr res)
         {
-            List<TDengineMeta> metaList = LibTaos.GetMeta(res);
-            List<object> dataList = LibTaos.GetData(res);
+            List<TDengineMeta> metaList = NativeMethods.FetchFields(res);
+            List<object> dataList = NativeMethods.GetData(res);
 
             metaList.ForEach(meta =>
             {

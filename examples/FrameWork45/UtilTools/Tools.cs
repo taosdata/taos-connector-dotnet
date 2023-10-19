@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using TDengineDriver;
-using TDengineDriver.Impl;
+using System.Runtime.InteropServices;
+using TDengine.Driver;
+using TDengine.Driver.Impl.NativeMethods;
 
 namespace FrameWork45.UtilTools
 {
@@ -12,14 +13,14 @@ namespace FrameWork45.UtilTools
         static string user = "root";
         static string password = "taosdata";
         static string db = "";
-        static short port = 0;
+        static ushort port = 0;
         //get a TDengine connection
         public static IntPtr TDConnection()
         {
-            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
-            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "60");
+            NativeMethods.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
+            NativeMethods.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "60");
 
-            IntPtr conn = TDengine.Connect(ip, user, password, db, port);
+            IntPtr conn = NativeMethods.Connect(ip, user, password, db, port);
 
             //Tools.ExecuteUpdate(conn, $"drop database if  exists {dbName}");
             //Tools.ExecuteUpdate(conn, $"create database if not exists {dbName} keep 3650");
@@ -35,7 +36,7 @@ namespace FrameWork45.UtilTools
 
         public static IntPtr ExecuteQuery(IntPtr conn, String sql)
         {
-            IntPtr res = TDengine.Query(conn, sql);
+            IntPtr res = NativeMethods.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 Console.Write(sql.ToString() + " failure, ");
@@ -50,7 +51,7 @@ namespace FrameWork45.UtilTools
 
         public static IntPtr ExecuteErrorQuery(IntPtr conn, String sql)
         {
-            IntPtr res = TDengine.Query(conn, sql);
+            IntPtr res = NativeMethods.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 Console.Write(sql.ToString() + " failure, ");
@@ -66,7 +67,7 @@ namespace FrameWork45.UtilTools
 
         public static void ExecuteUpdate(IntPtr conn, String sql)
         {
-            IntPtr res = TDengine.Query(conn, sql);
+            IntPtr res = NativeMethods.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 Console.Write(sql.ToString() + " failure, ");
@@ -77,7 +78,7 @@ namespace FrameWork45.UtilTools
                 Console.WriteLine(sql.ToString() + " success");
 
             }
-            TDengine.FreeResult(res);
+            NativeMethods.FreeResult(res);
         }
 
         public static void DisplayRes(IntPtr res)
@@ -122,8 +123,8 @@ namespace FrameWork45.UtilTools
                 ExitProgram();
             }
 
-            List<TDengineMeta> resMeta = LibTaos.GetMeta(res);
-            List<Object> resData = LibTaos.GetData(res);
+            List<TDengineMeta> resMeta = NativeMethods.FetchFields(res);
+            List<Object> resData = GetData(res);
             Dictionary<List<TDengineMeta>, List<Object>> result = new Dictionary<List<TDengineMeta>, List<Object>>(1);
             result.Add(resMeta, resData);
             return result;
@@ -131,11 +132,11 @@ namespace FrameWork45.UtilTools
 
         public static bool IsValidResult(IntPtr res)
         {
-            if ((res == IntPtr.Zero) || (TDengine.ErrorNo(res) != 0))
+            if ((res == IntPtr.Zero) || (NativeMethods.ErrorNo(res) != 0))
             {
                 if (res != IntPtr.Zero)
                 {
-                    Console.Write("reason: " + TDengine.Error(res));
+                    Console.Write("reason: " + NativeMethods.Error(res));
                     return false;
                 }
                 Console.WriteLine("");
@@ -147,7 +148,7 @@ namespace FrameWork45.UtilTools
         {
             if (conn != IntPtr.Zero)
             {
-                TDengine.Close(conn);
+                NativeMethods.Close(conn);
                 Console.WriteLine("close connection success");
             }
             else
@@ -157,22 +158,86 @@ namespace FrameWork45.UtilTools
         }
         public static List<TDengineMeta> GetResField(IntPtr res)
         {
-            List<TDengineMeta> meta = TDengine.FetchFields(res);
+            List<TDengineMeta> meta = NativeMethods.FetchFields(res);
             return meta;
         }
 
         // Only for exceptional exit.
         public static void ExitProgram()
         {
-            TDengine.Cleanup();
-            System.Environment.Exit(1);
+            NativeMethods.Cleanup();
+            Environment.Exit(1);
         }
 
         public static void FreeTaosRes(IntPtr taosRes)
         {
-            TDengine.FreeResult(taosRes);
+            NativeMethods.FreeResult(taosRes);
+        }
+        private static List<object> ReadRawBlock(IntPtr pData, List<TDengineMeta> metaList, int numOfRows)
+        {
+            var list = new List<object>(metaList.Count * numOfRows);
+            byte[] colType = new byte[metaList.Count];
+            for (int i = 0; i < metaList.Count; i++)
+            {
+                colType[i] = metaList[i].type;
+            }
+
+            var br = new BlockReader(0, metaList.Count, colType);
+            br.SetBlockPtr(pData, numOfRows);
+            for (int rowIndex = 0; rowIndex < numOfRows; rowIndex++)
+            {
+                for (int colIndex = 0; colIndex < metaList.Count; colIndex++)
+                {
+                    list.Add(br.Read(rowIndex, colIndex));
+                }
+            }
+
+            return list;
         }
 
+        public static List<object> GetData(IntPtr taosRes)
+        {
+            List<TDengineMeta> metaList = NativeMethods.FetchFields(taosRes);
+            List<Object> list = new List<object>();
+
+            IntPtr numOfRowsPrt = Marshal.AllocHGlobal(sizeof(Int32));
+            IntPtr pDataPtr = Marshal.AllocHGlobal(IntPtr.Size);
+            IntPtr pData;
+            try
+            {
+                byte[] colType = new byte[metaList.Count];
+                for (int i = 0; i < metaList.Count; i++)
+                {
+                    colType[i] = metaList[i].type;
+                }
+
+                while (true)
+                {
+                    int code = NativeMethods.FetchRawBlock(taosRes, numOfRowsPrt, pDataPtr);
+                    if (code != 0)
+                    {
+                        throw new Exception(
+                            $"fetch_raw_block failed,code {code} reason:{NativeMethods.Error(taosRes)}");
+                    }
+
+                    int numOfRows = Marshal.ReadInt32(numOfRowsPrt);
+                    if (numOfRows == 0)
+                    {
+                        break;
+                    }
+
+                    pData = Marshal.ReadIntPtr(pDataPtr);
+                    list.AddRange(ReadRawBlock(pData, metaList, numOfRows));
+                }
+
+                return list;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(numOfRowsPrt);
+                Marshal.FreeHGlobal(pDataPtr);
+            }
+        }
     }
 }
 

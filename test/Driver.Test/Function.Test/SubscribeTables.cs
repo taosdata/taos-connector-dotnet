@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using TDengineDriver;
-using TDengineTMQ;
+using TDengine.Driver;
+using TDengine.TMQ;
 using Test.Case.Attributes;
 using Test.Fixture;
 using Test.Utils;
@@ -12,7 +12,6 @@ namespace Function.Test.TMQ
 {
     [TestCaseOrderer("XUnit.Case.Orderers.TestExeOrderer", "Cases.ExeOrder")]
     [Collection("Database collection")]
-
     public class SubscribeTable
     {
         readonly DatabaseFixture database;
@@ -22,8 +21,8 @@ namespace Function.Test.TMQ
         {
             this.database = fixture;
             this._output = output;
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>SubscribeTable.NormalTable</Name>
         /// <describe>Subscribe a table and consume from beginning.</describe>
@@ -41,14 +40,14 @@ namespace Function.Test.TMQ
 
             List<object> columns = Tools.ColumnsList(5);
             List<object> tags = Tools.TagsList(1);
-            string insertSql = Tools.ConstructInsertSql($"{tableName}_s1", tableName, columns, tags, 5);
+            string insertSql = Tools.ConstructInsertSql($"{tableName}", "", columns, tags, 5);
 
             List<object> expectResData = Tools.ConstructResData(columns, tags, 5);
             List<TDengineMeta> expectResMeta = Tools.GetMetaFromDDL(createSql);
 
             var cfg = new ConsumerConfig
             {
-                GourpId = "c#_1",
+                GroupId = "c#_1",
                 TDConnectUser = "root",
                 TDConnectPasswd = "taosdata",
                 MsgWithTableName = "true",
@@ -72,36 +71,54 @@ namespace Function.Test.TMQ
 
             for (int i = 0; i < 5; i++)
             {
-                ConsumeResult consumerResult = consumer.Consume(200);
-
-                foreach (KeyValuePair<TopicPartition, TaosResult> kv in consumerResult.Message)
+                using (ConsumeResult consumerResult = consumer.Consume(200))
                 {
-                    if (kv.Key.table == tableName)
+                    if (consumerResult == null)
                     {
-                        // assert meta
-                        for (int k = 0; k < expectResMeta.Count; k++)
+                        _output.WriteLine(" ======= consume {0} done", i);
+                        continue;
+                    }
+
+                    foreach (var kv in consumerResult.Message)
+                    {
+                        _output.WriteLine(" ======= consume {0} {1}", i, tableName);
+                        if (kv.TableName == tableName)
                         {
-                            Assert.Equal(expectResMeta[k].name, kv.Value.Metas[k].name);
-                            Assert.Equal(expectResMeta[k].type, kv.Value.Metas[k].type);
-                            Assert.Equal(expectResMeta[k].size, kv.Value.Metas[k].size);
-                        }
-                        // assert data
-                        for (int j = 0; j < expectResData.Count; j++)
-                        {
-                            Assert.Equal(expectResData[j], kv.Value.Datas[j]);
+                            // assert meta
+                            for (int k = 0; k < expectResMeta.Count; k++)
+                            {
+                                Assert.Equal(expectResMeta[k].name, kv.Metas[k].name);
+                                Assert.Equal(expectResMeta[k].type, kv.Metas[k].type);
+                                Assert.Equal(expectResMeta[k].size, kv.Metas[k].size);
+                            }
+
+                            // assert data
+                            for (int j = 0; j < expectResData.Count; j++)
+                            {
+                                switch (kv.Datas[0][j])
+                                {
+                                    case DateTime val:
+                                        var ts = TDengineConstant.ConvertDatetimeToTick(val,
+                                            TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                                        Assert.Equal(expectResData[j], ts);
+                                        break;
+                                    default:
+                                        Assert.Equal(expectResData[j], kv.Datas[0][j]);
+                                        break;
+                                }
+                            }
                         }
                     }
 
+                    consumer.Commit(consumerResult);
+                    _output.WriteLine(" ======= consume {0} done", i);
                 }
-                consumer.Commit(consumerResult);
-                _output.WriteLine(" ======= consume {0} done", i);
             }
 
             // dispose
             consumer.Unsubscribe();
             Tools.ExecuteUpdate(conn, dropTopic, _output);
             consumer.Close();
-
         }
 
         /// <author>xiaolei</author>
@@ -109,7 +126,7 @@ namespace Function.Test.TMQ
         /// <describe>Subscribe table from the last progress.</describe>
         /// <filename>Subscribe.cs</filename>
         /// <result>pass or failed </result> 
-        [Fact(Skip = "SubscribeTable.MultiTables()"), TestExeOrder(2), Trait("Category", "MultiTables")]
+        [Fact(DisplayName = "SubscribeTable.MultiTables()"), TestExeOrder(2), Trait("Category", "MultiTables")]
         public void MultiTables()
         {
             IntPtr conn = database.Conn;
@@ -122,48 +139,44 @@ namespace Function.Test.TMQ
             string[] createTopic = new string[3];
             string[] insertSql = new string[3];
             string[] dropTopic = new string[3];
-            List<object> columns = Tools.ColumnsList(5);
+            List<object> columns = Tools.ColumnsList(1);
 
             List<List<object>> expectResData = new List<List<object>>(3);
             List<List<TDengineMeta>> expectResMeta = new List<List<TDengineMeta>>(3);
             List<List<object>> tags = new List<List<object>>(3);
 
             // prepare SQL
+
+            // table 
+
+            tags.Add(new List<object>());
+            createSql[0] = Tools.CreateTable(tableName[0], false, false);
+            insertSql[0] = Tools.ConstructInsertSql(tableName[0], "", columns, null, 1);
+            expectResData.Add(columns);
+            expectResMeta.Add(Tools.GetMetaFromDDL(createSql[0]));
+
+            // stable
+            tags.Add(Tools.TagsList(2, false));
+            createSql[1] = Tools.CreateTable(tableName[1], true, false);
+            insertSql[1] =
+                Tools.ConstructInsertSql($"{tableName[1]}_s1", tableName[1], columns, tags[1], 1);
+            expectResData.Add(Tools.ConstructResData(columns, tags[1], 1));
+            expectResMeta.Add(Tools.GetMetaFromDDL(createSql[1]));
+            // JSON
+            tags.Add(Tools.TagsList(3, true));
+            createSql[2] = Tools.CreateTable(tableName[2], true, true);
+            insertSql[2] =
+                Tools.ConstructInsertSql($"{tableName[2]}_j1", tableName[2], columns, tags[2], 1);
+            expectResData.Add(Tools.ConstructResData(columns, tags[2], 1));
+            expectResMeta.Add(Tools.GetMetaFromDDL(createSql[2]));
+
             for (int i = 0; i < 3; i++)
             {
-                switch (i)
-                {
-                    // table 
-                    case 0:
-                        tags.Add(new List<object>());
-                        createSql[i] = Tools.CreateTable(tableName[i], false, false);
-                        insertSql[i] = Tools.ConstructInsertSql(tableName[i], "", columns, null, 5);
-                        expectResData.Add(columns);
-                        expectResMeta.Add(Tools.GetMetaFromDDL(createSql[i]));
-                        break;
-                    // stable
-                    case 1:
-                        tags.Add(Tools.TagsList(2, false));
-                        createSql[i] = Tools.CreateTable(tableName[i], true, false);
-                        insertSql[i] = Tools.ConstructInsertSql($"{tableName[i]}_s1", tableName[i], columns, tags[i], 5);
-                        expectResData.Add(Tools.ConstructResData(columns, tags[i], 5));
-                        expectResMeta.Add(Tools.GetMetaFromDDL(createSql[i]));
-                        break;
-                    // JSON
-                    case 2:
-                        tags.Add(Tools.TagsList(3, true));
-                        createSql[i] = Tools.CreateTable(tableName[i], true, true);
-                        insertSql[i] = Tools.ConstructInsertSql($"{tableName[i]}_j1", tableName[i], columns, tags[i], 5);
-                        expectResData.Add(Tools.ConstructResData(columns, tags[i], 5));
-                        expectResMeta.Add(Tools.GetMetaFromDDL(createSql[i]));
-                        break;
-                }
                 createTopic[i] = $"create topic if not exists {topic[i]} as select * from {tableName[i]}";
                 dropTopic[i] = $"drop topic if exists {topic[i]}";
             }
 
             // create table,topic
-
             for (int i = 0; i < 3; i++)
             {
                 Tools.ExecuteUpdate(conn, createSql[i], _output);
@@ -173,7 +186,7 @@ namespace Function.Test.TMQ
 
             var cfg = new ConsumerConfig
             {
-                GourpId = "c#_2",
+                GroupId = "c#_2",
                 TDConnectUser = "root",
                 TDConnectPasswd = "taosdata",
                 MsgWithTableName = "true",
@@ -187,70 +200,108 @@ namespace Function.Test.TMQ
             consumer.Subscribe(topic);
             List<string> subTopics = consumer.Subscription();
 
-            subTopics.ForEach(tpc =>
-            {
-                Assert.Contains(tpc, topic);
-            });
+            subTopics.ForEach(tpc => { Assert.Contains(tpc, topic); });
 
             for (int i = 0; i < 5; i++)
             {
-                ConsumeResult consumerResult = consumer.Consume(200);
-                foreach (KeyValuePair<TopicPartition, TaosResult> kv in consumerResult.Message)
+                using (ConsumeResult consumerResult = consumer.Consume(200))
                 {
-                    var tmpMeta = kv.Value.Metas;
-                    var tmpData = kv.Value.Datas;
-                    switch (kv.Key.table)
+                    if (consumerResult == null)
                     {
-                        // if normal table 
-                        case "tmq_tb1":
-                            _output.WriteLine("tmq_tb1");
-                            tmpMeta.ForEach(meta =>
-                            {
-                                Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
-                                Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
-                                Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
-                            });
-                            tmpData.ForEach(data =>
-                            {
-                                Assert.Contains(data, expectResData[0]);
-                            });
-                            break;
-                        // if stable
-                        case "tmq_tb2_s1":
-                            _output.WriteLine("tmq_tb2_s1");
-                            tmpMeta.ForEach(meta =>
-                            {
-                                Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
-                                Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
-                                Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
-                            });
-                            tmpData.ForEach(data =>
-                            {
-                                Assert.Contains(data, expectResData[1]);
-                            });
-                            break;
-                        // if JSON table
-                        case "tmq_jb1_j1":
-                            _output.WriteLine("tmq_jb1_j1");
-                            tmpMeta.ForEach(meta =>
-                            {
-                                Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
-                                Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
-                                Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
-                            });
-                            tmpData.ForEach(data =>
-                            {
-                                Assert.Contains(data, expectResData[2]);
-                            });
-                            break;
-                        default:
-                            throw new Exception($"Unexpected table name {kv.Key.table}");
+                        _output.WriteLine("======= consume {0} done", i);
+                        continue;
                     }
 
-                }
-                consumer.Commit(consumerResult);
+                    foreach (var kv in consumerResult.Message)
+                    {
+                        var tmpMeta = kv.Metas;
+                        var tmpData = kv.Datas;
+                        switch (consumerResult.Topic)
+                        {
+                            // if normal table 
+                            case "topic_t1":
+                                _output.WriteLine("tmq_tb1");
+                                tmpMeta.ForEach(meta =>
+                                {
+                                    Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
+                                    Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
+                                    Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
+                                });
+                                for (int j = 0; j < tmpData[0].Count; j++)
+                                {
+                                    switch (tmpData[0][j])
+                                    {
+                                        case DateTime val:
+                                            var ts = TDengineConstant.ConvertDatetimeToTick(val,
+                                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                                            Assert.Equal(ts, expectResData[0][j]);
+                                            break;
+                                        default:
+                                            Assert.Equal(tmpData[0][j], expectResData[0][j]);
+                                            break;
+                                    }
+                                }
 
-                _output.WriteLine("======= consume {0} done", i);
+                                break;
+                            // if stable
+                            case "topic_t2":
+                                _output.WriteLine("tmq_tb2_s1");
+                                tmpMeta.ForEach(meta =>
+                                {
+                                    Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
+                                    Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
+                                    Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
+                                });
+                                for (int j = 0; j < expectResData[1].Count; j++)
+                                {
+                                    switch (tmpData[0][j])
+                                    {
+                                        case DateTime val:
+                                            var ts = TDengineConstant.ConvertDatetimeToTick(val,
+                                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                                            Assert.Equal(ts, expectResData[1][j]);
+                                            break;
+                                        default:
+                                            Assert.Equal(tmpData[0][j], expectResData[1][j]);
+                                            break;
+                                    }
+                                }
+
+                                break;
+                            // if JSON table
+                            case "topic_j1":
+                                _output.WriteLine("tmq_jb1_j1");
+                                tmpMeta.ForEach(meta =>
+                                {
+                                    Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
+                                    Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
+                                    Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
+                                });
+                                for (int j = 0; j < expectResData[2].Count; j++)
+                                {
+                                    switch (tmpData[0][j])
+                                    {
+                                        case DateTime val:
+                                            var ts = TDengineConstant.ConvertDatetimeToTick(val,
+                                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                                            Assert.Equal(ts, expectResData[2][j]);
+                                            break;
+                                        default:
+                                            Assert.Equal(tmpData[0][j], expectResData[2][j]);
+                                            break;
+                                    }
+                                }
+
+                                break;
+                            default:
+                                throw new Exception($"Unexpected table name {kv.TableName}");
+                        }
+                    }
+
+                    consumer.Commit(consumerResult);
+
+                    _output.WriteLine("======= consume {0} done", i);
+                }
             }
             // assert 
 
@@ -260,8 +311,8 @@ namespace Function.Test.TMQ
             {
                 Tools.ExecuteUpdate(conn, s, _output);
             }
+
             consumer.Close();
         }
     }
-
 }

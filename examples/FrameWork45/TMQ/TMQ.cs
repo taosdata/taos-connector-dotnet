@@ -1,7 +1,7 @@
 ﻿using FrameWork45.Data;
 using FrameWork45.UtilTools;
 using System;
-using TDengineTMQ;
+using TDengine.TMQ;
 using System.Collections.Generic;
 
 namespace FrameWork45.TMQ
@@ -52,7 +52,7 @@ namespace FrameWork45.TMQ
 
             var cfg = new ConsumerConfig
             {
-                GourpId = "TDengine-TMQ-C#",
+                GroupId = "TDengine-TMQ-C#",
                 TDConnectUser = "root",
                 TDConnectPasswd = "taosdata",
                 MsgWithTableName = "true",
@@ -76,16 +76,16 @@ namespace FrameWork45.TMQ
                         Console.WriteLine("================ consume {0} times ", i);
 
 
-                        foreach (KeyValuePair<TopicPartition, TaosResult> kv in consumerRes.Message)
+                        foreach (var kv in consumerRes.Message)
                         {
-                            Console.WriteLine("topic partitions:{0}", kv.Key.ToString());
+                            Console.WriteLine("topic partitions:{0}", consumerRes.Partition.ToString());
 
-                            kv.Value.Metas.ForEach(meta =>
+                            kv.Metas.ForEach(meta =>
                             {
                                 Console.Write("{0} {1}({2}) \t|", meta.name, meta.TypeName(), meta.size);
                             });
                             Console.WriteLine("");
-                            kv.Value.Datas.ForEach(data =>
+                            kv.Datas.ForEach(data =>
                             {
                                 Console.WriteLine(data.ToString());
                             });

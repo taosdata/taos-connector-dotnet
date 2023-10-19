@@ -1,17 +1,18 @@
 ﻿using System;
-using TDengineDriver;
+using TDengine.Driver;
+using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
 
 namespace Benchmark
 {
     internal class CleanUp
     {
         string Host { get; set; }
-        short Port { get; set; }
+        ushort Port { get; set; }
         string Username { get; set; }
         string Password { get; set; }
         string dropDb = $"drop database if exists benchmark";
 
-        public CleanUp(string host, string userName, string passwd, short port)
+        public CleanUp(string host, string userName, string passwd, ushort port)
         {
             Host = host;
             Username = userName;
@@ -22,30 +23,30 @@ namespace Benchmark
         {
             //Console.WriteLine("cleanup ...");
 
-            IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, "", Port);
+            IntPtr conn = NativeMethods.Connect(Host, Username, Password, "", Port);
             IntPtr res;
             if (conn != IntPtr.Zero)
             {
-                res = TDengineDriver.TDengine.Query(conn, dropDb);
+                res = NativeMethods.Query(conn, dropDb);
                 IfTaosQuerySucc(res, dropDb);
-                TDengineDriver.TDengine.FreeResult(res);
+                NativeMethods.FreeResult(res);
             }
             else
             {
                 throw new Exception("create TD connection failed");
             }
-            TDengineDriver.TDengine.Close(conn);
+            NativeMethods.Close(conn);
         }
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
+            if (NativeMethods.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {NativeMethods.Error(res)}, code{NativeMethods.ErrorNo(res)}");
             }
         }
     }

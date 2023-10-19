@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using TDengineDriver;
 using FrameWork45.UtilTools;
+using TDengine.Driver;
+using TDengine.Driver.Impl.NativeMethods;
 
 namespace FrameWork45.Stmt
 {
@@ -17,7 +18,7 @@ namespace FrameWork45.Stmt
 
             string querySql = $"select * from {stable}";
 
-            IntPtr stmt = TDengine.StmtInit(conn);
+            IntPtr stmt = NativeMethods.StmtInit(conn);
             if (stmt == IntPtr.Zero)
             {
                 Console.WriteLine("StmtInit() fail");
@@ -30,26 +31,26 @@ namespace FrameWork45.Stmt
 
             int stmtReturn = -1;
 
-            stmtReturn = TDengine.StmtPrepare(stmt, insertSql);
+            stmtReturn = NativeMethods.StmtPrepare(stmt, insertSql);
             IfStmtSucc(stmtReturn, stmt, "StmtPrepare()");
 
-            TDengine.LoadTableInfo(conn, new string[] { stable });
+            NativeMethods.LoadTableInfo(conn, new string[] { stable });
             TAOS_MULTI_BIND[] tagBind = InitEnv.InitTags();
-            stmtReturn = TDengine.StmtSetTbnameTags(stmt, subTable, tagBind);
+            stmtReturn = NativeMethods.StmtSetTbnameTags(stmt, subTable, tagBind);
             IfStmtSucc(stmtReturn, stmt, "StmtSetTbnameTags()");
 
             TAOS_MULTI_BIND[] dataBind = InitEnv.InitData();
-            stmtReturn = TDengine.StmtBindParamBatch(stmt, dataBind);
+            stmtReturn = NativeMethods.StmtBindParamBatch(stmt, dataBind);
             IfStmtSucc(stmtReturn, stmt, "StmtBindParamBatch()");
 
-            stmtReturn = TDengine.StmtAddBatch(stmt);
+            stmtReturn = NativeMethods.StmtAddBatch(stmt);
             IfStmtSucc(stmtReturn, stmt, "StmtAddBatch()");
 
-            stmtReturn = TDengine.StmtExecute(stmt);
+            stmtReturn = NativeMethods.StmtExecute(stmt);
             IfStmtSucc(stmtReturn, stmt, "StmtExecute()");
 
 
-            if (TDengine.StmtClose(stmt) == 0)
+            if (NativeMethods.StmtClose(stmt) == 0)
             {
                 Console.WriteLine("StmtClose() success");
             }
@@ -75,7 +76,7 @@ namespace FrameWork45.Stmt
             }
             else
             {
-                throw new Exception($"{method} failed,reason:{TDengine.StmtErrorStr(stmt)}");
+                throw new Exception($"{method} failed,reason:{NativeMethods.StmtErrorStr(stmt)}");
             }
         }
     }

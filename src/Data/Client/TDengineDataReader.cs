@@ -2,16 +2,16 @@
 using System.Collections;
 using System.Data;
 using System.Data.Common;
-using TDengine.Data.Protocol;
+using TDengine.Driver;
 
 namespace TDengine.Data.Client
 {
     public class TDengineDataReader : DbDataReader
     {
-        private ITDengineRows _rows;
+        private IRows _rows;
         private int _fieldCount;
 
-        public TDengineDataReader(ITDengineRows rows)
+        public TDengineDataReader(IRows rows)
         {
             _rows = rows;
             _fieldCount = rows.FieldCount;
@@ -163,7 +163,7 @@ namespace TDengine.Data.Client
             return _fieldCount;
         }
 
-        public override bool IsDBNull(int ordinal) => GetValue(ordinal) == DBNull.Value;
+        public override bool IsDBNull(int ordinal) => GetValue(ordinal) == null;
 
         public override int FieldCount => _fieldCount;
 

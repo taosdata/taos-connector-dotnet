@@ -1,7 +1,8 @@
 using System;
 using Test.Utils;
 using System.Collections.Generic;
-using TDengineDriver;
+using System.Text;
+using TDengine.Driver;
 using Test.Utils.ResultSet;
 using Test.Case.Attributes;
 using Xunit;
@@ -45,11 +46,11 @@ namespace Function.Test.Taosc
             string sql0 = "drop table if exists stb1;";
             string sql1 = "create stable if not exists stb1 (ts timestamp, name binary(10)) tags(n int);";
             string sql2 = $"insert into tb1 using stb1 tags(1) values(now, '{expectData[0]}');";
-            string sql3 = $"insert into tb2 using stb1 tags(2) values(now, '{expectData[1]}');";
-            string sql4 = $"insert into tb3 using stb1 tags(3) values(now, '{expectData[2]}');";
-            string sql5 = $"insert into tb4 using stb1 tags(4) values(now, '{expectData[3]}');";
+            string sql3 = $"insert into tb2 using stb1 tags(2) values(now+1s, '{expectData[1]}');";
+            string sql4 = $"insert into tb3 using stb1 tags(3) values(now+2s, '{expectData[2]}');";
+            string sql5 = $"insert into tb4 using stb1 tags(4) values(now+3s, '{expectData[3]}');";
 
-            string sql6 = "select distinct(name) from stb1;";
+            string sql6 = "select name from stb1 order by ts asc ;";
             Tools.ExecuteQuery(conn, sql0, _output);
             Tools.ExecuteQuery(conn, sql1, _output);
             Tools.ExecuteQuery(conn, sql2, _output);
@@ -64,10 +65,6 @@ namespace Function.Test.Taosc
             List<Object> actualData = actualResult.ResultData;
             List<TDengineMeta> actualMeta = actualResult.ResultMeta;
 
-            // Make expected data and retrieved data in same order
-            expectData.Sort();
-            actualData.Sort();
-
             // Assert meta data
             Assert.Equal(expectMeta[1].name, actualMeta[0].name);
             Assert.Equal(expectMeta[1].size, actualMeta[0].size);
@@ -77,7 +74,7 @@ namespace Function.Test.Taosc
             for (int i = 0; i < actualData.Count; i++)
             {
                 // Console.WriteLine($"expectData[{i}]:{expectData[i]},, actualData[{i}]:{actualData[i]}" );
-                Assert.Equal(expectData[i], actualData[i]);
+                Assert.Equal(expectData[i], Encoding.UTF8.GetString((byte[])actualData[i]));
             }
             _output.WriteLine("FetchLengthCase.TestRetrieveBinary() pass");
 

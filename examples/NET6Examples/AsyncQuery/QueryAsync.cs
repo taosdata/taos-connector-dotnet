@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using TDengineDriver;
-using TDengineDriver.Impl;
-using Examples.UtilsTools;
-using Examples.Data;
+﻿using Examples.Data;
+using TDengine.Driver;
+using TDengine.Driver.Impl.NativeMethods;
 
 namespace Examples.AsyncQuery
 {
@@ -19,7 +16,7 @@ namespace Examples.AsyncQuery
 
             QueryAsyncCallback queryAsyncCallback = new QueryAsyncCallback(QueryCallback);
             Console.WriteLine($"Start calling QueryAsync(),query {table}'s data asynchronously.");
-            TDengine.QueryAsync(conn, $"select * from {table}", queryAsyncCallback, IntPtr.Zero);
+            NativeMethods.QueryAsync(conn, $"select * from {table}", queryAsyncCallback, IntPtr.Zero);
 
             data.InsertData(conn, db, table, "s_02", 10);
             Thread.Sleep(100);
@@ -39,7 +36,7 @@ namespace Examples.AsyncQuery
             if (code == 0 && taosRes != IntPtr.Zero)
             {
                 FetchRawBlockAsyncCallback fetchRowAsyncCallback = new FetchRawBlockAsyncCallback(FetchRawBlockCallback);
-                TDengine.FetchRawBlockAsync(taosRes, fetchRowAsyncCallback, param);
+                NativeMethods.FetchRawBlockAsync(taosRes, fetchRowAsyncCallback, param);
             }
             else
             {
@@ -53,9 +50,9 @@ namespace Examples.AsyncQuery
             if (numOfRows > 0)
             {
                 Console.WriteLine($"{numOfRows} rows async retrieved");
-                IntPtr pdata = TDengine.GetRawBlock(taosRes);
-                List<TDengineMeta> metaList = TDengine.FetchFields(taosRes);
-                List<object> dataList = LibTaos.ReadRawBlock(pdata, metaList, numOfRows);
+                IntPtr pdata = NativeMethods.GetRawBlock(taosRes);
+                List<TDengineMeta> metaList = NativeMethods.FetchFields(taosRes);
+                List<object> dataList = ReadRawBlock(pdata, metaList, numOfRows);
 
                 for (int i = 0; i < metaList.Count; i++)
                 {
@@ -70,7 +67,7 @@ namespace Examples.AsyncQuery
                     }
                     Console.Write("{0}\t|", dataList[i]);
                 }
-                TDengine.FetchRawBlockAsync(taosRes, FetchRawBlockCallback, param);
+                NativeMethods.FetchRawBlockAsync(taosRes, FetchRawBlockCallback, param);
             }
             else
             {
@@ -82,8 +79,30 @@ namespace Examples.AsyncQuery
                 {
                     Console.WriteLine($"FetchRawBlockCallback callback error, error code {numOfRows}");
                 }
-                TDengine.FreeResult(taosRes);
+                NativeMethods.FreeResult(taosRes);
             }
+        }
+        
+        private static List<object> ReadRawBlock(IntPtr pData, List<TDengineMeta> metaList, int numOfRows)
+        {
+            var list = new List<object>(metaList.Count * numOfRows);
+            byte[] colType = new byte[metaList.Count];
+            for (int i = 0; i < metaList.Count; i++)
+            {
+                colType[i] = metaList[i].type;
+            }
+
+            var br = new BlockReader(0, metaList.Count, colType);
+            br.SetBlockPtr(pData, numOfRows);
+            for (int rowIndex = 0; rowIndex < numOfRows; rowIndex++)
+            {
+                for (int colIndex = 0; colIndex < metaList.Count; colIndex++)
+                {
+                    list.Add(br.Read(rowIndex, colIndex));
+                }
+            }
+
+            return list;
         }
     }
 }

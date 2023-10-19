@@ -1,9 +1,5 @@
-using System;
-using TDengineDriver;
-using TDengineDriver.Impl;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Collections.Generic;
+using TDengine.Driver;
+using TDengine.Driver.Impl.NativeMethods;
 
 namespace Examples.UtilsTools
 {
@@ -14,14 +10,14 @@ namespace Examples.UtilsTools
         static string user = "root";
         static string password = "taosdata";
         static string db = "";
-        static short port = 0;
+        static ushort port = 0;
         //get a TDengine connection
         public static IntPtr TDConnection()
         {
-            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
-            TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "60");
+            NativeMethods.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
+            NativeMethods.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "60");
 
-            IntPtr conn = TDengine.Connect(ip, user, password, db, port);
+            IntPtr conn = NativeMethods.Connect(ip, user, password, db, port);
 
             //Tools.ExecuteUpdate(conn, $"drop database if  exists {dbName}");
             //Tools.ExecuteUpdate(conn, $"create database if not exists {dbName} keep 3650");
@@ -50,7 +46,7 @@ namespace Examples.UtilsTools
 
         public static IntPtr ExecuteQuery(IntPtr conn, String sql)
         {
-            IntPtr res = TDengine.Query(conn, sql);
+            IntPtr res = NativeMethods.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 Console.Write(sql.ToString() + " failure, ");
@@ -65,7 +61,7 @@ namespace Examples.UtilsTools
 
         public static IntPtr ExecuteErrorQuery(IntPtr conn, String sql)
         {
-            IntPtr res = TDengine.Query(conn, sql);
+            IntPtr res = NativeMethods.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 Console.Write(sql.ToString() + " failure, ");
@@ -81,7 +77,7 @@ namespace Examples.UtilsTools
 
         public static void ExecuteUpdate(IntPtr conn, String sql)
         {
-            IntPtr res = TDengine.Query(conn, sql);
+            IntPtr res = NativeMethods.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 Console.Write(sql.ToString() + " failure, ");
@@ -92,7 +88,7 @@ namespace Examples.UtilsTools
                 Console.WriteLine(sql.ToString() + " success");
 
             }
-            TDengine.FreeResult(res);
+            NativeMethods.FreeResult(res);
         }
 
         public static void DisplayRes(IntPtr res)
@@ -137,8 +133,8 @@ namespace Examples.UtilsTools
                 ExitProgram();
             }
 
-            List<TDengineMeta> resMeta = LibTaos.GetMeta(res);
-            List<Object> resData = LibTaos.GetData(res);
+            List<TDengineMeta> resMeta = NativeMethods.FetchFields(res);
+            List<Object> resData = NativeMethods.GetData(res);
             Dictionary<List<TDengineMeta>, List<Object>> result = new Dictionary<List<TDengineMeta>, List<Object>>(1);
             result.Add(resMeta, resData);
             return result;
@@ -146,11 +142,11 @@ namespace Examples.UtilsTools
 
         public static bool IsValidResult(IntPtr res)
         {
-            if ((res == IntPtr.Zero) || (TDengine.ErrorNo(res) != 0))
+            if ((res == IntPtr.Zero) || (NativeMethods.ErrorNo(res) != 0))
             {
                 if (res != IntPtr.Zero)
                 {
-                    Console.Write("reason: " + TDengine.Error(res));
+                    Console.Write("reason: " + NativeMethods.Error(res));
                     return false;
                 }
                 Console.WriteLine("");
@@ -162,7 +158,7 @@ namespace Examples.UtilsTools
         {
             if (conn != IntPtr.Zero)
             {
-                TDengine.Close(conn);
+                NativeMethods.Close(conn);
                 Console.WriteLine("close connection success");
             }
             else
@@ -172,20 +168,20 @@ namespace Examples.UtilsTools
         }
         public static List<TDengineMeta> GetResField(IntPtr res)
         {
-            List<TDengineMeta> meta = TDengine.FetchFields(res);
+            List<TDengineMeta> meta = NativeMethods.FetchFields(res);
             return meta;
         }
 
         // Only for exceptional exit.
         public static void ExitProgram()
         {
-            TDengine.Cleanup();
-            System.Environment.Exit(1);
+            NativeMethods.Cleanup();
+            Environment.Exit(1);
         }
 
         public static void FreeTaosRes(IntPtr taosRes)
         {
-            TDengine.FreeResult(taosRes);
+            NativeMethods.FreeResult(taosRes);
         }
 
     }

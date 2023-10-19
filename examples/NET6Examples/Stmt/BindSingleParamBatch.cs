@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using TDengineDriver;
 using Examples.UtilsTools;
+using TDengine.Driver;
+using TDengine.Driver.Impl.NativeMethods;
 
 namespace Examples.Stmt
 {
@@ -15,7 +17,7 @@ namespace Examples.Stmt
             InitEnv.InitNTable(conn, table);
             Console.WriteLine(insertSql);
 
-            IntPtr stmt = TDengine.StmtInit(conn);
+            IntPtr stmt = NativeMethods.StmtInit(conn);
             if (stmt == IntPtr.Zero)
             {
                 Console.WriteLine("StmtInit() fail");
@@ -27,38 +29,38 @@ namespace Examples.Stmt
             }
 
             int stmtReturn = -1;
-            stmtReturn = TDengine.StmtPrepare(stmt, insertSql);
+            stmtReturn = NativeMethods.StmtPrepare(stmt, insertSql);
             IfStmtSucc(stmtReturn, stmt, "StmtPrepare()");
 
-            stmtReturn = TDengine.StmtSetTbname(stmt, table);
+            stmtReturn = NativeMethods.StmtSetTbname(stmt, table);
             IfStmtSucc(stmtReturn, stmt, "StmtSetTbname()");
 
             TAOS_MULTI_BIND[] dataBind = InitEnv.InitData();
-            stmtReturn = TDengine.StmtBindParamBatch(stmt, dataBind);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[0], 0);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[1], 1);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[2], 2);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[3], 3);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[4], 4);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[5], 5);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[6], 6);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[7], 7);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[8], 8);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[9], 9);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[10], 10);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[11], 11);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[12], 12);
-            stmtReturn = TDengine.StmtBindSingleParamBatch(stmt, ref dataBind[13], 13);
+            stmtReturn = NativeMethods.StmtBindParamBatch(stmt, dataBind);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[0], 0);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[1], 1);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[2], 2);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[3], 3);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[4], 4);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[5], 5);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[6], 6);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[7], 7);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[8], 8);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[9], 9);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[10], 10);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[11], 11);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[12], 12);
+            stmtReturn = NativeMethods.StmtBindSingleParamBatch(stmt, ref dataBind[13], 13);
             IfStmtSucc(stmtReturn, stmt, "StmtBindParamBatch()");
 
-            stmtReturn = TDengine.StmtAddBatch(stmt);
+            stmtReturn = NativeMethods.StmtAddBatch(stmt);
             IfStmtSucc(stmtReturn, stmt, "StmtAddBatch()");
 
-            stmtReturn = TDengine.StmtExecute(stmt);
+            stmtReturn = NativeMethods.StmtExecute(stmt);
             IfStmtSucc(stmtReturn, stmt, "StmtExecute()");
 
 
-            if (TDengine.StmtClose(stmt) == 0)
+            if (NativeMethods.StmtClose(stmt) == 0)
             {
                 Console.WriteLine("StmtClose() success");
             }
@@ -82,7 +84,7 @@ namespace Examples.Stmt
             }
             else
             {
-                throw new Exception($"{method} failed,reason:{TDengine.StmtErrorStr(stmt)}");
+                throw new Exception($"{method} failed,reason:{NativeMethods.StmtErrorStr(stmt)}");
             }
         }
     }

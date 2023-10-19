@@ -1,9 +1,12 @@
 using System.Text;
-using TDengineDriver;
-using TDengineDriver.Impl;
 using Xunit.Abstractions;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using TDengine.Driver;
+using TDengine.Driver.Impl;
+using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
+
 namespace Test.Utils
 {
     public class Tools
@@ -11,7 +14,7 @@ namespace Test.Utils
         /*----------------------- construct SQL ----------------------*/
         public static string CreateDB(string db)
         {
-            return $"create database if not exists {db} keep 36500";
+            return $"create database if not exists {db} keep 36500 WAL_RETENTION_PERIOD 86400";
         }
 
         public static string UseDB(string db)
@@ -62,8 +65,10 @@ namespace Test.Utils
                     sqlBuilder.Append(",bb binary(200)");
                     sqlBuilder.Append(",nc nchar(200)");
                 }
+
                 sqlBuilder.Append(')');
             }
+
             return sqlBuilder.ToString();
         }
 
@@ -82,11 +87,11 @@ namespace Test.Utils
             {
                 return $"drop table if exists {db}.{table}";
             }
-
         }
 
         // Generate insert SQL for the with the columns' data and tags' data 
-        public static string ConstructInsertSql(string table, string stable, List<Object> colData, List<Object>? tagData, int numOfRows)
+        public static string ConstructInsertSql(string table, string stable, List<Object> colData,
+            List<Object>? tagData, int numOfRows)
         {
             int numOfFields = colData.Count / numOfRows;
             StringBuilder insertSql;
@@ -101,16 +106,23 @@ namespace Test.Utils
 
                 for (int j = 0; j < tagData!.Count; j++)
                 {
-                    if (tagData[j] is String)
+                    switch (tagData[j])
                     {
-                        insertSql.Append('\'');
-                        insertSql.Append(tagData[j]);
-                        insertSql.Append('\'');
+                        case string val:
+                            insertSql.Append('\'');
+                            insertSql.Append(val);
+                            insertSql.Append('\'');
+                            break;
+                        case byte[] val:
+                            insertSql.Append('\'');
+                            insertSql.Append(Encoding.UTF8.GetString(val));
+                            insertSql.Append('\'');
+                            break;
+                        default:
+                            insertSql.Append(tagData[j]);
+                            break;
                     }
-                    else
-                    {
-                        insertSql.Append(tagData[j]);
-                    }
+
                     if (j + 1 != tagData.Count)
                     {
                         insertSql.Append(',');
@@ -119,18 +131,24 @@ namespace Test.Utils
 
                 insertSql.Append(")values(");
             }
+
             for (int i = 0; i < colData.Count; i++)
             {
-
-                if (colData[i] is String)
+                switch (colData[i])
                 {
-                    insertSql.Append('\'');
-                    insertSql.Append(colData[i]);
-                    insertSql.Append('\'');
-                }
-                else
-                {
-                    insertSql.Append(colData[i]);
+                    case string val:
+                        insertSql.Append('\'');
+                        insertSql.Append(val);
+                        insertSql.Append('\'');
+                        break;
+                    case byte[] val:
+                        insertSql.Append('\'');
+                        insertSql.Append(Encoding.UTF8.GetString(val));
+                        insertSql.Append('\'');
+                        break;
+                    default:
+                        insertSql.Append(colData[i]);
+                        break;
                 }
 
                 if ((i + 1) % numOfFields == 0 && (i + 1) != colData.Count)
@@ -146,6 +164,7 @@ namespace Test.Utils
                     insertSql.Append(',');
                 }
             }
+
             insertSql.Append(';');
             //Console.WriteLine(insertSql.ToString());
 
@@ -155,62 +174,51 @@ namespace Test.Utils
         /*---------------------- warp native methods --------------*/
         public static IntPtr ExecuteQuery(IntPtr conn, String sql, ITestOutputHelper output)
         {
-            IntPtr res = TDengineDriver.TDengine.Query(conn, sql);
+            IntPtr res = NativeMethods.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 throw new Exception($"execute {sql} failed.");
             }
+
+            return res;
+        }
+
+        public static IntPtr ExecuteQueryWithReqId(IntPtr conn, String sql, ITestOutputHelper output, long reqid)
+        {
+            IntPtr res = NativeMethods.QueryWithReqid(conn, sql, reqid);
+            if (!IsValidResult(res))
+            {
+                throw new Exception($"execute {sql} failed.");
+            }
+
             return res;
         }
 
         public static IntPtr ExecuteErrorQuery(IntPtr conn, String sql)
         {
-            IntPtr res = TDengineDriver.TDengine.Query(conn, sql);
+            IntPtr res = NativeMethods.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 throw new Exception($"execute {sql} failed.");
             }
+
             return res;
         }
 
         public static void ExecuteUpdate(IntPtr conn, String sql, ITestOutputHelper output)
         {
-            IntPtr res = TDengineDriver.TDengine.Query(conn, sql);
+            IntPtr res = NativeMethods.Query(conn, sql);
             if (!IsValidResult(res))
             {
                 throw new Exception($"execute {sql} failed.");
             }
-            TDengineDriver.TDengine.FreeResult(res);
+
+            NativeMethods.FreeResult(res);
         }
 
         public static void FreeResult(IntPtr res)
         {
-            TDengineDriver.TDengine.FreeResult(res);
-        }
-
-        /*------------------------ parse TAO_RES ---------------------*/
-        public static void DisplayRes(IntPtr taosRes)
-        {
-            if (!IsValidResult(taosRes))
-            {
-                ExitProgram();
-            }
-
-            List<TDengineMeta> metaList = LibTaos.GetMeta(taosRes);
-            metaList.ForEach(meta => Console.Write("{0} {1}({2}) \t|", meta.name, meta.TypeName(), meta.size));
-            Console.WriteLine();
-
-            List<Object> dataList = LibTaos.GetData(taosRes);
-            for (int i = 0; i < dataList.Count; i += metaList.Count)
-            {
-                for (int j = 0; j < metaList.Count; j++)
-                {
-                    Console.Write(" {0} \t|", dataList[i + j].ToString());
-
-                }
-                Console.WriteLine("");
-            }
-
+            NativeMethods.FreeResult(res);
         }
 
         /*----------------------- For Test ------------*/
@@ -269,7 +277,7 @@ namespace Test.Utils
                     break;
                 case "BINARY":
                     _meta.type = 8;
-                    _meta.size = short.Parse(subs[1]);
+                    _meta.size = int.Parse(subs[1]);
                     break;
                 case "TIMESTAMP":
                     _meta.type = 9;
@@ -277,7 +285,7 @@ namespace Test.Utils
                     break;
                 case "NCHAR":
                     _meta.type = 10;
-                    _meta.size = short.Parse(subs[1]);
+                    _meta.size = int.Parse(subs[1]);
                     break;
                 case "JSON":
                     _meta.type = 15;
@@ -288,6 +296,7 @@ namespace Test.Utils
                     _meta.size = 0;
                     break;
             }
+
             return _meta;
         }
 
@@ -313,6 +322,7 @@ namespace Test.Utils
                 // Console.WriteLine("GetMetaFromDLL():{0},{1}",itemArr[0],itemArr[1]);
                 expectResMeta.Add(Tools.ConstructTDengineMeta(itemArr[0], itemArr[1]));
             }
+
             if (dllStr.Contains("TAGS") || dllStr.Contains("tags"))
             {
                 //location BINARY(30), groupId INT
@@ -326,8 +336,8 @@ namespace Test.Utils
                     // Console.WriteLine("GetMetaFromDLL():{0},{1}",itemArr[0],itemArr[1]);
                     expectResMeta.Add(Tools.ConstructTDengineMeta(itemArr[0], itemArr[1]));
                 }
-
             }
+
             return expectResMeta;
         }
 
@@ -345,6 +355,7 @@ namespace Test.Utils
                     }
                 }
             }
+
             return list;
         }
 
@@ -364,10 +375,11 @@ namespace Test.Utils
                 columns.Add((ulong)(i + 3));
                 columns.Add((float)(3.1415F + i));
                 columns.Add((double)(3.1415926535897932D + i));
-                columns.Add("binary_col_列_" + i);
+                columns.Add(Encoding.UTF8.GetBytes("binary_col_列_" + i));
                 columns.Add("nchar_col_列_" + i);
                 columns.Add((i & 1) == 1 ? true : false);
             }
+
             return columns;
         }
 
@@ -379,22 +391,24 @@ namespace Test.Utils
             {
                 throw new IndexOutOfRangeException("seq should in range 1-3");
             }
+
             if (ifJson)
             {
                 switch (seq)
                 {
                     case 1:
-                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine涛思数据\",\"key4\":1,\"key5\":true}");
+                        jTags.Add(Encoding.UTF8.GetBytes( "{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine涛思数据\",\"key4\":1,\"key5\":true}"));
                         break;
                     case 2:
-                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine涛思数据\",\"key4\":2,\"key5\":false}");
+                        jTags.Add(Encoding.UTF8.GetBytes(  "{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine涛思数据\",\"key4\":2,\"key5\":false}"));
                         break;
                     case 3:
-                        jTags.Add("{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine涛思数据\",\"key4\":3,\"key5\":true}");
+                        jTags.Add(Encoding.UTF8.GetBytes(  "{\"key1\":\"taosdata\",\"key2\":null,\"key3\":\"TDengine涛思数据\",\"key4\":3,\"key5\":true}"));
                         break;
                     default:
                         throw new IndexOutOfRangeException("seq should in range 1-3");
                 }
+
                 return jTags;
             }
             else
@@ -410,12 +424,11 @@ namespace Test.Utils
                 tags.Add((ulong)(3 + seq));
                 tags.Add((float)(3.1415F + seq));
                 tags.Add((double)(3.1415926535897932D + seq));
-                tags.Add("binary_tag_标签_" + seq);
+                tags.Add(Encoding.UTF8.GetBytes("binary_tag_标签_" + seq));
                 tags.Add("nchar_tag_标签_" + seq);
 
                 return tags;
             }
-
         }
 
         /*-------------------- other utility functions -----------------*/
@@ -423,18 +436,91 @@ namespace Test.Utils
         {
             if ((res == IntPtr.Zero))
             {
-                throw new Exception($"invalid TAOS_RES,reason {TDengineDriver.TDengine.Error(res)} code:{TDengineDriver.TDengine.ErrorNo(res)}");
+                throw new Exception(
+                    $"invalid TAOS_RES,reason {NativeMethods.Error(res)} code:{NativeMethods.ErrorNo(res)}");
             }
+
+            int code = NativeMethods.ErrorNo(res);
+            if (code != 0)
+            {
+                throw new Exception(
+                    $"invalid TAOS_RES,reason {NativeMethods.Error(res)} code:{NativeMethods.ErrorNo(res)}");
+            }
+
             return true;
         }
 
         public static void ExitProgram(int statusCode = 1)
         {
-            TDengineDriver.TDengine.Cleanup();
+            NativeMethods.Cleanup();
             System.Environment.Exit(statusCode);
         }
 
+        public static List<object> GetData(IntPtr taosRes)
+        {
+            List<TDengineMeta> metaList = NativeMethods.FetchFields(taosRes);
+            List<Object> list = new List<object>();
+
+            IntPtr numOfRowsPrt = Marshal.AllocHGlobal(sizeof(Int32));
+            IntPtr pDataPtr = Marshal.AllocHGlobal(IntPtr.Size);
+            IntPtr pData;
+            try
+            {
+                byte[] colType = new byte[metaList.Count];
+                for (int i = 0; i < metaList.Count; i++)
+                {
+                    colType[i] = metaList[i].type;
+                }
+
+                while (true)
+                {
+                    int code = NativeMethods.FetchRawBlock(taosRes, numOfRowsPrt, pDataPtr);
+                    if (code != 0)
+                    {
+                        throw new Exception(
+                            $"fetch_raw_block failed,code {code} reason:{NativeMethods.Error(taosRes)}");
+                    }
+
+                    int numOfRows = Marshal.ReadInt32(numOfRowsPrt);
+                    if (numOfRows == 0)
+                    {
+                        break;
+                    }
+
+                    //list = new List<Object>(numOfRows * numOfFields);
+                    pData = Marshal.ReadIntPtr(pDataPtr);
+                    list.AddRange(ReadRawBlock(pData, metaList, numOfRows));
+                }
+
+                return list;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(numOfRowsPrt);
+                Marshal.FreeHGlobal(pDataPtr);
+            }
+        }
+
+        public static List<object> ReadRawBlock(IntPtr pData, List<TDengineMeta> metaList, int numOfRows)
+        {
+            var list = new List<object>(metaList.Count * numOfRows);
+            byte[] colType = new byte[metaList.Count];
+            for (int i = 0; i < metaList.Count; i++)
+            {
+                colType[i] = metaList[i].type;
+            }
+
+            var br = new BlockReader(0, metaList.Count, colType);
+            br.SetBlockPtr(pData, numOfRows);
+            for (int rowIndex = 0; rowIndex < numOfRows; rowIndex++)
+            {
+                for (int colIndex = 0; colIndex < metaList.Count; colIndex++)
+                {
+                    list.Add(br.Read(rowIndex, colIndex));
+                }
+            }
+
+            return list;
+        }
     }
-
 }
-

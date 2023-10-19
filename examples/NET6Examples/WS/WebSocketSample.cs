@@ -1,4 +1,6 @@
-﻿using TDengineDriver;
+﻿using System;
+using System.Collections.Generic;
+using TDengineDriver;
 using TDengineWS.Impl;
 
 namespace Examples.WS

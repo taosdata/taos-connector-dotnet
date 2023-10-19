@@ -5,7 +5,7 @@
         string Host = "127.0.0.1";
         string User = "root";
         string Passwd = "taosdata";
-        short Port = 6030;
+        ushort Port = 6030;
         string benchmarkOptions = "connect";
         int RunTimes = 1;
         string TableTypes = "normal";

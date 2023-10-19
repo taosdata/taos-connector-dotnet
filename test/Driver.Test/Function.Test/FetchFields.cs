@@ -1,6 +1,6 @@
 using System;
 using Test.Utils;
-using TDengineDriver;
+using TDengine.Driver;
 using System.Collections.Generic;
 using Xunit;
 using Test.Utils.ResultSet;

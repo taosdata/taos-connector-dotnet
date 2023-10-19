@@ -1,6 +1,5 @@
-﻿using System;
-using TDengineDriver;
-using Examples.UtilsTools;
+﻿using Examples.UtilsTools;
+using TDengine.Driver;
 
 namespace Examples.Stmt
 {
@@ -9,24 +8,25 @@ namespace Examples.Stmt
         static string dropDB = "drop database if exists stmt30";
         static string createDB = "create database if not exists stmt30 keep 36500";
         static string selectDB = "use stmt30";
+
         public static void InitSTable(IntPtr conn, string stable)
         {
             string createTable = $"create stable if not exists {stable} (ts timestamp "
-                                + ",b bool"
-                                + ",v1 tinyint"
-                                + ",v2 smallint"
-                                + ",v4 int"
-                                + ",v8 bigint"
-                                + ",f4 float"
-                                + ",f8 double"
-                                + ",u1 tinyint unsigned"
-                                + ",u2 smallint unsigned"
-                                + ",u4 int unsigned"
-                                + ",u8 bigint unsigned"
-                                + ",vcr varchar(200)"
-                                + ",ncr nchar(200)"
-                                + ")tags("
-                                + "bo bool"
+                                 + ",b bool"
+                                 + ",v1 tinyint"
+                                 + ",v2 smallint"
+                                 + ",v4 int"
+                                 + ",v8 bigint"
+                                 + ",f4 float"
+                                 + ",f8 double"
+                                 + ",u1 tinyint unsigned"
+                                 + ",u2 smallint unsigned"
+                                 + ",u4 int unsigned"
+                                 + ",u8 bigint unsigned"
+                                 + ",vcr varchar(200)"
+                                 + ",ncr nchar(200)"
+                                 + ")tags("
+                                 + "bo bool"
                                  + ",tt tinyint"
                                  + ",si smallint"
                                  + ",ii int"
@@ -39,7 +39,7 @@ namespace Examples.Stmt
                                  + ",dd double "
                                  + ",vrc_tag varchar(200)"
                                  + ",ncr_tag nchar(200)"
-                                + ")";
+                                 + ")";
 
             string dropTable = $"drop table if exists {stable}";
 
@@ -56,28 +56,28 @@ namespace Examples.Stmt
         public static void InitNTable(IntPtr conn, string ntable)
         {
             string createTable = $"create table if not exists {ntable} ("
-                                + "ts timestamp "
-                                + ",b bool"
-                                + ",v1 tinyint"
-                                + ",v2 smallint"
-                                + ",v4 int"
-                                + ",v8 bigint"
-                                + ",f4 float"
-                                + ",f8 double"
-                                + ",u1 tinyint unsigned"
-                                + ",u2 smallint unsigned"
-                                + ",u4 int unsigned"
-                                + ",u8 bigint unsigned"
-                                + ",vcr binary(200)"
-                                + ",ncr nchar(200)"
-                                + ")";
+                                 + "ts timestamp "
+                                 + ",b bool"
+                                 + ",v1 tinyint"
+                                 + ",v2 smallint"
+                                 + ",v4 int"
+                                 + ",v8 bigint"
+                                 + ",f4 float"
+                                 + ",f8 double"
+                                 + ",u1 tinyint unsigned"
+                                 + ",u2 smallint unsigned"
+                                 + ",u4 int unsigned"
+                                 + ",u8 bigint unsigned"
+                                 + ",vcr binary(200)"
+                                 + ",ncr nchar(200)"
+                                 + ")";
 
             string dropTable = $"drop table if exists {ntable}";
             Tools.ExecuteUpdate(conn, createDB);
             Tools.ExecuteUpdate(conn, selectDB);
             Tools.ExecuteUpdate(conn, createTable);
-
         }
+
         public static TAOS_MULTI_BIND[] InitTags()
         {
             TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[13];
@@ -115,9 +115,18 @@ namespace Examples.Stmt
             ushort?[] uShortArr = new ushort?[5] { ushort.MinValue, 200, null, 400, ushort.MaxValue - 1 };
             uint?[] uIntArr = new uint?[5] { uint.MinValue, 100, null, 2, uint.MaxValue - 1 };
             ulong?[] uLongArr = new ulong?[5] { ulong.MinValue, 2000, null, 1000, long.MaxValue - 1 };
-            string?[] binaryArr = new string?[5] { "1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", String.Empty, null, "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM", "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$%^&*()_+=-`[]{}:,./<>?" };
-            string?[] ncharArr = new string?[5] { "1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", null, "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM", "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", string.Empty };
-
+            string?[] binaryArr = new string?[5]
+            {
+                "1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", String.Empty, null,
+                "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM",
+                "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$%^&*()_+=-`[]{}:,./<>?"
+            };
+            string?[] ncharArr = new string?[5]
+            {
+                "1234567890~!@#$%^&*()_+=-`[]{}:,./<>?", null, "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM",
+                "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$%^&*()_+=-`[]{}:,./<>?",
+                string.Empty
+            };
 
 
             mBinds[0] = TaosMultiBind.MultiBindTimestamp(tsArr);

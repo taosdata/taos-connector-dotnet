@@ -82,7 +82,7 @@ namespace FrameWork45.Data
             {
                 sb.Append("create database if not exists ");
                 sb.Append(db);
-                sb.Append(" keep 36500");
+                sb.Append(" keep 36500 WAL_RETENTION_PERIOD 86400");
                 createDB = sb.ToString();
                 sb.Clear();
                 //sb.Append("drop database if exists ");

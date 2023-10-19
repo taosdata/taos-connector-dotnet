@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
-using TDengine.Data.Protocol;
-using TDengine.Data.Protocol.Native;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
 
 namespace TDengine.Data.Client
 {
@@ -11,23 +13,12 @@ namespace TDengine.Data.Client
         private string _connectionString;
         private ConnectionState _state;
         internal ITDengineClient client;
-        internal object connection;
-        internal TDengineConnectionStringBuilder ConnectionStringBuilder { get; set; }
+        // internal object connection;
+        public TDengineConnectionStringBuilder ConnectionStringBuilder { get; set; }
 
         public TDengineConnection(string connectionString)
         {
             ConnectionString = connectionString;
-            switch (ConnectionStringBuilder.Protocol)
-            {
-                case TDengineConnectionStringBuilder.ProtocolNative:
-                    client = new Native();
-                    break;
-                
-                case TDengineConnectionStringBuilder.ProtocolWebSocket:
-                    throw new NotImplementedException();
-                default:
-                    throw new ArgumentException($"Invalid protocol parameter:{ConnectionStringBuilder.Protocol}");
-            }
         }
 
         protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
@@ -37,15 +28,16 @@ namespace TDengine.Data.Client
 
         public override void ChangeDatabase(string databaseName)
         {
-            client.ChangeDatabase(connection, databaseName);
+            client.Exec("use `" + databaseName + "`;");
         }
 
         public override void Close()
         {
             if (State == ConnectionState.Closed) return;
-            if (connection != null)
+            if (client != null)
             {
-                client.Close(connection);
+                client.Dispose();
+                client = null;
             }
 
             SetState(ConnectionState.Closed);
@@ -67,9 +59,7 @@ namespace TDengine.Data.Client
         public override void Open()
         {
             if (State == ConnectionState.Open) return;
-            object connection = null;
-            client.Open(ConnectionStringBuilder, ref connection);
-            this.connection = connection;
+            client = DbDriver.Open(ConnectionStringBuilder);
             SetState(ConnectionState.Open);
         }
 
@@ -78,6 +68,11 @@ namespace TDengine.Data.Client
             get => _connectionString;
             set
             {
+                if (State == ConnectionState.Open)
+                {
+                    throw new InvalidOperationException("Cannot change connection string on an open connection");
+                }
+
                 _connectionString = value;
                 ConnectionStringBuilder = new TDengineConnectionStringBuilder(value);
             }
@@ -86,6 +81,14 @@ namespace TDengine.Data.Client
         public override string Database => ConnectionStringBuilder.Database;
         public override ConnectionState State => _state;
         public override string DataSource => ConnectionStringBuilder.Host;
-        public override string ServerVersion => client.GetServerVersion(client);
+
+        public override string ServerVersion
+        {
+            get
+            {
+                var rows = client.Query("select server_version();");
+                return Encoding.UTF8.GetString((byte[])rows.GetValue(0));
+            }
+        }
     }
 }

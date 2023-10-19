@@ -1,11 +1,13 @@
-﻿using TDengineDriver;
-using TDengineDriver.Impl;
+﻿using TDengine.Driver;
+using TDengine.Driver.Impl;
+using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
+
 namespace Benchmark
 {
     internal class Query
     {
         string Host { get; set; }
-        short Port { get; set; }
+        ushort Port { get; set; }
         string Username { get; set; }
         string Password { get; set; }
         readonly string db = "benchmark";
@@ -32,7 +34,7 @@ namespace Benchmark
                                    "from jtb;";
 
 
-        public Query(string host, string userName, string passwd, short port)
+        public Query(string host, string userName, string passwd, ushort port)
         {
             Host = host;
             Username = userName;
@@ -42,13 +44,13 @@ namespace Benchmark
         public void Run(string types, int times)
         {
             // Console.WriteLine("Query {0} ... ", types);
-            IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, db, Port);
+            IntPtr conn = NativeMethods.Connect(Host, Username, Password, db, Port);
             IntPtr res;
             if (conn != IntPtr.Zero)
             {
-                res = TDengineDriver.TDengine.Query(conn, $"use {db}");
+                res = NativeMethods.Query(conn, $"use {db}");
                 IfTaosQuerySucc(res, $"use {db}");
-                TDengineDriver.TDengine.FreeResult(res);
+                NativeMethods.FreeResult(res);
 
                 if (types == "normal")
                 {
@@ -63,7 +65,7 @@ namespace Benchmark
             {
                 throw new Exception("create TD connection failed");
             }
-            TDengineDriver.TDengine.Close(conn);
+            NativeMethods.Close(conn);
 
         }
         public void QueryLoop(IntPtr conn, int times, string sql)
@@ -72,11 +74,11 @@ namespace Benchmark
             int i = 0;
             while (i < times)
             {
-                res = TDengineDriver.TDengine.Query(conn, sql);
+                res = NativeMethods.Query(conn, sql);
                 IfTaosQuerySucc(res, sql);
-                LibTaos.GetMeta(res);
-                LibTaos.GetData(res);
-                TDengineDriver.TDengine.FreeResult(res);
+                NativeMethods.FetchFields(res);
+                Tools.GetData(res);
+                NativeMethods.FreeResult(res);
                 i++;
             }
             // Console.WriteLine("last time:{0}", i);
@@ -84,13 +86,13 @@ namespace Benchmark
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
+            if (NativeMethods.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {NativeMethods.Error(res)}, code{NativeMethods.ErrorNo(res)}");
             }
         }
     }

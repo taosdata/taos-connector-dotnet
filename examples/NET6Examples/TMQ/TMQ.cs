@@ -1,6 +1,9 @@
-﻿using Examples.Data;
+﻿using System;
+using System.Collections.Generic;
+using Examples.Data;
 using Examples.UtilsTools;
-using TDengineTMQ;
+using TDengine.TMQ;
+
 namespace Examples.TMQ
 {
     internal class TMQExample
@@ -49,7 +52,7 @@ namespace Examples.TMQ
 
             var cfg = new ConsumerConfig
             {
-                GourpId = "TDengine-TMQ-C#",
+                GroupId = "TDengine-TMQ-C#",
                 TDConnectUser = "root",
                 TDConnectPasswd = "taosdata",
                 MsgWithTableName = "true",
@@ -73,7 +76,7 @@ namespace Examples.TMQ
                         Console.WriteLine("================ consume {0} times ", i);
 
 
-                        foreach (KeyValuePair<TopicPartition, TaosResult> kv in consumerRes.Message)
+                        foreach ( in consumerRes.Message)
                         {
                             Console.WriteLine("topic partitions:{0}", kv.Key.ToString());
 

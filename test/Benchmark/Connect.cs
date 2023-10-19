@@ -1,17 +1,18 @@
 ﻿using System;
-using TDengineDriver;
+using TDengine.Driver;
+using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
 
 namespace Benchmark
 {
     internal class Connect
     {
         string Host { get; set; }
-        short Port { get; set; }
+        ushort Port { get; set; }
         string Username { get; set; }
         string Password { get; set; }
         string db = "benchmark";
 
-        public Connect(string host, string userName, string passwd, short port)
+        public Connect(string host, string userName, string passwd, ushort port)
         {
             Host = host;
             Username = userName;
@@ -24,10 +25,10 @@ namespace Benchmark
             int i = 0;
             while (i < times)
             {
-                IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, db, Port);
+                IntPtr conn = NativeMethods.Connect(Host, Username, Password, db, Port);
                 if (conn != IntPtr.Zero)
                 {
-                    TDengineDriver.TDengine.Close(conn);
+                    NativeMethods.Close(conn);
                 }
                 else
                 {

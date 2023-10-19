@@ -1,6 +1,6 @@
 ﻿using Examples.UtilsTools;
-using TDengineDriver;
-using TDengineDriver.Impl;
+using TDengine.Driver;
+using TDengine.Driver.Impl.NativeMethods;
 
 namespace Examples.Schemaless
 {
@@ -17,24 +17,24 @@ namespace Examples.Schemaless
             Console.WriteLine("RunOptsJSON ...");
 
             // OptsJSON protocol
-            IntPtr res = TDengine.SchemalessInsert(conn, lines, 1, (int)TDengineSchemalessProtocol.TSDB_SML_JSON_PROTOCOL, (int)TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NOT_CONFIGURED);
-            if (TDengine.ErrorNo(res) != 0)
+            IntPtr res = NativeMethods.SchemalessInsert(conn, lines, 1, (int)TDengineSchemalessProtocol.TSDB_SML_JSON_PROTOCOL, (int)TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NOT_CONFIGURED);
+            if (NativeMethods.ErrorNo(res) != 0)
             {
-                throw new Exception($"SchemalessInsert failed，reason:{TDengine.Error(res)}, code:{TDengine.ErrorNo(res)}");
+                throw new Exception($"SchemalessInsert failed，reason:{NativeMethods.Error(res)}, code:{NativeMethods.ErrorNo(res)}");
             }
             else
             {
-                int affectedRows = TDengine.AffectRows(res);
+                int affectedRows = NativeMethods.AffectRows(res);
                 Console.WriteLine($"SchemalessInsert success, affected {affectedRows} rows");
             }
 
             //free res
-            TDengine.FreeResult(res);
+            NativeMethods.FreeResult(res);
 
             //check insert
             res = Tools.ExecuteQuery(conn, selectSql);
-            List<TDengineMeta> metaList = LibTaos.GetMeta(res);
-            List<Object> dataList = LibTaos.GetData(res);
+            List<TDengineMeta> metaList = NativeMethods.FetchFields(res);
+            List<Object> dataList = NativeMethods.GetData(res);
 
             metaList.ForEach(meta =>
             {
@@ -54,7 +54,7 @@ namespace Examples.Schemaless
                 }
             }
 
-            TDengine.FreeResult(res);
+            NativeMethods.FreeResult(res);
         }
     }
 }

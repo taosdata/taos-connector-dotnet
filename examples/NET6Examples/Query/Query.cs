@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using TDengineDriver.Impl;
+﻿using Examples.Data;
 using Examples.UtilsTools;
-using Examples.Data;
+using TDengine.Driver;
+using TDengine.Driver.Impl.NativeMethods;
 
 namespace Examples
 {
@@ -16,8 +15,8 @@ namespace Examples
             data.InsertData(conn, db, stable, table, numOfRows);
             IntPtr res = Tools.ExecuteQuery(conn, $"select * from {tmp} ");
             // IntPtr res = Tools.ExecuteQuery(conn, $"select * from benchmark.stb limit 10 ");
-            List<TDengineDriver.TDengineMeta> resMeta = LibTaos.GetMeta(res);
-            List<Object> resData = LibTaos.GetData(res);
+            List<TDengineMeta> resMeta = NativeMethods.FetchFields(res);
+            List<object> resData = NativeMethods.GetData(res);
 
             foreach (var meta in resMeta)
             {
