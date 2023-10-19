@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using TDengine.Driver;
-using TDengine.Driver.Impl.WebSocketMethods;
 using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
 
 namespace TDengine.TMQ
@@ -44,7 +43,6 @@ namespace TDengine.TMQ
 
         public TMQ_RES Type { get; set; }
 
-        private TMQConnection wsConnection = null;
         /// <summary>
         ///     The TopicPartition associated with the message.
         /// </summary>

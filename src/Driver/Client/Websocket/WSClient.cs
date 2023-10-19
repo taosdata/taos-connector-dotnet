@@ -6,7 +6,6 @@ namespace TDengine.Driver.Client.Websocket
 {
     public class WSClient : ITDengineClient
     {
-        private ConnectionStringBuilder _builder;
         private Connection _connection;
         private TimeZoneInfo _tz;
 

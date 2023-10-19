@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Threading.Tasks;
 using TDengine.Driver;
 
 namespace TDengine.Data.Client
@@ -30,13 +31,16 @@ namespace TDengine.Data.Client
             throw new NotSupportedException();
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
+            if (!disposing) return;
             if (_stmt != null)
             {
                 _stmt.Dispose();
                 _stmt = null;
             }
+
+            base.Dispose(disposing);
         }
         
         public override int ExecuteNonQuery()

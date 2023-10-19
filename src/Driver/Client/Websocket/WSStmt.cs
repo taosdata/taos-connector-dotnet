@@ -10,7 +10,6 @@ namespace TDengine.Driver.Client.Websocket
         private Connection _connection;
         private bool closed;
         private long lastAffected;
-        private Array[] tempData;
         private bool _isInsert;
 
         public WSStmt(ulong stmt, TimeZoneInfo tz, Connection connection)
