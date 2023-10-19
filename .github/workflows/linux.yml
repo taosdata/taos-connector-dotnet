@@ -202,6 +202,9 @@ jobs:
 
       - name: start taosd
         run: nohup sudo sh ./start.sh &
+        
+      - name: start taosadapter
+        run: sudo taosadapter &
 
       - name: test
         run: |

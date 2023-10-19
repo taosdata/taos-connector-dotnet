@@ -73,15 +73,6 @@ namespace TDengine.Driver
             byte[] dataArray = new byte[blockSize];
             Marshal.Copy(pBlock, dataArray, 0, blockSize);
             SetBlock(dataArray, rows);
-            for (int i = 0; i < _block.Length; i++)
-            {
-                Console.Write("0x" + _block[i].ToString("X2") + " ");
-    
-                if ((i + 1) % 16 == 0)
-                {
-                    Console.WriteLine();
-                }
-            }
         }
 
         private Int32 GetBlockSize(IntPtr pBlock)
