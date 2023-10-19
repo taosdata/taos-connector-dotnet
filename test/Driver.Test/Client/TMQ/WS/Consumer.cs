@@ -138,8 +138,8 @@ namespace Driver.Test.Client.TMQ.WS
                 }
                 finally
                 {
-                    DoRequest(client, "drop topic if exists test_tmq_common_ws");
                     Thread.Sleep(3000);
+                    DoRequest(client, "drop topic if exists test_tmq_common_ws");
                     DoRequest(client, "drop database if exists af_test_tmq_ws");
                 }
             }
@@ -303,8 +303,8 @@ namespace Driver.Test.Client.TMQ.WS
                 }
                 finally
                 {
-                    DoRequest(client, "drop topic if exists test_tmq_ws_seek");
                     Thread.Sleep(3000);
+                    DoRequest(client, "drop topic if exists test_tmq_ws_seek");
                     DoRequest(client, "drop database if exists af_test_tmq_ws_seek");
                 }
             }
@@ -432,8 +432,8 @@ namespace Driver.Test.Client.TMQ.WS
                 }
                 finally
                 {
-                    DoRequest(client, "drop topic if exists test_tmq_ws_commit");
                     Thread.Sleep(3000);
+                    DoRequest(client, "drop topic if exists test_tmq_ws_commit");
                     DoRequest(client, "drop database if exists af_test_tmq_ws_commit");
                 }
             }
