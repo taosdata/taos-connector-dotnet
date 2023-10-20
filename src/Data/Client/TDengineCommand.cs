@@ -33,7 +33,6 @@ namespace TDengine.Data.Client
 
         protected override void Dispose(bool disposing)
         {
-            if (!disposing) return;
             if (_stmt != null)
             {
                 _stmt.Dispose();

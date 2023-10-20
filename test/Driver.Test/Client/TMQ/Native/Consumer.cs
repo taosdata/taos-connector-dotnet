@@ -135,6 +135,7 @@ namespace Driver.Test.Client.TMQ.Native
                 {
                     Thread.Sleep(3000);
                     DoRequest(client, "drop topic if exists test_tmq_common");
+                    Thread.Sleep(3000);
                     DoRequest(client, "drop database if exists af_test_tmq");
                 }
             }
@@ -300,6 +301,7 @@ namespace Driver.Test.Client.TMQ.Native
                 {
                     Thread.Sleep(3000);
                     DoRequest(client, "drop topic if exists test_tmq_seek");
+                    Thread.Sleep(3000);
                     DoRequest(client, "drop database if exists af_test_tmq_seek");
                 }
             }
@@ -428,6 +430,7 @@ namespace Driver.Test.Client.TMQ.Native
                 {
                     Thread.Sleep(3000);
                     DoRequest(client, "drop topic if exists test_tmq_commit");
+                    Thread.Sleep(3000);
                     DoRequest(client, "drop database if exists af_test_tmq_commit");
                 }
             }

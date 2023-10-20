@@ -189,9 +189,11 @@ namespace TDengine.Data.Client
 
         protected override void Dispose(bool disposing)
         {
-            if (!disposing) return;
-            _rows.Dispose();
-            _rows = null;
+            if (_rows != null)
+            {
+                _rows.Dispose();
+                _rows = null;
+            }
         }
     }
 }
