@@ -99,6 +99,11 @@ namespace Driver.Test.Client.WS
 
                     Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(14));
                 }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
                 finally
                 {
                     client.Exec($"drop database if exists {db}");
@@ -193,6 +198,11 @@ namespace Driver.Test.Client.WS
 
                     Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(14));
                 }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
                 finally
                 {
                     client.Exec($"drop database if exists {db}");
@@ -286,6 +296,11 @@ namespace Driver.Test.Client.WS
                     }
 
                     Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(14));
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
                 }
                 finally
                 {
@@ -412,6 +427,11 @@ namespace Driver.Test.Client.WS
                         Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), result.GetValue(14));
                     }
                 }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
                 finally
                 {
                     client.Exec($"drop database if exists {db}");
@@ -527,6 +547,11 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     client.SchemalessInsert(new string[] { data }, TDengineSchemalessProtocol.TSDB_SML_LINE_PROTOCOL,
                         TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NANO_SECONDS, 0, ReqId.GetReqId());
                 }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
                 finally
                 {
                     client.Exec($"drop database if exists {db}");
@@ -556,9 +581,14 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     client.SchemalessInsert(data, TDengineSchemalessProtocol.TSDB_SML_TELNET_PROTOCOL,
                         TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NOT_CONFIGURED, 0, ReqId.GetReqId());
                 }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
                 finally
                 {
-                    // client.Exec($"drop database if exists {db}");
+                    client.Exec($"drop database if exists {db}");
                 }
             }
         }
@@ -591,6 +621,11 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     };
                     client.SchemalessInsert(data, TDengineSchemalessProtocol.TSDB_SML_JSON_PROTOCOL,
                         TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NOT_CONFIGURED, 0, ReqId.GetReqId());
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
                 }
                 finally
                 {

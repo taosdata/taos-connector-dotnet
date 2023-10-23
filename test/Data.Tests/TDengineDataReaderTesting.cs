@@ -4,6 +4,7 @@ using System.Text;
 using TDengine.Data.Client;
 using TDengine.Driver;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Data.Tests
 {
@@ -11,9 +12,11 @@ namespace Data.Tests
     {
         private DbConnection _connection;
         private DbConnection _wsConnection;
+        private readonly ITestOutputHelper _output;
 
-        public TDengineDataReaderTesting()
+        public TDengineDataReaderTesting(ITestOutputHelper output)
         {
+            _output = output;
             var builder = new TDengineConnectionStringBuilder("username=root;password=taosdata");
             _connection = new TDengineConnection(builder.ConnectionString);
             _connection.Open();
@@ -48,6 +51,11 @@ namespace Data.Tests
                     cmd.CommandText = "drop database if exists ws_test_nano";
                     cmd.ExecuteNonQuery();
                 }
+            }
+            catch (Exception e)
+            {
+                _output.WriteLine(e.ToString());
+                throw;
             }
             finally
             {

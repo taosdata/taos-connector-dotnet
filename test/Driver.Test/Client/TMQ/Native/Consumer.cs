@@ -131,6 +131,11 @@ namespace Driver.Test.Client.TMQ.Native
                     consumer.Unsubscribe();
                     consumer.Close();
                 }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
                 finally
                 {
                     Thread.Sleep(3000);
@@ -297,6 +302,11 @@ namespace Driver.Test.Client.TMQ.Native
                     consumer.Unsubscribe();
                     consumer.Close();
                 }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
                 finally
                 {
                     Thread.Sleep(3000);
@@ -425,6 +435,11 @@ namespace Driver.Test.Client.TMQ.Native
                     Assert.Equal(3, messageCount);
                     consumer.Unsubscribe();
                     consumer.Close();
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
                 }
                 finally
                 {
