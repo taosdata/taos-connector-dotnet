@@ -102,7 +102,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             }
 
             var resp = JsonConvert.DeserializeObject<T2>(Encoding.UTF8.GetString(respBytes));
-            Console.WriteLine(Encoding.UTF8.GetString(respBytes));
+            // Console.WriteLine(Encoding.UTF8.GetString(respBytes));
             if (resp.Action != action)
             {
                 throw new TDengineError(-1, $"receive unexpected action {resp.Action},req:{reqStr}",Encoding.UTF8.GetString(respBytes));
