@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace TDengine.TMQ
 {
-    public interface IConsumer
+    public interface IConsumer<TValue>
     {
-        ConsumeResult Consume(int millisecondsTimeout);
+        ConsumeResult<TValue> Consume(int millisecondsTimeout);
         
         List<TopicPartition> Assignment { get; }
 
@@ -21,7 +21,7 @@ namespace TDengine.TMQ
         void Unsubscribe();
 
         //commit
-        void Commit(ConsumeResult consumerResult);
+        void Commit(ConsumeResult<TValue> consumerResult);
 
         List<TopicPartitionOffset> Commit();
         

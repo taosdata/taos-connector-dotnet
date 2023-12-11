@@ -5,22 +5,16 @@ using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
 
 namespace TDengine.TMQ
 {
-    public class TmqMessage
+    public class TmqMessage<TValue>
     {
-        public List<TDengineMeta> Metas { get; set; }
-        public List<List<Object>> Datas { get; set; }
-
         public string TableName { get; set; }
-
-        public TmqMessage()
-        {
-        }
+        public TValue Value { get; set; }
     }
 
     /// <summary>
     ///  Represent consume result.
     /// </summary>
-    public class ConsumeResult : IDisposable
+    public class ConsumeResult<TValue> : IDisposable
     {
         /// <summary>
         ///     The topic associated with the message.
@@ -36,8 +30,6 @@ namespace TDengine.TMQ
         ///     The partition offset associated with the message.
         /// </summary>
         public Offset Offset { get; set; }
-
-        public IntPtr ResultPtr { get; set; }
 
         public ulong MessageId { get; }
 
@@ -63,30 +55,24 @@ namespace TDengine.TMQ
             }
         }
 
-        public List<TmqMessage> Message { get; set; }
+        public List<TmqMessage<TValue>> Message { get; set; }
 
-        public ConsumeResult(IntPtr resultPtr, string topic, Partition partition, Offset offset, TMQ_RES type)
+        public ConsumeResult(string topic, Partition partition, Offset offset, TMQ_RES type)
         {
-            ResultPtr = resultPtr;
             Topic = topic;
             Partition = partition;
             Offset = offset;
             Type = type;
-            Message = new List<TmqMessage>();
+            Message = new List<TmqMessage<TValue>>();
         }
         
-        public ConsumeResult(ulong messageId,string topic, Partition partition, Offset offset, TMQ_RES type):this(IntPtr.Zero,topic, partition, offset, type)
+        public ConsumeResult(ulong messageId,string topic, Partition partition, Offset offset, TMQ_RES type):this(topic, partition, offset, type)
         {
             MessageId = messageId;
         }
 
         public void Dispose()
         {
-            if (ResultPtr != IntPtr.Zero)
-            {
-                NativeMethods.FreeResult(ResultPtr);
-                ResultPtr = IntPtr.Zero;
-            }
         }
     }
 }

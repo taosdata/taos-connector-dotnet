@@ -110,7 +110,8 @@ namespace Function.Test.TMQ
             };
 
             // consumer
-            var consumer = new ConsumerBuilder(cfg).Build();
+            var builder = new ConsumerBuilder<Dictionary<string, Object>>(cfg);
+            var consumer = builder.Build();
             consumer.Subscribe(topic);
 
             List<string> subTopics = consumer.Subscription();
@@ -118,7 +119,7 @@ namespace Function.Test.TMQ
 
             for (int i = 0; i < 5; i++)
             {
-                using (ConsumeResult consumeResult = consumer.Consume(100))
+                using (var consumeResult = consumer.Consume(100))
                 {
                     if (consumeResult == null)
                     {
@@ -126,86 +127,81 @@ namespace Function.Test.TMQ
                         continue;
                     }
 
-                    foreach (var kv in consumeResult.Message)
+                    var normalCount = 0;
+                    var superCount = 0;
+                    var jsonCount = 0;
+                    for (int j = 0; j < consumeResult.Message.Count; j++)
                     {
-                        var tmpMeta = kv.Metas;
-                        var tmpData = kv.Datas;
-                        switch (kv.TableName)
+                        var v = consumeResult.Message[j].Value;
+                        var ts = TDengineConstant.ConvertDatetimeToTick((DateTime)v["ts"],
+                            TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                        var b = 0;
+                        switch (consumeResult.Message[j].TableName)
                         {
                             // if normal table 
                             case "tmq_tn":
                                 _output.WriteLine("tmq_tn");
-                                tmpMeta.ForEach(meta =>
-                                {
-                                    Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
-                                });
-                                for (int j = 0; j < tmpData[0].Count; j++)
-                                {
-                                    switch (tmpData[0][j])
-                                    {
-                                        case DateTime val:
-                                            var ts = TDengineConstant.ConvertDatetimeToTick(val,
-                                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
-                                            Assert.Equal(ts,expectResData[0][j]);
-                                            break;
-                                        default:
-                                            Assert.Equal(tmpData[0][j],expectResData[0][j]);
-                                            break;
-                                    }
-                                }
+                                b = 14 * normalCount;
+                                Assert.Equal(expectResData[0][b + 0], ts);
+                                Assert.Equal(expectResData[0][b + 1], v["v1"]);
+                                Assert.Equal(expectResData[0][b + 2], v["v2"]);
+                                Assert.Equal(expectResData[0][b + 3], v["v4"]);
+                                Assert.Equal(expectResData[0][b + 4], v["v8"]);
+                                Assert.Equal(expectResData[0][b + 5], v["u1"]);
+                                Assert.Equal(expectResData[0][b + 6], v["u2"]);
+                                Assert.Equal(expectResData[0][b + 7], v["u4"]);
+                                Assert.Equal(expectResData[0][b + 8], v["u8"]);
+                                Assert.Equal(expectResData[0][b + 9], v["f4"]);
+                                Assert.Equal(expectResData[0][b + 10], v["f8"]);
+                                Assert.Equal(expectResData[0][b + 11], v["bin"]);
+                                Assert.Equal(expectResData[0][b + 12], v["nchr"]);
+                                Assert.Equal(expectResData[0][b + 13], v["b"]);
+                                normalCount += 1;
                                 break;
                             // if stable
                             case "tmq_ts_s1":
                                 _output.WriteLine("tmq_ts_s1");
-                                tmpMeta.ForEach(meta =>
-                                {
-                                    Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
-                                });
-                                for (int j = 0; j < tmpData[0].Count; j++)
-                                {
-                                    switch (tmpData[0][j])
-                                    {
-                                        case DateTime val:
-                                            var ts = TDengineConstant.ConvertDatetimeToTick(val,
-                                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
-                                            Assert.Equal(ts,expectResData[1][j]);
-                                            break;
-                                        default:
-                                            Assert.Equal(tmpData[0][j],expectResData[1][j]);
-                                            break;
-                                    }
-                                }
+                                b = 14 * superCount;
+                                Assert.Equal(expectResData[1][b + 0], ts);
+                                Assert.Equal(expectResData[1][b + 1], v["v1"]);
+                                Assert.Equal(expectResData[1][b + 2], v["v2"]);
+                                Assert.Equal(expectResData[1][b + 3], v["v4"]);
+                                Assert.Equal(expectResData[1][b + 4], v["v8"]);
+                                Assert.Equal(expectResData[1][b + 5], v["u1"]);
+                                Assert.Equal(expectResData[1][b + 6], v["u2"]);
+                                Assert.Equal(expectResData[1][b + 7], v["u4"]);
+                                Assert.Equal(expectResData[1][b + 8], v["u8"]);
+                                Assert.Equal(expectResData[1][b + 9], v["f4"]);
+                                Assert.Equal(expectResData[1][b + 10], v["f8"]);
+                                Assert.Equal(expectResData[1][b + 11], v["bin"]);
+                                Assert.Equal(expectResData[1][b + 12], v["nchr"]);
+                                Assert.Equal(expectResData[1][b + 13], v["b"]);
+                                superCount += 1;
+
                                 break;
                             // if JSON table
                             case "tmq_tj_j1":
                                 _output.WriteLine("tmq_tj_j1");
-                                tmpMeta.ForEach(meta =>
-                                {
-                                    Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
-                                });
-                                for (int j = 0; j < tmpData[0].Count; j++)
-                                {
-                                    switch (tmpData[0][j])
-                                    {
-                                        case DateTime val:
-                                            var ts = TDengineConstant.ConvertDatetimeToTick(val,
-                                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
-                                            Assert.Equal(ts,expectResData[2][j]);
-                                            break;
-                                        default:
-                                            Assert.Equal(tmpData[0][j],expectResData[2][j]);
-                                            break;
-                                    }
-                                }
+                                b = 14 * jsonCount;
+                                Assert.Equal(expectResData[2][b + 0], ts);
+                                Assert.Equal(expectResData[2][b + 1], v["v1"]);
+                                Assert.Equal(expectResData[2][b + 2], v["v2"]);
+                                Assert.Equal(expectResData[2][b + 3], v["v4"]);
+                                Assert.Equal(expectResData[2][b + 4], v["v8"]);
+                                Assert.Equal(expectResData[2][b + 5], v["u1"]);
+                                Assert.Equal(expectResData[2][b + 6], v["u2"]);
+                                Assert.Equal(expectResData[2][b + 7], v["u4"]);
+                                Assert.Equal(expectResData[2][b + 8], v["u8"]);
+                                Assert.Equal(expectResData[2][b + 9], v["f4"]);
+                                Assert.Equal(expectResData[2][b + 10], v["f8"]);
+                                Assert.Equal(expectResData[2][b + 11], v["bin"]);
+                                Assert.Equal(expectResData[2][b + 12], v["nchr"]);
+                                Assert.Equal(expectResData[2][b + 13], v["b"]);
+                                jsonCount += 1;
+
                                 break;
                             default:
-                                throw new Exception($"Unexpected table name {kv.TableName}");
+                                throw new Exception($"Unexpected table name {consumeResult.Message[i].TableName}");
                         }
                     }
 

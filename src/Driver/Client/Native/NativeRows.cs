@@ -15,7 +15,7 @@ namespace TDengine.Driver.Client.Native
         private IntPtr _block = IntPtr.Zero;
         private bool _completed;
         private readonly BlockReader _blockReader;
-        private bool _isStmt;
+        private bool _disableFreeResult;
 
         public NativeRows(int affectedRows)
         {
@@ -23,9 +23,9 @@ namespace TDengine.Driver.Client.Native
             AffectRows = affectedRows;
         }
 
-        public NativeRows(IntPtr result, TimeZoneInfo tz, bool isStmt)
+        public NativeRows(IntPtr result, TimeZoneInfo tz, bool disableFreeResult)
         {
-            _isStmt = isStmt;
+            _disableFreeResult = disableFreeResult;
             AffectRows = -1;
             FieldCount = NativeMethods.FieldCount(result);
 
@@ -42,7 +42,7 @@ namespace TDengine.Driver.Client.Native
         
         public void Dispose()
         {
-            if (_isStmt)
+            if (_disableFreeResult)
             {
                 return;
             }
@@ -118,6 +118,10 @@ namespace TDengine.Driver.Client.Native
                 if (numOfRows == 0)
                 {
                     _completed = true;
+                }
+                else if (numOfRows < 0)
+                {
+                    throw new TDengineError(NativeMethods.ErrorNo(_result), NativeMethods.Error(_result));
                 }
                 else
                 {

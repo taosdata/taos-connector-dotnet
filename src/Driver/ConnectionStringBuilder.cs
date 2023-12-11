@@ -14,7 +14,6 @@ namespace TDengine.Driver
         private const string UsernameKey = "username";
         private const string PasswordKey = "password";
         private const string ProtocolKey = "protocol";
-        private const string TokenKey = "token";
         private const string TimezoneKey = "timezone";
         private const string ConnTimeoutKey = "connTimeout";
         private const string ReadTimeoutKey = "readTimeout";
@@ -28,7 +27,6 @@ namespace TDengine.Driver
             Username,
             Password,
             Protocol,
-            Token,
             Timezone,
             ConnTimeout,
             ReadTimeout,
@@ -41,7 +39,6 @@ namespace TDengine.Driver
         private string _user = string.Empty;
         private string _password = string.Empty;
         private string _protocol = TDengineConstant.ProtocolNative;
-        private string _token = string.Empty;
         private TimeZoneInfo _timezone = TimeZoneInfo.Local;
         private TimeSpan _connTimeout = TimeSpan.Zero;
         private TimeSpan _readTimeout = TimeSpan.Zero;
@@ -52,21 +49,20 @@ namespace TDengine.Driver
 
         static ConnectionStringBuilder()
         {
-            var list = new string[11];
+            var list = new string[10];
             list[(int)KeysEnum.Host] = HostKey;
             list[(int)KeysEnum.Port] = PortKey;
             list[(int)KeysEnum.Database] = DatabaseKey;
             list[(int)KeysEnum.Username] = UsernameKey;
             list[(int)KeysEnum.Password] = PasswordKey;
             list[(int)KeysEnum.Protocol] = ProtocolKey;
-            list[(int)KeysEnum.Token] = TokenKey;
             list[(int)KeysEnum.Timezone] = TimezoneKey;
             list[(int)KeysEnum.ConnTimeout] = ConnTimeoutKey;
             list[(int)KeysEnum.ReadTimeout] = ReadTimeoutKey;
             list[(int)KeysEnum.WriteTimeout] = WriteTimeoutKey;
             KeysList = list;
 
-            KeysDict = new Dictionary<string, KeysEnum>(8, StringComparer.OrdinalIgnoreCase)
+            KeysDict = new Dictionary<string, KeysEnum>(10, StringComparer.OrdinalIgnoreCase)
             {
                 [HostKey] = KeysEnum.Host,
                 [PortKey] = KeysEnum.Port,
@@ -74,7 +70,6 @@ namespace TDengine.Driver
                 [UsernameKey] = KeysEnum.Username,
                 [PasswordKey] = KeysEnum.Password,
                 [ProtocolKey] = KeysEnum.Protocol,
-                [TokenKey] = KeysEnum.Token,
                 [TimezoneKey] = KeysEnum.Timezone,
                 [ConnTimeoutKey] = KeysEnum.ConnTimeout,
                 [ReadTimeoutKey] = KeysEnum.ReadTimeout,
@@ -90,10 +85,10 @@ namespace TDengine.Driver
                 string[] queries = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (string query in queries)
                 {
-                    string[] keyValue = query.Split('=');
-                    if (keyValue.Length % 2 != 0)
+                    string[] keyValue = query.Split(new char[] { '=' },2);
+                    if (keyValue.Length != 2)
                     {
-                        continue;
+                        throw new ArgumentException($"invalid connection param ${query}");
                     }
 
                     var keyword = keyValue[0].Trim();
@@ -121,9 +116,6 @@ namespace TDengine.Driver
                                 break;
                             case KeysEnum.Protocol:
                                 Protocol = value;
-                                break;
-                            case KeysEnum.Token:
-                                Token = value;
                                 break;
                             case KeysEnum.Timezone:
                                 Timezone = TimeZoneInfo.FindSystemTimeZoneById(value);
@@ -185,12 +177,7 @@ namespace TDengine.Driver
                 base[ProtocolKey] = _protocol = value;
             }
         }
-
-        public string Token
-        {
-            get => _token;
-            set => base[TokenKey] = _token = value;
-        }
+        
 
         public TimeZoneInfo Timezone
         {
@@ -248,8 +235,6 @@ namespace TDengine.Driver
                     return Password;
                 case KeysEnum.Protocol:
                     return Protocol;
-                case KeysEnum.Token:
-                    return Token;
                 case KeysEnum.Timezone:
                     return Timezone;
                 default:
@@ -292,9 +277,6 @@ namespace TDengine.Driver
                     return;
                 case KeysEnum.Protocol:
                     _protocol = TDengineConstant.ProtocolNative;
-                    return;
-                case KeysEnum.Token:
-                    _token = string.Empty;
                     return;
                 case KeysEnum.Timezone:
                     _timezone = TimeZoneInfo.Local;

@@ -1,381 +1,1064 @@
-# CSharp Connector
+# C# Connector
 
-* This C# connector supports: Linux 64/Windows x64/Windows x86.
-* This C# connector can be downloaded and included as a normal package from [Nuget.org](https://www.nuget.org/packages/TDengine.Connector/).
-* From V3.0.2, this C# connector support WebSocket.But need additional some configurations in your project file.
+`TDengine.Connector` is the C# language connector provided by TDengine. C# developers can use it to develop C# application software that accesses TDengine cluster data.
 
-## Installation preparations
+The `TDengine.Connector` connector supports establishing a connection with the TDengine running instance through the TDengine client driver (taosc), and provides functions such as data writing, query, data subscription, schemaless data writing, and parameter binding interface data writing. `TDengine.Connector` also supports WebSocket since v3.0.1, establishes WebSocket connection, and provides functions such as data writing, query, and parameter binding interface data writing.
 
-* Install TDengine client.
-* .NET interface file TDengineDriver.cs and reference samples both
-  are located under Windows client's installation path:install_directory/examples/C#.
+This article introduces how to install `TDengine.Connector` in a Linux or Windows environment, and connect to the TDengine cluster through `TDengine.Connector` to perform basic operations such as data writing and querying.
+
+Notice:
+
+* `TDengine.Connector` 3.x is not compatible with TDengine 2.x. If you need to use the C# connector in an environment running TDengine 2.x version, please use the 1.x version of TDengine.Connector.
+* `TDengine.Connector` version 3.1.0 has been completely refactored and is no longer compatible with 3.0.2 and previous versions. For 3.0.2 documents, please refer to [nuget](https://www.nuget.org/packages/TDengine.Connector/3.0.2)
+
+The source code of `TDengine.Connector` is hosted on [GitHub](https://github.com/taosdata/taos-connector-dotnet/tree/3.0).
+
+## Supported platforms
+
+The supported platforms are the same as those supported by the TDengine client driver.
+
+Note TDengine no longer supports 32-bit Windows platforms.
+
+## Version support
+
+| **Connector version** | **TDengine version** |
+|-----------------------|----------------------|
+| 3.1.0                 | 3.2.1.0/3.1.1.18     |
+
+## Handling exceptions
+
+`TDengine.Connector` will throw an exception and the application needs to handle the exception. The taosc exception type `TDengineError` contains error code and error information, and the application can handle it based on the error code and error information.
+
+## TDengine DataType vs. C# DataType
+
+| TDengine DataType | C# Type                 |
+|-------------------|-------------------------|
+| TIMESTAMP         | DateTime                |
+| TINYINT           | sbyte                   |
+| SMALLINT          | short                   |
+| INT               | int                     |
+| BIGINT            | long                    |
+| TINYINT UNSIGNED  | byte                    |
+| SMALLINT UNSIGNED | ushort                  |
+| INT UNSIGNED      | uint                    |
+| BIGINT UNSIGNED   | ulong                   |
+| FLOAT             | float                   |
+| DOUBLE            | double                  |
+| BOOL              | bool                    |
+| BINARY            | byte[]                  |
+| NCHAR             | string (utf-8 encoding) |
+| JSON              | byte[]                  |
+
+**Note**: JSON type is only supported in tag.
+
+## Installation Steps
+
+### Pre-installation preparation
+
 * Install [.NET SDK](https://dotnet.microsoft.com/download)
+* [Nuget Client](https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools) (optional installation)
+* Install the TDengine client driver. For specific steps, please refer to [Installing the client driver](https://docs.taosdata.com/develop/connect/#%E5%AE%89%E8%A3%85%E5%AE% A2%E6%88%B7%E7%AB%AF%E9%A9%B1%E5%8A%A8-taosc)
 
-## Installation
+### Install the connectors
 
-For native connection:
+Nuget package `TDengine.Connector` can be added to the current project through dotnet CLI under the path of the current .NET project.
 
-```cmd
+```bash
 dotnet add package TDengine.Connector
 ```
 
-For WebSocket, Need add the following ItemGroup in your project file:
+You can also modify the `.csproj` file of the current project and add the following ItemGroup.
 
 ``` XML
-// .csproj
-<ItemGroup>
-    <PackageReference Include="TDengine.Connector" Version="3.0.*" GeneratePathProperty="true" />
-  </ItemGroup>
-  <Target Name="copyDLLDependency" BeforeTargets="BeforeBuild">
-    <ItemGroup>
-      <DepDLLFiles Include="$(PkgTDengine_Connector)\runtimes\**\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DepDLLFiles)" DestinationFolder="$(OutDir)" />
-  </Target>
-
+   <ItemGroup>
+     <PackageReference Include="TDengine.Connector" Version="3.1.0" />
+   </ItemGroup>
 ```
 
-**Tips:**
-`TDengine.Connector` support WebSocket from V3.0.2. And for v1.x doesn't support WebSocket.
+## Establishing a connection
 
-## Example Source Code
+Native connection
 
-You can find examples under follow directories:
-
-* {client_installation_directory}/examples/C#
-* [TDengine example source code](https://github.com/taosdata/TDengine/tree/main/docs/examples/csharp)
-* [Current repo example source code](https://github.com/taosdata/taos-connector-dotnet/tree/3.0/examples)
-
-## Use C# connector
-
-### **prepare**
-
-**tips:** Need to install .NET SDK first.
-
-* Create a dotnet project(using console project as an example).
-
-``` cmd
-mkdir test
-cd test
-dotnet new console
-```
-
-* Add "TDengine.Connector" as a package through Nuget into project.
-
-``` cmd
-dotnet add package TDengine.Connector
-```
-
-### **Connection**
-
-``` C#
-using TDengineDriver;
-using System.Runtime.InteropServices;
-// ... do something ...
-string host = "127.0.0.1" ; 
-string configDir =  "C:/TDengine/cfg"; // For linux should it be /etc/taos.
-string user = "root";
-string password = "taosdata";
-string db = ''; // Also can set it to the db name you want to connect.
-string port = 0
-
-/* Set client options (optional step):charset, locale, timezone.
- * Default: charset, locale, timezone same to system.
- * Current supports options:TSDB_OPTION_LOCALE, TSDB_OPTION_CHARSET, TSDB_OPTION_TIMEZONE, TSDB_OPTION_CONFIGDIR.
-*/
-TDengineDriver.TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR,configDir);
-
-// Get an TDengine connection
-InPtr conn = TDengineDriver.TDengine.Connect(host, user, taosdata, db, port);
-
-// Check if get connection success
-if (conn == IntPtr.Zero)
+``` csharp
+var builder = new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
+using (var client = DbDriver.Open(builder))
 {
-   Console.WriteLine("Connect to TDengine failed");
+     Console.WriteLine("connected")
 }
-else
-{
-   Console.WriteLine("Connect to TDengine success");
-}
-
-// Close TDengine Connection
-if (conn != IntPtr.Zero)
-{
-    TDengineDriver.TDengine.Close(this.conn);
-}
-
-// Suggest to clean environment, before exit your application.
-TDengineDriver.TDengine.Cleanup();
 ```
 
-### **Execute SQL**
+WebSocket connection
 
-```C#
-// Suppose conn is a valid tdengine connection from previous Connection sample
-public static void ExecuteSQL(IntPtr conn, string sql)
+```csharp
+new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/rest/ws;username=root;password=taosdata");
+using (var client = DbDriver.Open(builder))
 {
-    IntPtr res = TDengineDriver.TDengine.Query(conn, sql);
-    // Check if query success
-    if((res == IntPtr.Zero) || (TDengineDriver.TDengine.ErrorNo(res) != 0))
-    {
-        Console.Write(sql + " failure, ");
-        // Get error message while Res is a not null pointer.
-        if (res != IntPtr.Zero)
-         {
-             Console.Write("reason:" + TDengineDriver.TDengine.Error(res));
-         }
-    }
-    else
-    {
-        Console.Write(sql + " success, {0} rows affected", TDengineDriver.TDengine.AffectRows(res));
-        //... do something with res ...
-
-        // Important: need to free result to avoid memory leak.
-        TDengineDriver.TDengine.FreeResult(res);
-    }
+     Console.WriteLine("connected")
 }
-
-// Calling method to execute sql;
-ExecuteSQL(conn,$"create database if not exists {db};");
-ExecuteSQL(conn,$"use {db};");
-string createSql = "CREATE TABLE meters(ts TIMESTAMP, current FLOAT,"+
-" voltage INT, phase FLOAT)TAGS(location BINARY(30), groupId INT);"
-ExecuteSQL(conn,createSql);
-ExecuteSQL(conn," INSERT INTO d1001 USING meters TAGS('Beijing.Chaoyang', 2) VALUES('a');");
-ExecuteSQL(conn,$"drop database if exists {db};");
 ```
 
-### **Get Query Result**
+The parameters supported by `ConnectionStringBuilder` are as follows:
+* protocol: connection protocol, optional value is Native or WebSocket, default is Native
+* host: the address of the running instance of TDengine,
+    * When protocol is WebSocket, host is the URL of TDengine WebSocket service, such as `ws://localhost:6041/ws`. If it contains special characters, URLEncoding is required.
+    * When protocol is Native, host is the address of the TDengine running instance, such as `localhost`
+* port: The port of the running instance of TDengine. The default is 6030. It is only valid when the protocol is Native.
+* username: username to connect to TDengine
+* password: password to connect to TDengine
+* db: database connected to TDengine
+* timezone: The time zone for parsing time results, the default is `TimeZoneInfo.Local`, use the `TimeZoneInfo.FindSystemTimeZoneById` method to parse the string into a `TimeZoneInfo` object.
+* connTimeout: WebSocket connection timeout, only valid when the protocol is WebSocket, the default is 1 minute, use the `TimeSpan.Parse` method to parse the string into a `TimeSpan` object.
+* readTimeout: WebSocket read timeout, only valid when the protocol is WebSocket, the default is 5 minutes, use the `TimeSpan.Parse` method to parse the string into a `TimeSpan` object.
+* writeTimeout: WebSocket write timeout, only valid when the protocol is WebSocket, the default is 10 seconds, use the `TimeSpan.Parse` method to parse the string into a `TimeSpan` object.
 
-```C#
+### Specify the URL and Properties to get the connection
 
+The C# connector does not support this feature
+
+### Priority of configuration parameters
+
+The C# connector does not support this feature
+
+## Usage examples
+
+### Create database and tables
+
+Native Example
+
+```csharp
 using System;
-using System.Collections.Generic;
-using TDengineDriver.Impl;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
 
-// Following code is a sample that traverses retrieve data from TDengineDriver.TDengine.
-public void ExecuteQuery(IntPtr conn,string sql)
+namespace NativeQuery
 {
-    // "conn" is a valid TDengine connection which can
-    // be got from previous "Connection" sample.
-    IntPrt res = TDengineDriver.TDengine.Query(conn, sql);
-    if ((res == IntPtr.Zero) || (TDengineDriver.TDengine.ErrorNo(res) != 0))
+    internal class Query
     {
-         Console.Write(sql.ToString() + " failure, ");
-         if (res != IntPtr.Zero)
-         {
-             Console.Write("reason: " + TDengineDriver.TDengine.Error(res));
-         }
-         // Execute query sql failed
-         // ... do something ...
-    }
-
-    List<TDengineDriver.TDengineMeta> resMeta = LibTaos.GetMeta(res);
-    List<Object> resData = LibTaos.GetData(res);
-
-    foreach (var meta in resMeta)
-    {
-        Console.Write($"\t|{meta.name} {meta.TypeName()} ({meta.size})\t|");
-    }
-    Console.WriteLine("")
-    for (int i = 0; i < resData.Count; i++)
-    {
-        Console.Write($"|{resData[i].ToString()} \t");
-        //Console.WriteLine("{0},{1},{2}", i, resMeta.Count, (i) % resMeta.Count);
-        if (((i + 1) % resMeta.Count == 0))
+        public static void Main(string[] args)
         {
-            Console.WriteLine("");
+            var builder = new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec("create database power");
+                    client.Exec("CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
         }
     }
-    Console.WriteLine("")
-    // Important free "res".
-     TDengineDriver.TDengine.FreeResult(res);
 }
 ```
 
-### **Stmt Bind Sample**
+WebSocket Example
 
-* Bind different types of data.
+```csharp
+using System;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
 
-```C#
-// Prepare tags values used to binding by stmt.
-// An instance of TAOS_BIND can just bind a cell of table.
-TAOS_BIND[] binds = new TAOS_BIND[1];
-binds[0] = TaosBind.BindNchar("-123acvnchar");
-// Use TaosBind.BindNil() to bind null values.
-
-long[] tsArr = new long[5] { 1637064040000, 1637064041000,
-1637064042000, 1637064043000, 1637064044000 };
-bool?[] boolArr = new bool?[5] { true, false, null, true, true };
-int?[] intArr = new int?[5] { -200, -100, null, 0, 300 };
-long?[] longArr = new long?[5] { long.MinValue + 1, -2000, null,
-1000, long.MaxValue };
-string[] binaryArr = new string[5] { "/TDengine/src/client/src/tscPrepare.c",
- String.Empty, null, "doBindBatchParam",
- "string.Join:1234567890123456789012345" };
-
-// TAOS_MULTI_BIND can bind a column of data.
-TAOS_MULTI_BIND[] mBinds = new TAOS_MULTI_BIND[5];
-
-mBinds[0] = TaosMultiBind.MultiBindTimestamp(tsArr);
-mBinds[1] = TaosMultiBind.MultiBindBool(boolArr);
-mBinds[4] = TaosMultiBind.MultiBindInt(intArr);
-mBinds[5] = TaosMultiBind.MultiBindBigint(longArr);
-mBinds[12] = TaosMultiBind.MultiBindBinary(binaryArr);
-
-// After using instance of TAOS_MULTI_BIND and TAOS_BIND,
-// need to free the allocated unmanaged memory.
-TaosMultiBind.FreeBind(mBind);
-TaosMultiBind.FreeMBind(mBinds);
-```
-
-* Insert
-
-```C#
-  /* Pre-request: create stable or normal table.
-   * Target table for this sample：stmtdemo
-   * Structure：create stable stmtdemo (ts timestamp,b bool,v4 int,
-   * v8 bigint,bin binary(100))tags(blob nchar(100));
-  */
-  // This conn should be a valid connection that is returned by TDengineDriver.TDengine.Connect().
-  IntPtr conn;
-  IntPtr stmt = IntPtr.Zero;
-  // Insert statement
-  string sql = "insert into ? using stmtdemo tags(?,?,?,?,?) values(?)";
-  // "use db" before stmtPrepare().
-
-  stmt = TDengineDriver.TDengine.StmtInit(conn);
-  TDengineDriver.TDengine.StmtPrepare(stmt, sql);
-
-  // Use method StmtSetTbname() to config tablename,
-  // but needs to create the table before.
-  // Using StmtSetTbnameTags() to config table name and
-  // tags' value.(create sub table based on stable automatically)
-  TDengineDriver.TDengine.StmtSetTbname_tags(stmt,"t1",binds);
-
-  // Binding multiple lines of data.
-  TDengineDriver.TDengine.StmtBindParamBatch(stmt,mBinds);
-
-  // Add current bind parameters into batch.
-  TDengineDriver.TDengine.StmtAddBatch(stmt);
-
-  // Execute the batch instruction which has been prepared well by bind_param() method.
-  TDengineDriver.TDengine.StmtExecute(stmt);
-
-  // Cause we use unmanaged memory, remember to free occupied memory, after execution.
-  TaosMultiBind.FreeBind(mBind);
-  TaosMultiBind.FreeMBind(mBinds);
-
-  // Get error information if current stmt operation failed.
-  // This method is appropriate for all the stmt methods to get error message.
-  TDengineDriver.TDengine.StmtError(stmt);
-```
-
-* Query
-
-``` C#
-stmt = StmtInit(conn);
-
-string querySql = "SELECT * FROM T1 WHERE V4 > ? AND V8 < ?";
-StmtPrepare(stmt, querySql);
-
-// Prepare Query parameters.
-TAOS_BIND qparams[2];
-qparams[0] = TaosBind.bindInt(-2);
-qparams[1] = TaosBind.bindLong(4);
-
-// Bind parameters.
-TDengineDriver.TDengine.StmtBindParam(stmt, qparams);
-
-// Execute
-TDengineDriver.TDengine.StmtExecute(stmt);
-
-// Get querying result, for SELECT only.
-// User application should be freed with API FreeResult() at the end.
-IntPtr result = TDengineDriver.TDengine.StmtUseResult(stmt);
-
-// This "result" cam be traversed as normal sql query result.
-// ... Do something with "result" ...
-
-TDengineDriver.TDengine.FreeResult(result);
-
-// Cause we use unmanaged memory, we need to free occupied memory after execution.
-TaosMultiBind.FreeBind(qparams);
-
-// Close stmt and release resource.
-TDengineDriver.TDengine.StmtClose(stmt);
-```
-
-* Assert (samples about how to assert every step of stmt is succeed or failed)
-
-```C#
-// Special  StmtInit().
-IntPtr stmt = TDengineDriver.TDengine.StmtInit(conn);
-if ( stmt == IntPtr.Zero)
+namespace WSQuery
 {
-       Console.WriteLine("Init stmt failed:{0}",TDengineDriver.TDengine.StmtErrorStr(stmt));
-       // ... do something ...
-}
-else
-{
-      Console.WriteLine("Init stmt success");
-      // Continue
-}
-
-// For all stmt methods that return int type,we can get error message by StmtErrorStr().
-if (TDengineDriver.TDengine.StmtPrepare(this.stmt, sql) == 0)
-{
-    Console.WriteLine("stmt prepare success");
-    // Continue
-}
-else
-{
-     Console.WriteLine("stmt prepare failed:{0} " , TDengineDriver.TDengine.StmtErrorStr(stmt));
-     // ... do something ...
-}
-
-// Estimate weather StmtUseResult() is successful or failed.
-// If failed, get the error message by TDengineDriver.TDengine.Error(res)
-IntPtr res = TDengineDriver.TDengine.StmtUseResult(stmt);
-if ((res == IntPtr.Zero) || (TDengineDriver.TDengine.ErrorNo(res) != 0))
-{
-      Console.Write( " StmtUseResult failure, ");
-      if (res != IntPtr.Zero) {
-        Console.Write("reason: " + TDengineDriver.TDengine.Error(res));
-       }
-}
-else
-{
- Console.WriteLine(sql.ToString() + " success");
+    internal class Query
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec("create database power");
+                    client.Exec("CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+    }
 }
 ```
 
-### Websocket Example
+### Insert data
 
-``` XML
-// modify your project file (.csproj), copy dynamic library from the nupkg into your project directory.
-<ItemGroup>
-    <PackageReference Include="TDengineDriver.TDengine.Connector" Version="3.0.*" GeneratePathProperty="true" />
-</ItemGroup>
-  <Target Name="copyDLLDependency" BeforeTargets="BeforeBuild">
-    <ItemGroup>
-      <DepDLLFiles Include="$(PkgTDengine_Connector)\runtimes\**\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DepDLLFiles)" DestinationFolder="$(OutDir)" />
-  </Target>
+Native Example
+
+```csharp
+using System;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace NativeQuery
+{
+    internal class Query
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    string insertQuery =
+                        "INSERT INTO " +
+                        "power.d1001 USING power.meters TAGS(2,'California.SanFrancisco') " +
+                        "VALUES " +
+                        "('2023-10-03 14:38:05.000', 10.30000, 219, 0.31000) " +
+                        "('2023-10-03 14:38:15.000', 12.60000, 218, 0.33000) " +
+                        "('2023-10-03 14:38:16.800', 12.30000, 221, 0.31000) " +
+                        "power.d1002 USING power.meters TAGS(3, 'California.SanFrancisco') " +
+                        "VALUES " +
+                        "('2023-10-03 14:38:16.650', 10.30000, 218, 0.25000) " +
+                        "power.d1003 USING power.meters TAGS(2,'California.LosAngeles') " +
+                        "VALUES " +
+                        "('2023-10-03 14:38:05.500', 11.80000, 221, 0.28000) " +
+                        "('2023-10-03 14:38:16.600', 13.40000, 223, 0.29000) " +
+                        "power.d1004 USING power.meters TAGS(3,'California.LosAngeles') " +
+                        "VALUES " +
+                        "('2023-10-03 14:38:05.000', 10.80000, 223, 0.29000) " +
+                        "('2023-10-03 14:38:06.500', 11.50000, 221, 0.35000)";
+                    client.Exec(insertQuery);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+    }
+}
 ```
 
-* [WebSocket basic use](https://github.com/taosdata/taos-connector-dotnet/blob/3.0/examples/NET6Examples/WS/WebSocketSample.cs).
-* [WebSocket STMT](https://github.com/taosdata/taos-connector-dotnet/blob/3.0/examples/NET6Examples/WS/WebSocketSTMT.cs).
-* More samples reference from [examples](https://github.com/taosdata/taos-connector-dotnet/tree/3.0/examples/NET6Examples/WS).
+WebSocket Example
 
-**Note：**
+```csharp
+using System;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
 
-* For WebSocket need copy dynamic library from the nupkg into your project directory.
-  
-* Since this. NET connector interface requires the taos.dll file, so before
-  executing the application, copy the taos.dll file in the
-  Windows {client_install_directory}/driver directory to the folder where the
-  .NET project finally generated the .exe executable file. After running the exe
-  file, you can access the TDengine database and do operations such as insert
-  and query(This step can be skip if the client has been installed on you machine).
+namespace WSQuery
+{
+    internal class Query
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    string insertQuery =
+                        "INSERT INTO " +
+                        "power.d1001 USING power.meters TAGS(2,'California.SanFrancisco') " +
+                        "VALUES " +
+                        "('2023-10-03 14:38:05.000', 10.30000, 219, 0.31000) " +
+                        "('2023-10-03 14:38:15.000', 12.60000, 218, 0.33000) " +
+                        "('2023-10-03 14:38:16.800', 12.30000, 221, 0.31000) " +
+                        "power.d1002 USING power.meters TAGS(3, 'California.SanFrancisco') " +
+                        "VALUES " +
+                        "('2023-10-03 14:38:16.650', 10.30000, 218, 0.25000) " +
+                        "power.d1003 USING power.meters TAGS(2,'California.LosAngeles') " +
+                        "VALUES " +
+                        "('2023-10-03 14:38:05.500', 11.80000, 221, 0.28000) " +
+                        "('2023-10-03 14:38:16.600', 13.40000, 223, 0.29000) " +
+                        "power.d1004 USING power.meters TAGS(3,'California.LosAngeles') " +
+                        "VALUES " +
+                        "('2023-10-03 14:38:05.000', 10.80000, 223, 0.29000) " +
+                        "('2023-10-03 14:38:06.500', 11.50000, 221, 0.35000)";
+                    client.Exec(insertQuery);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+### Querying data
+
+Native Example
+
+```csharp
+using System;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace NativeQuery
+{
+    internal class Query
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    string query = "SELECT * FROM meters";
+                    var rows = client.Query(query);
+                    while (rows.Read())
+                    {
+                        Console.WriteLine($"{((DateTime)rows.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {rows.GetValue(1)}, {rows.GetValue(2)}, {rows.GetValue(3)}, {rows.GetValue(4)}, {Encoding.UTF8.GetString((byte[])rows.GetValue(5))}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+WebSocket Example
+
+```csharp
+using System;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace WSQuery
+{
+    internal class Query
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec(use power");
+                    string query = "SELECT * FROM meters";
+                    var rows = client.Query(query);
+                    while (rows.Read())
+                    {
+                        Console.WriteLine($"{((DateTime)rows.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {rows.GetValue(1)}, {rows.GetValue(2)}, {rows.GetValue(3)}, {rows.GetValue(4)}, {Encoding.UTF8.GetString((byte[])rows.GetValue(5))}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+### execute SQL with reqId
+
+Native Example
+
+```csharp
+using System;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace NativeQueryWithReqID
+{
+    internal abstract class QueryWithReqID
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec($"create database if not exists test_db",ReqId.GetReqId());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+WebSocket Example
+
+```csharp
+using System;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace NativeQueryWithReqID
+{
+    internal abstract class QueryWithReqID
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec($"create database if not exists test_db",ReqId.GetReqId());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+### Writing data via parameter binding
+
+Native Example
+
+```csharp
+using System;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace NativeStmt
+{
+    internal abstract class NativeStmt
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec("create database power");
+                    client.Exec(
+                        "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
+                    var stmt = client.StmtInit();
+                    stmt.Prepare(
+                        "Insert into power.d1001 using power.meters tags(2,'California.SanFrancisco') values(?,?,?,?)");
+                    var ts = new DateTime(2023, 10, 03, 14, 38, 05, 000);
+                    stmt.BindRow(new object[] { ts, (float)10.30000, (int)219, (float)0.31000 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    var affected = stmt.Affected();
+                    Console.WriteLine($"affected rows: {affected}");
+                    stmt.Dispose();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+WebSocket Example
+
+```csharp
+using System;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace WSStmt
+{
+    internal abstract class NativeStmt
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec(create database power");
+                    client.Exec(
+                        "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
+                    var stmt = client.StmtInit();
+                    stmt.Prepare(
+                        "Insert into power.d1001 using power.meters tags(2,'California.SanFrancisco') values(?,?,?,?)");
+                    var ts = new DateTime(2023, 10, 03, 14, 38, 05, 000);
+                    stmt.BindRow(new object[] { ts, (float)10.30000, (int)219, (float)0.31000 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    var affected = stmt.Affected();
+                    Console.WriteLine($"affected rows: {affected}");
+                    stmt.Dispose();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+Note: When using BindRow, you need to pay attention to the one-to-one correspondence between the original C# column type and the TDengine column type. For the specific correspondence, please refer to [TDengine DataType and C# DataType](#tdengine-datatype-vs-c-datatype).
+
+### Schemaless Writing
+
+Native Example
+
+```csharp
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace NativeSchemaless
+{
+    internal class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder =
+                new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                client.Exec("create database sml");
+                client.Exec("use sml");
+                var influxDBData =
+                    "st,t1=3i64,t2=4f64,t3=\"t3\" c1=3i64,c3=L\"passit\",c2=false,c4=4f64 1626006833639000000";
+                client.SchemalessInsert(new string[] { influxDBData },
+                    TDengineSchemalessProtocol.TSDB_SML_LINE_PROTOCOL,
+                    TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NANO_SECONDS, 0, ReqId.GetReqId());
+                var telnetData = "stb0_0 1626006833 4 host=host0 interface=eth0";
+                client.SchemalessInsert(new string[] { telnetData },
+                    TDengineSchemalessProtocol.TSDB_SML_TELNET_PROTOCOL,
+                    TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_MILLI_SECONDS, 0, ReqId.GetReqId());
+                var jsonData =
+                    "{\"metric\": \"meter_current\",\"timestamp\": 1626846400,\"value\": 10.3, \"tags\": {\"groupid\": 2, \"location\": \"California.SanFrancisco\", \"id\": \"d1001\"}}";
+                client.SchemalessInsert(new string[] { jsonData }, TDengineSchemalessProtocol.TSDB_SML_JSON_PROTOCOL,
+                    TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_MILLI_SECONDS, 0, ReqId.GetReqId());
+            }
+        }
+    }
+}
+```
+
+WebSocket Example
+
+```csharp
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace WSSchemaless
+{
+    internal class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder =
+                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                client.Exec("create database sml");
+                client.Exec("use sml");
+                var influxDBData =
+                    "st,t1=3i64,t2=4f64,t3=\"t3\" c1=3i64,c3=L\"passit\",c2=false,c4=4f64 1626006833639000000";
+                client.SchemalessInsert(new string[] { influxDBData },
+                    TDengineSchemalessProtocol.TSDB_SML_LINE_PROTOCOL,
+                    TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NANO_SECONDS, 0, ReqId.GetReqId());
+                var telnetData = "stb0_0 1626006833 4 host=host0 interface=eth0";
+                client.SchemalessInsert(new string[] { telnetData },
+                    TDengineSchemalessProtocol.TSDB_SML_TELNET_PROTOCOL,
+                    TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_MILLI_SECONDS, 0, ReqId.GetReqId());
+                var jsonData =
+                    "{\"metric\": \"meter_current\",\"timestamp\": 1626846400,\"value\": 10.3, \"tags\": {\"groupid\": 2, \"location\": \"California.SanFrancisco\", \"id\": \"d1001\"}}";
+                client.SchemalessInsert(new string[] { jsonData }, TDengineSchemalessProtocol.TSDB_SML_JSON_PROTOCOL,
+                    TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_MILLI_SECONDS, 0, ReqId.GetReqId());
+            }
+        }
+    }
+}
+```
+
+### Schemaless with reqId
+
+```csharp
+public void SchemalessInsert(string[] lines, TDengineSchemalessProtocol protocol,
+    TDengineSchemalessPrecision precision,
+    int ttl, long reqId)
+```
+
+### Data Subscription
+
+#### Create a Topic
+
+Native Example
+
+```csharp
+using System;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace NativeQuery
+{
+    internal class Query
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec("create database power");
+                    client.Exec("CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
+                    client.exec("CREATE TOPIC topic_meters as SELECT * from power.meters");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+WebSocket Example
+
+```csharp
+using System;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+
+namespace WSQuery
+{
+    internal class Query
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec("create database power");
+                    client.Exec("CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
+                    client.exec("CREATE TOPIC topic_meters as SELECT * from power.meters");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+#### Create a Consumer
+
+Native Example
+
+```csharp
+var cfg = new Dictionary<string, string>()
+{
+    { "group.id", "group1" },
+    { "auto.offset.reset", "latest" },
+    { "td.connect.ip", "127.0.0.1" },
+    { "td.connect.user", "root" },
+    { "td.connect.pass", "taosdata" },
+    { "td.connect.port", "6030" },
+    { "client.id", "tmq_example" },
+    { "enable.auto.commit", "true" },
+    { "msg.with.table.name", "false" },
+};
+var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+```
+
+WebSocket Example
+
+```csharp
+var cfg = new Dictionary<string, string>()
+{
+    { "td.connect.type", "WebSocket" },
+    { "group.id", "group1" },
+    { "auto.offset.reset", "latest" },
+    { "td.connect.ip", "ws://localhost:6041/rest/tmq" },
+    { "td.connect.user", "root" },
+    { "td.connect.pass", "taosdata" },
+    { "client.id", "tmq_example" },
+    { "enable.auto.commit", "true" },
+    { "msg.with.table.name", "false" },
+};
+var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+```
+
+The configuration parameters supported by consumer are as follows:
+* td.connect.type: connection type, optional value is Native or WebSocket, default is Native
+* td.connect.ip: The address of the TDengine running instance,
+  * When td.connect.type is WebSocket, td.connect.ip is the URL of TDengine WebSocket service, such as `ws://localhost:6041/rest/tmq`. If it contains special characters, URLEncoding is required.
+  * When td.connect.type is Native, td.connect.ip is the address of the TDengine running instance, such as `localhost`
+* td.connect.port: The port of the running instance of TDengine. The default is 6030. It is only valid when td.connect.type is Native.
+* td.connect.user: username to connect to TDengine
+* td.connect.pass: Password for connecting to TDengine
+* group.id: consumer group ID
+* client.id: consumer ID
+* enable.auto.commit: Whether to automatically commit offset, the default is true
+* auto.commit.interval.ms: The interval for automatically submitting offsets, the default is 5000 milliseconds
+* auto.offset.reset: When offset does not exist, where to start consumption, the optional value is earliest or latest, the default is latest
+* msg.with.table.name: Whether the message contains the table name
+
+#### Subscribe to consume data
+
+```csharp
+consumer.Subscribe(new List<string>() { "topic_meters" });
+while (true)
+{
+    using (var cr = consumer.Consume(500))
+    {
+        if (cr == null) continue;
+        foreach (var message in cr.Message)
+        {
+            Console.WriteLine(
+                $"message {{{((DateTime)message.Value["ts"]).ToString("yyyy-MM-dd HH:mm:ss.fff")}, " +
+                $"{message.Value["current"]}, {message.Value["voltage"]}, {message.Value["phase"]}}}");
+        }
+    }
+}
+```
+
+#### Assignment subscription Offset
+
+```csharp
+consumer.Assignment.ForEach(a =>
+{
+    Console.WriteLine($"{a}, seek to 0");
+    consumer.Seek(new TopicPartitionOffset(a.Topic, a.Partition, 0));
+    Thread.Sleep(TimeSpan.FromSeconds(1));
+});
+```
+
+#### Commit offset
+
+```csharp
+public void Commit(ConsumeResult<TValue> consumerResult)
+public List<TopicPartitionOffset> Commit()
+public void Commit(IEnumerable<TopicPartitionOffset> offsets)
+```
+
+#### Close subscriptions
+
+```csharp
+consumer.Unsubscribe();
+consumer.Close();
+```
+
+#### Full Sample Code
+
+Native Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+using TDengine.TMQ;
+
+namespace NativeSubscription
+{
+    internal class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec("CREATE DATABASE power");
+                    client.Exec("USE power");
+                    client.Exec(
+                        "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
+                    client.Exec("CREATE TOPIC topic_meters as SELECT * from power.meters");
+                    var cfg = new Dictionary<string, string>()
+                    {
+                        { "group.id", "group1" },
+                        { "auto.offset.reset", "latest" },
+                        { "td.connect.ip", "127.0.0.1" },
+                        { "td.connect.user", "root" },
+                        { "td.connect.pass", "taosdata" },
+                        { "td.connect.port", "6030" },
+                        { "client.id", "tmq_example" },
+                        { "enable.auto.commit", "true" },
+                        { "msg.with.table.name", "false" },
+                    };
+                    var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                    consumer.Subscribe(new List<string>() { "topic_meters" });
+                    Task.Run(InsertData);
+                    while (true)
+                    {
+                        using (var cr = consumer.Consume(500))
+                        {
+                            if (cr == null) continue;
+                            foreach (var message in cr.Message)
+                            {
+                                Console.WriteLine(
+                                    $"message {{{((DateTime)message.Value["ts"]).ToString("yyyy-MM-dd HH:mm:ss.fff")}, " +
+                                    $"{message.Value["current"]}, {message.Value["voltage"]}, {message.Value["phase"]}}}");
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+        
+        static void InsertData()
+        {
+            var builder = new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                while (true)
+                {
+                    client.Exec("INSERT into power.d1001 using power.meters tags(2,'California.SanFrancisco') values(now,11.5,219,0.30)");
+                    Task.Delay(1000).Wait();
+                }
+            }
+        }
+    }
+}
+```
+
+WebSocket Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using TDengine.Driver;
+using TDengine.Driver.Client;
+using TDengine.TMQ;
+
+namespace WSSubscription
+{
+    internal class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec("CREATE DATABASE power");
+                    client.Exec("USE power");
+                    client.Exec(
+                        "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
+                    client.Exec("CREATE TOPIC topic_meters as SELECT * from power.meters");
+                    var cfg = new Dictionary<string, string>()
+                    {
+                        { "td.connect.type", "WebSocket" },
+                        { "group.id", "group1" },
+                        { "auto.offset.reset", "latest" },
+                        { "td.connect.ip", "ws://localhost:6041/rest/tmq" },
+                        { "td.connect.user", "root" },
+                        { "td.connect.pass", "taosdata" },
+                        { "client.id", "tmq_example" },
+                        { "enable.auto.commit", "true" },
+                        { "msg.with.table.name", "false" },
+                    };
+                    var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                    consumer.Subscribe(new List<string>() { "topic_meters" });
+                    Task.Run(InsertData);
+                    while (true)
+                    {
+                        using (var cr = consumer.Consume(500))
+                        {
+                            if (cr == null) continue;
+                            foreach (var message in cr.Message)
+                            {
+                                Console.WriteLine(
+                                    $"message {{{((DateTime)message.Value["ts"]).ToString("yyyy-MM-dd HH:mm:ss.fff")}, " +
+                                    $"{message.Value["current"]}, {message.Value["voltage"]}, {message.Value["phase"]}}}");
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    throw;
+                }
+            }
+        }
+        
+        static void InsertData()
+        {
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            using (var client = DbDriver.Open(builder))
+            {
+                while (true)
+                {
+                    client.Exec("INSERT into power.d1001 using power.meters tags(2,'California.SanFrancisco') values(now,11.5,219,0.30)");
+                    Task.Delay(1000).Wait();
+                }
+            }
+        }
+    }
+}
+```
+
+### ADO.NET
+
+The C# connector supports the ADO.NET interface, and you can connect to the TDengine running instance through the ADO.NET interface to perform operations such as data writing and querying.
+
+Native Example
+
+```csharp
+using System;
+using TDengine.Data.Client;
+
+namespace NativeADO
+{
+    internal class Program
+    {
+        public static void Main(string[] args)
+        {
+            const string connectionString = "host=localhost;port=6030;username=root;password=taosdata";
+            using (var connection = new TDengineConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    using (var command = new TDengineCommand(connection))
+                    {
+                        command.CommandText = "create database power";
+                        command.ExecuteNonQuery();
+                        connection.ChangeDatabase("power");
+                        command.CommandText =
+                            "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))";
+                        command.ExecuteNonQuery();
+                        command.CommandText = "INSERT INTO " +
+                                              "power.d1001 USING power.meters TAGS(2,'California.SanFrancisco') " +
+                                              "VALUES " +
+                                              "(?,?,?,?)";
+                        var parameters = command.Parameters;
+                        parameters.Add(new TDengineParameter("@0", new DateTime(2023,10,03,14,38,05,000)));
+                        parameters.Add(new TDengineParameter("@1", (float)10.30000));
+                        parameters.Add(new TDengineParameter("@2", (int)219));
+                        parameters.Add(new TDengineParameter("@3", (float)0.31000));
+                        command.ExecuteNonQuery();
+                        command.Parameters.Clear();
+                        command.CommandText = "SELECT * FROM meters";
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                Console.WriteLine(
+                                    $"{((DateTime) reader.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {reader.GetValue(1)}, {reader.GetValue(2)}, {reader.GetValue(3)}, {reader.GetValue(4)}, {System.Text.Encoding.UTF8.GetString((byte[]) reader.GetValue(5))}");
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+WebSocket Example
+
+```csharp
+using System;
+using TDengine.Data.Client;
+
+namespace WSADO
+{
+    internal class Program
+    {
+        public static void Main(string[] args)
+        {
+            const string connectionString = "protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata";
+            using (var connection = new TDengineConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    using (var command = new TDengineCommand(connection))
+                    {
+                        command.CommandText = "create database power";
+                        command.ExecuteNonQuery();
+                        connection.ChangeDatabase("power");
+                        command.CommandText =
+                            "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))";
+                        command.ExecuteNonQuery();
+                        command.CommandText = "INSERT INTO " +
+                                              "power.d1001 USING power.meters TAGS(2,'California.SanFrancisco') " +
+                                              "VALUES " +
+                                              "(?,?,?,?)";
+                        var parameters = command.Parameters;
+                        parameters.Add(new TDengineParameter("@0", new DateTime(2023,10,03,14,38,05,000)));
+                        parameters.Add(new TDengineParameter("@1", (float)10.30000));
+                        parameters.Add(new TDengineParameter("@2", (int)219));
+                        parameters.Add(new TDengineParameter("@3", (float)0.31000));
+                        command.ExecuteNonQuery();
+                        command.Parameters.Clear();
+                        command.CommandText = "SELECT * FROM meters";
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                Console.WriteLine(
+                                    $"{((DateTime) reader.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {reader.GetValue(1)}, {reader.GetValue(2)}, {reader.GetValue(3)}, {reader.GetValue(4)}, {System.Text.Encoding.UTF8.GetString((byte[]) reader.GetValue(5))}");
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            }
+        }
+    }
+}
+```
+
+* The connection parameters are consistent with those in [Establishing a connection](#establishing-a-connection).
+* The name of TDengineParameter needs to start with @, such as @0, @1, @2, etc. The value needs to have a one-to-one correspondence between the C# column type and the TDengine column type. For the specific correspondence, please refer to [TDengine DataType and C# DataType](#tdengine-datatype-vs-c-datatype).

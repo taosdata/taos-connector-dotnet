@@ -55,6 +55,10 @@ namespace TDengineHelper
     {
         public static string PtrToStringUTF8(IntPtr ptr)
         {
+            if (ptr == IntPtr.Zero)
+            {
+                return string.Empty;
+            }
 #if NETSTANDARD2_1_OR_GREATER ||NET5_0_OR_GREATER||NETCOREAPP1_1_OR_GREATER
             return Marshal.PtrToStringUTF8(ptr);
 #else

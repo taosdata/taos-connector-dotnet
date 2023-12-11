@@ -63,7 +63,10 @@ namespace Function.Test.TMQ
             Tools.ExecuteUpdate(conn, createTopic, _output);
 
             // consumer
-            var consumer = new ConsumerBuilder(cfg).Build();
+            var consumerBuilder = new ConsumerBuilder<TMQResult>(cfg);
+            consumerBuilder.SetValueDeserializer(new ReferenceDeserializer<TMQResult>());
+            var consumer = consumerBuilder.Build();
+
             consumer.Subscribe(topic);
             List<string> subTopics = consumer.Subscription();
 
@@ -71,7 +74,7 @@ namespace Function.Test.TMQ
 
             for (int i = 0; i < 5; i++)
             {
-                using (ConsumeResult consumerResult = consumer.Consume(200))
+                using (ConsumeResult<TMQResult> consumerResult = consumer.Consume(200))
                 {
                     if (consumerResult == null)
                     {
@@ -79,35 +82,27 @@ namespace Function.Test.TMQ
                         continue;
                     }
 
-                    foreach (var kv in consumerResult.Message)
+                    for (int j = 0; j < consumerResult.Message.Count; j++)
                     {
+                        var b = j * 27;
+                        var v = consumerResult.Message[j].Value;
                         _output.WriteLine(" ======= consume {0} {1}", i, tableName);
-                        if (kv.TableName == tableName)
-                        {
-                            // assert meta
-                            for (int k = 0; k < expectResMeta.Count; k++)
-                            {
-                                Assert.Equal(expectResMeta[k].name, kv.Metas[k].name);
-                                Assert.Equal(expectResMeta[k].type, kv.Metas[k].type);
-                                Assert.Equal(expectResMeta[k].size, kv.Metas[k].size);
-                            }
-
-                            // assert data
-                            for (int j = 0; j < expectResData.Count; j++)
-                            {
-                                switch (kv.Datas[0][j])
-                                {
-                                    case DateTime val:
-                                        var ts = TDengineConstant.ConvertDatetimeToTick(val,
-                                            TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
-                                        Assert.Equal(expectResData[j], ts);
-                                        break;
-                                    default:
-                                        Assert.Equal(expectResData[j], kv.Datas[0][j]);
-                                        break;
-                                }
-                            }
-                        }
+                        var ts = TDengineConstant.ConvertDatetimeToTick(v.ts,
+                            TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                        Assert.Equal(expectResData[0 + b], ts);
+                        Assert.Equal(expectResData[1 + b], v.v1);
+                        Assert.Equal(expectResData[2 + b], v.v2);
+                        Assert.Equal(expectResData[3 + b], v.v4);
+                        Assert.Equal(expectResData[4 + b], v.v8);
+                        Assert.Equal(expectResData[5 + b], v.u1);
+                        Assert.Equal(expectResData[6 + b], v.u2);
+                        Assert.Equal(expectResData[7 + b], v.u4);
+                        Assert.Equal(expectResData[8 + b], v.u8);
+                        Assert.Equal(expectResData[9 + b], v.f4);
+                        Assert.Equal(expectResData[10 + b], v.f8);
+                        Assert.Equal(expectResData[11 + b], v.bin);
+                        Assert.Equal(expectResData[12 + b], v.nchr);
+                        Assert.Equal(expectResData[13 + b], v.b);
                     }
 
                     consumer.Commit(consumerResult);
@@ -196,7 +191,7 @@ namespace Function.Test.TMQ
 
 
             // consumer
-            var consumer = new ConsumerBuilder(cfg).Build();
+            var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
             consumer.Subscribe(topic);
             List<string> subTopics = consumer.Subscription();
 
@@ -204,101 +199,112 @@ namespace Function.Test.TMQ
 
             for (int i = 0; i < 5; i++)
             {
-                using (ConsumeResult consumerResult = consumer.Consume(200))
+                using (var consumeResult = consumer.Consume(200))
                 {
-                    if (consumerResult == null)
+                    if (consumeResult == null)
                     {
                         _output.WriteLine("======= consume {0} done", i);
                         continue;
                     }
 
-                    foreach (var kv in consumerResult.Message)
                     {
-                        var tmpMeta = kv.Metas;
-                        var tmpData = kv.Datas;
-                        switch (consumerResult.Topic)
+                        switch (consumeResult.Topic)
                         {
                             // if normal table 
                             case "topic_t1":
                                 _output.WriteLine("tmq_tb1");
-                                tmpMeta.ForEach(meta =>
+                                for (int j = 0; j < consumeResult.Message.Count; j++)
                                 {
-                                    Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[0][tmpMeta.IndexOf(meta)].name, meta.name);
-                                });
-                                for (int j = 0; j < tmpData[0].Count; j++)
-                                {
-                                    switch (tmpData[0][j])
-                                    {
-                                        case DateTime val:
-                                            var ts = TDengineConstant.ConvertDatetimeToTick(val,
-                                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
-                                            Assert.Equal(ts, expectResData[0][j]);
-                                            break;
-                                        default:
-                                            Assert.Equal(tmpData[0][j], expectResData[0][j]);
-                                            break;
-                                    }
+                                    var v = consumeResult.Message[j].Value;
+                                    var ts = TDengineConstant.ConvertDatetimeToTick((DateTime)v["ts"],
+                                        TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                                    Assert.Equal(expectResData[0][0], ts);
+                                    Assert.Equal(expectResData[0][1], v["v1"]);
+                                    Assert.Equal(expectResData[0][2], v["v2"]);
+                                    Assert.Equal(expectResData[0][3], v["v4"]);
+                                    Assert.Equal(expectResData[0][4], v["v8"]);
+                                    Assert.Equal(expectResData[0][5], v["u1"]);
+                                    Assert.Equal(expectResData[0][6], v["u2"]);
+                                    Assert.Equal(expectResData[0][7], v["u4"]);
+                                    Assert.Equal(expectResData[0][8], v["u8"]);
+                                    Assert.Equal(expectResData[0][9], v["f4"]);
+                                    Assert.Equal(expectResData[0][10], v["f8"]);
+                                    Assert.Equal(expectResData[0][11], v["bin"]);
+                                    Assert.Equal(expectResData[0][12], v["nchr"]);
+                                    Assert.Equal(expectResData[0][13], v["b"]);
                                 }
 
                                 break;
                             // if stable
                             case "topic_t2":
                                 _output.WriteLine("tmq_tb2_s1");
-                                tmpMeta.ForEach(meta =>
+                                for (int j = 0; j < consumeResult.Message.Count; j++)
                                 {
-                                    Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[1][tmpMeta.IndexOf(meta)].name, meta.name);
-                                });
-                                for (int j = 0; j < expectResData[1].Count; j++)
-                                {
-                                    switch (tmpData[0][j])
-                                    {
-                                        case DateTime val:
-                                            var ts = TDengineConstant.ConvertDatetimeToTick(val,
-                                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
-                                            Assert.Equal(ts, expectResData[1][j]);
-                                            break;
-                                        default:
-                                            Assert.Equal(tmpData[0][j], expectResData[1][j]);
-                                            break;
-                                    }
+                                    var v = consumeResult.Message[j].Value;
+                                    var ts = TDengineConstant.ConvertDatetimeToTick((DateTime)v["ts"],
+                                        TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                                    Assert.Equal(expectResData[1][0], ts);
+                                    Assert.Equal(expectResData[1][1], v["v1"]);
+                                    Assert.Equal(expectResData[1][2], v["v2"]);
+                                    Assert.Equal(expectResData[1][3], v["v4"]);
+                                    Assert.Equal(expectResData[1][4], v["v8"]);
+                                    Assert.Equal(expectResData[1][5], v["u1"]);
+                                    Assert.Equal(expectResData[1][6], v["u2"]);
+                                    Assert.Equal(expectResData[1][7], v["u4"]);
+                                    Assert.Equal(expectResData[1][8], v["u8"]);
+                                    Assert.Equal(expectResData[1][9], v["f4"]);
+                                    Assert.Equal(expectResData[1][10], v["f8"]);
+                                    Assert.Equal(expectResData[1][11], v["bin"]);
+                                    Assert.Equal(expectResData[1][12], v["nchr"]);
+                                    Assert.Equal(expectResData[1][13], v["b"]);
+                                    Assert.Equal(expectResData[1][14], v["bo"]);
+                                    Assert.Equal(expectResData[1][15], v["tt"]);
+                                    Assert.Equal(expectResData[1][16], v["si"]);
+                                    Assert.Equal(expectResData[1][17], v["ii"]);
+                                    Assert.Equal(expectResData[1][18], v["bi"]);
+                                    Assert.Equal(expectResData[1][19], v["tu"]);
+                                    Assert.Equal(expectResData[1][20], v["su"]);
+                                    Assert.Equal(expectResData[1][21], v["iu"]);
+                                    Assert.Equal(expectResData[1][22], v["bu"]);
+                                    Assert.Equal(expectResData[1][23], v["ff"]);
+                                    Assert.Equal(expectResData[1][24], v["dd"]);
+                                    Assert.Equal(expectResData[1][25], v["bb"]);
+                                    Assert.Equal(expectResData[1][26], v["nc"]);
                                 }
 
                                 break;
                             // if JSON table
                             case "topic_j1":
                                 _output.WriteLine("tmq_jb1_j1");
-                                tmpMeta.ForEach(meta =>
+                                for (int j = 0; j < consumeResult.Message.Count; j++)
                                 {
-                                    Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
-                                    Assert.Equal(expectResMeta[2][tmpMeta.IndexOf(meta)].name, meta.name);
-                                });
-                                for (int j = 0; j < expectResData[2].Count; j++)
-                                {
-                                    switch (tmpData[0][j])
-                                    {
-                                        case DateTime val:
-                                            var ts = TDengineConstant.ConvertDatetimeToTick(val,
-                                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
-                                            Assert.Equal(ts, expectResData[2][j]);
-                                            break;
-                                        default:
-                                            Assert.Equal(tmpData[0][j], expectResData[2][j]);
-                                            break;
-                                    }
+                                    var v = consumeResult.Message[j].Value;
+                                    var ts = TDengineConstant.ConvertDatetimeToTick((DateTime)v["ts"],
+                                        TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                                    Assert.Equal(expectResData[2][0], ts);
+                                    Assert.Equal(expectResData[2][1], v["v1"]);
+                                    Assert.Equal(expectResData[2][2], v["v2"]);
+                                    Assert.Equal(expectResData[2][3], v["v4"]);
+                                    Assert.Equal(expectResData[2][4], v["v8"]);
+                                    Assert.Equal(expectResData[2][5], v["u1"]);
+                                    Assert.Equal(expectResData[2][6], v["u2"]);
+                                    Assert.Equal(expectResData[2][7], v["u4"]);
+                                    Assert.Equal(expectResData[2][8], v["u8"]);
+                                    Assert.Equal(expectResData[2][9], v["f4"]);
+                                    Assert.Equal(expectResData[2][10], v["f8"]);
+                                    Assert.Equal(expectResData[2][11], v["bin"]);
+                                    Assert.Equal(expectResData[2][12], v["nchr"]);
+                                    Assert.Equal(expectResData[2][13], v["b"]);
+                                    Assert.Equal(expectResData[2][14], v["json_tag"]);
                                 }
 
                                 break;
                             default:
-                                throw new Exception($"Unexpected table name {kv.TableName}");
+                                throw new Exception($"Unexpected table name {consumeResult.Topic}");
                         }
                     }
 
-                    consumer.Commit(consumerResult);
+                    consumer.Commit(consumeResult);
 
                     _output.WriteLine("======= consume {0} done", i);
                 }
@@ -314,5 +320,23 @@ namespace Function.Test.TMQ
 
             consumer.Close();
         }
+    }
+
+    public class TMQResult
+    {
+        public DateTime ts { get; set; }
+        public sbyte v1 { get; set; }
+        public short v2 { get; set; }
+        public int v4 { get; set; }
+        public long v8 { get; set; }
+        public byte u1 { get; set; }
+        public ushort u2 { get; set; }
+        public uint u4 { get; set; }
+        public ulong u8 { get; set; }
+        public float f4 { get; set; }
+        public double f8 { get; set; }
+        public byte[] bin { get; set; }
+        public string nchr { get; set; }
+        public bool b { get; set; }
     }
 }

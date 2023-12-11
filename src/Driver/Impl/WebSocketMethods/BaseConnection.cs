@@ -170,7 +170,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 cts.CancelAfter(_readTimeout);
                 using (MemoryStream memoryStream = new MemoryStream())
                 {
-                    int bufferSize = 1024 * 1024 * 4;
+                    int bufferSize = 1024 * 4;
                     byte[] buffer = new byte[bufferSize];
                     WebSocketReceiveResult result;
 

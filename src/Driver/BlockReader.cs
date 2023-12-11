@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.VisualBasic;
 
 namespace TDengine.Driver
 {
@@ -22,29 +23,36 @@ namespace TDengine.Driver
         private int _headerOffset;
         private int _nullBitMapOffset;
 
-        private readonly int[] _colHeadOffset;
+        private int _precision;
+        private int[] _colHeadOffset;
+        private  int _cols;
+        private  byte[] _colType;
+        private  TimeZoneInfo _tz;
+        
         private readonly int _offset;
-        private readonly int _precision;
-        private readonly int _cols;
-        private readonly byte[] _colType;
-        private readonly TimeZoneInfo _tz;
         private readonly bool _disableParseTime;
+        
 
         private readonly Dictionary<TDengineDataType, Func<int, int, object>> _methodMap =
             new Dictionary<TDengineDataType, Func<int, int, object>>();
 
 
-        public BlockReader(int offset, int cols, int precision, byte[] colType, TimeZoneInfo tz =default)
+        public BlockReader(int offset, int cols, int precision, byte[] colType, TimeZoneInfo tz =default): this(offset,tz)
         {
-            _offset = offset;
             _cols = cols;
             _precision = precision;
             _colHeadOffset = new int[cols];
             _colType = colType;
+        }
+
+        public BlockReader(int offset,TimeZoneInfo tz = default)
+        {
+            _offset = offset;
             if (tz == default)
             {
                 tz = TimeZoneInfo.Local;
             }
+
             _tz = tz;
             _methodMap[TDengineDataType.TSDB_DATA_TYPE_BOOL] = ConvertBool;
             _methodMap[TDengineDataType.TSDB_DATA_TYPE_TINYINT] = ConvertTinyint;
@@ -61,8 +69,8 @@ namespace TDengine.Driver
             _methodMap[TDengineDataType.TSDB_DATA_TYPE_UINT] = ConvertUInt;
             _methodMap[TDengineDataType.TSDB_DATA_TYPE_UBIGINT] = ConvertUBigInt;
             _methodMap[TDengineDataType.TSDB_DATA_TYPE_JSONTAG] = ConvertJson;
+            
         }
-
         public BlockReader(int offset, int cols, byte[] colType):this(offset,cols,0,colType)
         {
             _disableParseTime = true;
@@ -77,7 +85,7 @@ namespace TDengine.Driver
 
         private Int32 GetBlockSize(IntPtr pBlock)
         {
-            return Marshal.ReadInt32(pBlock + RawBlockLengthOffset);
+            return Marshal.ReadInt32(pBlock + _offset + RawBlockLengthOffset);
         }
 
         public void SetBlock(byte[] block, int rows)
@@ -101,6 +109,47 @@ namespace TDengine.Driver
                     _colHeadOffset[i + 1] = _colHeadOffset[i] + _nullBitMapOffset + colLength;
                 }
             }
+        }
+
+        public void SetTMQBlock(byte[] block,int precision)
+        {
+            _block = block;
+            _rows = GetRowCount();
+            _precision = precision;
+            _cols = GetColumnCount();
+            _colHeadOffset = new int[_cols];
+            _colType = GetColTypes();
+            SetBlock(_block,_rows);
+        }
+
+        private int GetColumnCount()
+        {
+            return BitConverter.ToInt32(_block, _offset + NumOfColsOffset);
+        }
+
+        private int GetRowCount()
+        {
+            return BitConverter.ToInt32(_block, _offset + NumOfRowsOffset);
+        }
+
+        private byte[] GetColTypes()
+        {
+            var cols = GetColumnCount();
+            var result = new byte[cols];
+            for (int i = 0; i < cols; i++)
+            {
+                result[i] = _block[_offset + ColInfoOffset + i * ColInfoSize];
+            }
+
+            return result;
+        }
+        
+        public void SetTMQBlock(IntPtr pBlock, int precision)
+        {
+            var blockSize = GetBlockSize(pBlock);
+            byte[] dataArray = new byte[blockSize];
+            Marshal.Copy(pBlock, dataArray, 0, blockSize);
+            SetTMQBlock(dataArray,precision);
         }
 
         private bool ItemIsNull(int headOffset, int row) =>

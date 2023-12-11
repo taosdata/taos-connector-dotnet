@@ -53,7 +53,7 @@ namespace TDengine.Driver.Client.Native
             var result = NativeMethods.QueryWithReqid(_conn, query, reqId);
             CheckError(result);
             var isUpdate = NativeMethods.IsUpdateQuery(result);
-            if (!isUpdate) return new NativeRows(result, _tz,false);
+            if (isUpdate == 0) return new NativeRows(result, _tz, false);
             var affectRows = NativeMethods.AffectRows(result);
             NativeMethods.FreeResult(result);
             return new NativeRows(affectRows);
@@ -87,13 +87,13 @@ namespace TDengine.Driver.Client.Native
                 throw new TDengineError(errno, NativeMethods.Error(result));
             }
         }
-        
+
         private void CheckError(IntPtr result)
         {
             var errNo = NativeMethods.ErrorNo(result);
             if (errNo != 0)
             {
-                var error=  new TDengineError(errNo, NativeMethods.Error(result));
+                var error = new TDengineError(errNo, NativeMethods.Error(result));
                 NativeMethods.FreeResult(result);
                 throw error;
             }

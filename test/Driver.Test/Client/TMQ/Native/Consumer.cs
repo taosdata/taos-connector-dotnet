@@ -82,7 +82,7 @@ namespace Driver.Test.Client.TMQ.Native
                         { "msg.with.table.name", "true" },
                     };
 
-                    var consumer = new ConsumerBuilder(cfg).Build();
+                    var consumer = new ConsumerBuilder<Dictionary<string,object>>(cfg).Build();
                     consumer.Subscribe("test_tmq_common");
                     var assignment = consumer.Assignment;
                     Assert.Equal(2, assignment.Count);
@@ -113,7 +113,7 @@ namespace Driver.Test.Client.TMQ.Native
                             {
                                 messageCount += 1;
                                 _output.WriteLine(message.TableName);
-                                _output.WriteLine(message.Datas.ToString());
+                                _output.WriteLine(message.Value.ToString());
                             }
 
                             consumer.Commit(new List<TopicPartitionOffset>
@@ -210,7 +210,7 @@ namespace Driver.Test.Client.TMQ.Native
                         { "msg.with.table.name", "true" },
                     };
 
-                    var consumer = new ConsumerBuilder(cfg).Build();
+                    var consumer = new ConsumerBuilder<Dictionary<string,object>>(cfg).Build();
                     consumer.Subscribe("test_tmq_seek");
                     var assignment = consumer.Assignment;
                     Assert.Equal(2, assignment.Count);
@@ -242,7 +242,7 @@ namespace Driver.Test.Client.TMQ.Native
                             {
                                 messageCount += 1;
                                 _output.WriteLine(message.TableName);
-                                _output.WriteLine(message.Datas.ToString());
+                                _output.WriteLine(message.Value.ToString());
                             }
 
                             consumer.Commit(new List<TopicPartitionOffset>
@@ -282,7 +282,7 @@ namespace Driver.Test.Client.TMQ.Native
                             {
                                 messageCount += 1;
                                 _output.WriteLine(message.TableName);
-                                _output.WriteLine(message.Datas.ToString());
+                                _output.WriteLine(message.Value.ToString());
                             }
 
                             consumer.Commit(new List<TopicPartitionOffset>
@@ -381,7 +381,7 @@ namespace Driver.Test.Client.TMQ.Native
                         { "msg.with.table.name", "true" },
                     };
 
-                    var consumer = new ConsumerBuilder(cfg).Build();
+                    var consumer = new ConsumerBuilder<Dictionary<string,object>>(cfg).Build();
                     consumer.Subscribe("test_tmq_commit");
                     var assignment = consumer.Assignment;
                     Assert.Equal(2, assignment.Count);
@@ -413,7 +413,7 @@ namespace Driver.Test.Client.TMQ.Native
                             {
                                 messageCount += 1;
                                 _output.WriteLine(message.TableName);
-                                _output.WriteLine(message.Datas.ToString());
+                                _output.WriteLine(message.Value.ToString());
                             }
 
                             var committed = consumer.Commit();

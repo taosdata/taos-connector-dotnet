@@ -2,14 +2,22 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using TDengine.Driver;
+using TDengine.Driver.Client.Native;
 using TDengine.Driver.Impl.NativeMethods;
 using TDengineHelper;
 
 namespace TDengine.TMQ.Native
 {
-    internal class Consumer : IConsumer
+    internal class Consumer<TValue> : IConsumer<TValue>
     {
         private IntPtr _consumer = IntPtr.Zero;
+
+        private IDeserializer<TValue> valueDeserializer;
+
+        private Dictionary<Type, object> defaultDeserializers = new Dictionary<Type, object>
+        {
+            { typeof(Dictionary<string, object>), DictionaryDeserializer.Dictionary },
+        };
 
         private void NullReferenceHandler(IntPtr ptr)
         {
@@ -36,11 +44,25 @@ namespace TDengine.TMQ.Native
             }
         }
 
-        public Consumer(ConsumerBuilder builder)
+        public Consumer(ConsumerBuilder<TValue> builder)
         {
             var confPtr = NativeMethods.TmqConfNew();
             NullReferenceHandler(confPtr);
             ConfSet(confPtr, builder.Config);
+            if (builder.ValueDeserializer == null)
+            {
+                if (!defaultDeserializers.TryGetValue(typeof(TValue), out object deserializer))
+                {
+                    throw new InvalidOperationException(
+                        $"Value deserializer was not specified and there is no default deserializer defined for type {typeof(TValue).Name}.");
+                }
+
+                this.valueDeserializer = (IDeserializer<TValue>)deserializer;
+            }
+            else
+            {
+                this.valueDeserializer = builder.ValueDeserializer;
+            }
 
             int errStringLength = 256;
             IntPtr errStrPtr = Marshal.AllocHGlobal(errStringLength);
@@ -52,7 +74,7 @@ namespace TDengine.TMQ.Native
                 {
                     // read Error string 
                     string errStr = StringHelper.PtrToStringUTF8(errStrPtr, errStringLength);
-                    throw  new TDengineError(-1,$"Create new Consumer failed, reason:{errStr}");
+                    throw new TDengineError(-1, $"Create new Consumer failed, reason:{errStr}");
                 }
             }
             finally
@@ -68,7 +90,7 @@ namespace TDengine.TMQ.Native
         private void ErrorHandler(string errMsg, int code)
         {
             string errStr = StringHelper.PtrToStringUTF8(NativeMethods.TmqErr2Str(code));
-            throw new TDengineError(code,$"TDengine TMQ Error:{errMsg} failed,reason:{errStr} \t code: {code}");
+            throw new TDengineError(code, $"TDengine TMQ Error:{errMsg} failed,reason:{errStr} \t code: {code}");
         }
 
         public List<string> Subscription()
@@ -113,7 +135,7 @@ namespace TDengine.TMQ.Native
 
         public Offset Position(TopicPartition partition)
         {
-            var offset =  (Offset)NativeMethods.TmqPosition(_consumer, partition.Topic, partition.Partition);
+            var offset = (Offset)NativeMethods.TmqPosition(_consumer, partition.Topic, partition.Partition);
             if (offset < 0 && !offset.IsSpecial)
             {
                 ErrorHandler("tmq_position", (int)offset);
@@ -131,7 +153,7 @@ namespace TDengine.TMQ.Native
             }
         }
 
-        public ConsumeResult Consume(int millisecondsTimeout)
+        public ConsumeResult<TValue> Consume(int millisecondsTimeout)
         {
             NullReferenceHandler(_consumer);
             IntPtr message = NativeMethods.TmqConsumerPoll(_consumer, millisecondsTimeout);
@@ -142,83 +164,33 @@ namespace TDengine.TMQ.Native
                 return null;
             }
 
-            IntPtr numOfRowsPrt = Marshal.AllocHGlobal(sizeof(Int32));
-            IntPtr pDataPtr = Marshal.AllocHGlobal(IntPtr.Size);
-            IntPtr pData;
-            TMQ_RES type = (TMQ_RES)NativeMethods.TmqGetResType(message);
-            string topic = StringHelper.PtrToStringUTF8(NativeMethods.TmqGetTopicName(message));
-            int vGourpId = NativeMethods.TmqGetVgroupId(message);
-            
-            long offset = NativeMethods.TmqGetVgroupOffset(message);
-            ConsumeResult consumeResult = new ConsumeResult(message, topic, vGourpId, offset, type);
-
-            if (NeedGetData(type))
+            try
             {
-                try
+                TMQ_RES type = (TMQ_RES)NativeMethods.TmqGetResType(message);
+                string topic = StringHelper.PtrToStringUTF8(NativeMethods.TmqGetTopicName(message));
+                int vGourpId = NativeMethods.TmqGetVgroupId(message);
+
+                long offset = NativeMethods.TmqGetVgroupOffset(message);
+                ConsumeResult<TValue> consumeResult =
+                    new ConsumeResult<TValue>(topic, vGourpId, offset, type);
+                if (NeedGetData(type))
                 {
-                    while (true)
-                    {
-                        var dataMessage = new TmqMessage();
-                        int code = NativeMethods.FetchRawBlock(message, numOfRowsPrt, pDataPtr);
-
-                        if (code != 0)
-                        {
-                            ErrorHandler($"TMQ fetch_raw_block failed",code);
-                        }
-                        string table = StringHelper.PtrToStringUTF8(NativeMethods.TmqGetTableName(message));
-                        if (!string.IsNullOrEmpty(table))
-                        {
-                            dataMessage.TableName = table;
-                        }
-                        
-                        int numOfRows = Marshal.ReadInt32(numOfRowsPrt);
-                        int numOfFields = NativeMethods.FieldCount(message);
-                        var precision = NativeMethods.ResultPrecision(message);
-                        pData = Marshal.ReadIntPtr(pDataPtr);
-
-                        if (numOfRows == 0)
-                        {
-                            break;
-                        }
-
-                        if (numOfRows < 0)
-                        {
-                            ErrorHandler("TMQ fetch_raw_block failed", numOfRows);
-                        }
-                        List<TDengineMeta> metaList = NativeMethods.FetchFields(message);
-                        var types = new byte[metaList.Count];
-                        for (int i = 0; i < metaList.Count; i++)
-                        {
-                            types[i] = metaList[i].type;
-                        }
-
-                        var data = new List<List<object>>(numOfRows);
-                        var br = new BlockReader(0, numOfFields, precision, types, TimeZoneInfo.Local);
-                        br.SetBlockPtr(pData,numOfRows);
-                        
-                        for (int rowIndex = 0; rowIndex < numOfRows; rowIndex++)
-                        {
-                            List<Object> dataRow = new List<object>(numOfFields);
-                            for (int colIndex = 0; colIndex < numOfFields; colIndex++)
-                            {
-                                dataRow.Add(br.Read(rowIndex, colIndex));
-                            }
-                            data.Add(dataRow);
-                        }
-
-                        dataMessage.Datas = data;
-                        dataMessage.Metas = metaList;
-                        consumeResult.Message.Add(dataMessage);
+                    var result = new TMQNativeRows(message, TimeZoneInfo.Local);
+                    while (result.Read())
+                    { 
+                        var value = this.valueDeserializer.Deserialize(result, false, null);
+                        consumeResult.Message.Add(new TmqMessage<TValue> { Value = value, TableName = result.TableName });
                     }
+
                     return consumeResult;
                 }
-                finally
-                {
-                    Marshal.FreeHGlobal(numOfRowsPrt);
-                    Marshal.FreeHGlobal(pDataPtr);
-                }
+
+                return null;
             }
-            return null;
+            finally
+            {
+                NativeMethods.FreeResult(message);
+            }
         }
 
         private bool NeedGetData(TMQ_RES type)
@@ -286,6 +258,7 @@ namespace TDengine.TMQ.Native
             {
                 ErrorHandler("tmq_list_append", code);
             }
+
             NativeMethods.TmqListDestroy(topicPtr);
         }
 
@@ -299,11 +272,12 @@ namespace TDengine.TMQ.Native
             }
         }
 
-        public void Commit(ConsumeResult consumerResult)
+        public void Commit(ConsumeResult<TValue> consumerResult)
         {
             NullReferenceHandler(_consumer);
             int code;
-            if ((code = NativeMethods.TmqCommitSync(_consumer, consumerResult.ResultPtr)) != 0)
+            if ((code = NativeMethods.TmqCommitOffsetSync(_consumer, consumerResult.Topic, consumerResult.Partition,
+                    consumerResult.Offset)) != 0)
             {
                 ErrorHandler("Sync Commit", code);
             }

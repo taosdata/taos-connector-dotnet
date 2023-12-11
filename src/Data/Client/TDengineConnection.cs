@@ -23,7 +23,7 @@ namespace TDengine.Data.Client
 
         protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void ChangeDatabase(string databaseName)

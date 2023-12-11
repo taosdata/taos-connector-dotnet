@@ -160,6 +160,10 @@ namespace TDengine.Driver.Client.Websocket
             _completed = fetchResult.Completed;
             _blockSize = fetchResult.Rows;
             _currentRow = 0;
+            if (_completed)
+            {
+                return;
+            }
             _block = _connection.FetchBlock(_resultId);
             _blockReader.SetBlock(_block, _blockSize);
         }

@@ -19,12 +19,6 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             _db = db;
         }
 
-        public Connection(string addr, string db, TimeSpan connectTimeout = default, TimeSpan readTimeout = default,
-            TimeSpan writeTimeout = default) : base(addr, connectTimeout, readTimeout, writeTimeout)
-        {
-            _db = db;
-        }
-
         public void Connect()
         {
             SendJsonBackJson<WSConnReq, WSConnResp>(WSAction.Conn, new WSConnReq

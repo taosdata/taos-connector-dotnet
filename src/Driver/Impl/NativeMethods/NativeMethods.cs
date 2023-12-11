@@ -216,7 +216,7 @@ namespace TDengine.Driver.Impl.NativeMethods
 
         //bool taos_is_update_query(TAOS_RES *res);
         [DllImport(DLLName, EntryPoint = "taos_is_update_query", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool IsUpdateQuery(IntPtr res);
+        public static extern byte IsUpdateQuery(IntPtr res);
 
         //int taos_validate_sql(TAOS *taos, const char *sql);
         [DllImport(DLLName, EntryPoint = "taos_validate_sql", CallingConvention = CallingConvention.Cdecl)]

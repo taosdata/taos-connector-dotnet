@@ -13,16 +13,8 @@ namespace TDengine.Driver.Client.Websocket
         {
             Debug.Assert(builder.Protocol == TDengineConstant.ProtocolWebSocket);
             _tz = builder.Timezone;
-            if (string.IsNullOrEmpty(builder.Token))
-            {
-                _connection = new Connection(builder.Host, builder.Username, builder.Password,
-                    builder.Database, builder.ConnTimeout, builder.ReadTimeout, builder.WriteTimeout);
-            }
-            else
-            {
-                _connection = new Connection(builder.Host, builder.Database, builder.ConnTimeout, builder.ReadTimeout,
-                    builder.WriteTimeout);
-            }
+            _connection = new Connection(builder.Host, builder.Username, builder.Password,
+                builder.Database, builder.ConnTimeout, builder.ReadTimeout, builder.WriteTimeout);
 
             _connection.Connect();
         }
@@ -44,7 +36,7 @@ namespace TDengine.Driver.Client.Websocket
         public IStmt StmtInit(long reqId)
         {
             var resp = _connection.StmtInit((ulong)reqId);
-            return new WSStmt(resp.StmtId, _tz,_connection);
+            return new WSStmt(resp.StmtId, _tz, _connection);
         }
 
         public IRows Query(string query)
@@ -59,6 +51,7 @@ namespace TDengine.Driver.Client.Websocket
             {
                 return new WSRows(resp.AffectedRows);
             }
+
             return new WSRows(resp, _connection, _tz);
         }
 

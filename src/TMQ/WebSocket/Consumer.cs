@@ -3,22 +3,44 @@ using System.Collections.Generic;
 using TDengine.Driver;
 using TDengine.Driver.Impl.WebSocketMethods;
 using TDengine.Driver.Impl.WebSocketMethods.Protocol;
+using TDengineHelper;
 
 namespace TDengine.TMQ.WebSocket
 {
-    public class Consumer : IConsumer
+    public class Consumer<TValue> : IConsumer<TValue>
     {
         private readonly TMQOptions _options;
         private readonly TMQConnection _connection;
         private ulong _lastMessageId;
 
-        public Consumer(ConsumerBuilder builder)
+        private IDeserializer<TValue> valueDeserializer;
+
+        private Dictionary<Type, object> defaultDeserializers = new Dictionary<Type, object>
+        {
+            { typeof(Dictionary<string, object>), DictionaryDeserializer.Dictionary },
+        };
+
+        public Consumer(ConsumerBuilder<TValue> builder)
         {
             _options = new TMQOptions(builder.Config);
             _connection = new TMQConnection(_options.TDConnectIp);
+            if (builder.ValueDeserializer == null)
+            {
+                if (!defaultDeserializers.TryGetValue(typeof(TValue), out object deserializer))
+                {
+                    throw new InvalidOperationException(
+                        $"Value deserializer was not specified and there is no default deserializer defined for type {typeof(TValue).Name}.");
+                }
+
+                this.valueDeserializer = (IDeserializer<TValue>)deserializer;
+            }
+            else
+            {
+                this.valueDeserializer = builder.ValueDeserializer;
+            }
         }
 
-        public ConsumeResult Consume(int millisecondsTimeout)
+        public ConsumeResult<TValue> Consume(int millisecondsTimeout)
         {
             var resp = _connection.Poll(millisecondsTimeout);
             if (!resp.HaveMessage)
@@ -26,52 +48,15 @@ namespace TDengine.TMQ.WebSocket
                 return null;
             }
 
-            var consumeResult = new ConsumeResult(resp.MessageId, resp.Topic, resp.VgroupId, resp.Offset,
+            var consumeResult = new ConsumeResult<TValue>(resp.MessageId, resp.Topic, resp.VgroupId, resp.Offset,
                 (TMQ_RES)resp.MessageType);
             _lastMessageId = resp.MessageId;
             if (!NeedGetData((TMQ_RES)resp.MessageType)) return null;
-            while (true)
+            var result = new TMQWSRows(resp, _connection, TimeZoneInfo.Local);
+            while (result.Read())
             {
-                var dataMessage = new TmqMessage();
-                var fetchResp = _connection.Fetch(resp.MessageId);
-                if (fetchResp.Completed)
-                {
-                    break;
-                }
-
-                List<TDengineMeta> metaList = new List<TDengineMeta>(fetchResp.FieldsCount);
-                for (int i = 0; i < fetchResp.FieldsCount; i++)
-                {
-                    var meta = new TDengineMeta
-                    {
-                        name = fetchResp.FieldsNames[i],
-                        type = fetchResp.FieldsTypes[i],
-                        size = (int)fetchResp.FieldsLengths[i]
-                    };
-                    metaList.Add(meta);
-                }
-
-                var block = _connection.FetchBlock(resp.MessageId);
-                var data = new List<List<object>>(fetchResp.Rows);
-                var br = new BlockReader(24, fetchResp.FieldsCount, fetchResp.Precision,
-                    fetchResp.FieldsTypes.ToArray(), TimeZoneInfo.Local);
-                br.SetBlock(block, fetchResp.Rows);
-
-                for (int rowIndex = 0; rowIndex < fetchResp.Rows; rowIndex++)
-                {
-                    List<Object> dataRow = new List<object>(fetchResp.FieldsCount);
-                    for (int colIndex = 0; colIndex < fetchResp.FieldsCount; colIndex++)
-                    {
-                        dataRow.Add(br.Read(rowIndex, colIndex));
-                    }
-
-                    data.Add(dataRow);
-                }
-
-                dataMessage.Datas = data;
-                dataMessage.Metas = metaList;
-                dataMessage.TableName = fetchResp.TableName;
-                consumeResult.Message.Add(dataMessage);
+                var value = this.valueDeserializer.Deserialize(result, false, null);
+                consumeResult.Message.Add(new TmqMessage<TValue> { Value = value, TableName = result.TableName });
             }
 
             return consumeResult;
@@ -117,7 +102,7 @@ namespace TDengine.TMQ.WebSocket
             _connection.Unsubscribe();
         }
 
-        public void Commit(ConsumeResult consumerResult)
+        public void Commit(ConsumeResult<TValue> consumerResult)
         {
             _connection.Commit(consumerResult.MessageId);
         }

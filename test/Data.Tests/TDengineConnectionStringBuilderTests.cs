@@ -33,13 +33,12 @@ namespace Data.Tests
         [Fact]
         public void Parse()
         {
-            var builder = new TDengineConnectionStringBuilder("host=127.0.0.1;port=6030;username=root;password=taosdata;protocol=Native;db=test;token=tk");
+            var builder = new TDengineConnectionStringBuilder("host=127.0.0.1;port=6030;username=root;password=taosdata;protocol=Native;db=test");
             Assert.Equal("127.0.0.1",builder.Host);
             Assert.Equal(6030,builder.Port);
             Assert.Equal("root",builder.Username);
             Assert.Equal("taosdata",builder.Password);
             Assert.Equal("test",builder.Database);
-            Assert.Equal("tk",builder.Token);
             Assert.Equal(TDengineConstant.ProtocolNative,builder.Protocol);
             builder.Clear();
             Assert.Equal(string.Empty,builder.Host);
@@ -47,7 +46,6 @@ namespace Data.Tests
             Assert.Equal(string.Empty,builder.Username);
             Assert.Equal(string.Empty,builder.Password);
             Assert.Equal(string.Empty,builder.Database);
-            Assert.Equal(string.Empty,builder.Token);
             Assert.Equal(TDengineConstant.ProtocolNative,builder.Protocol);
             builder.Database = "test2";
             Assert.Equal("test2",builder.Database);
