@@ -135,7 +135,7 @@ namespace Driver.Test.Client.WS
 
             var builder =
                 new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=ws://localhost:6041/rest/ws;username=root;password=taosdata");
+                    "protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -234,7 +234,7 @@ namespace Driver.Test.Client.WS
 
             var builder =
                 new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=ws://localhost:6041/rest/ws;username=root;password=taosdata");
+                    "protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try

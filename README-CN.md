@@ -90,7 +90,7 @@ using (var client = DbDriver.Open(builder))
 WebSocket 连接
 
 ```csharp
-new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/rest/ws;username=root;password=taosdata");
+new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
 using (var client = DbDriver.Open(builder))
 {
     Console.WriteLine("connected")

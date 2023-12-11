@@ -22,7 +22,7 @@ namespace Driver.Test.Client.TMQ.WS
         public void NewConsumerTest()
         {
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/rest/ws;username=root;password=taosdata");
+                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -155,7 +155,7 @@ namespace Driver.Test.Client.TMQ.WS
         public void ConsumerSeekTest()
         {
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/rest/ws;username=root;password=taosdata");
+                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -326,7 +326,7 @@ namespace Driver.Test.Client.TMQ.WS
         public void ConsumerCommitTest()
         {
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/rest/ws;username=root;password=taosdata");
+                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
