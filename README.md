@@ -57,7 +57,7 @@ Note TDengine no longer supports 32-bit Windows platforms.
 
 * Install [.NET SDK](https://dotnet.microsoft.com/download)
 * [Nuget Client](https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools) (optional installation)
-* Install the TDengine client driver. For specific steps, please refer to [Installing the client driver](https://docs.taosdata.com/develop/connect/#%E5%AE%89%E8%A3%85%E5%AE% A2%E6%88%B7%E7%AB%AF%E9%A9%B1%E5%8A%A8-taosc)
+* Install the TDengine client driver. For specific steps, please refer to [Installing the client driver](https://docs.tdengine.com/develop/connect/#install-client-driver-taosc)
 
 ### Install the connectors
 
