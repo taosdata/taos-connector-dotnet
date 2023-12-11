@@ -428,6 +428,8 @@ namespace Driver.Test.Client.TMQ.Native
                             }
 
                             var allCommitted = consumer.Committed(TimeSpan.Zero);
+                            allCommitted.Sort((x,y)=>x.Partition.Value.CompareTo(y.Partition.Value));
+                            committed.Sort((x,y)=>x.Partition.Value.CompareTo(y.Partition.Value));
                             Assert.Equal(committed, allCommitted);
                         }
                     }
