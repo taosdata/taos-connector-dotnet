@@ -1,5 +1,7 @@
 # C# 连接器
 
+[English edition](./README.md)
+
 `TDengine.Connector` 是 TDengine 提供的 C# 语言连接器。C# 开发人员可以通过它开发存取 TDengine 集群数据的 C# 应用软件。
 
 `TDengine.Connector` 连接器支持通过 TDengine 客户端驱动（taosc）建立与 TDengine 运行实例的连接，提供数据写入、查询、数据订阅、schemaless 数据写入、参数绑定接口数据写入等功能。 `TDengine.Connector` 自 v3.0.1 起还支持 WebSocket 连接，提供数据写入、查询、参数绑定接口数据写入等功能。

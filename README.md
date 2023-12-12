@@ -1,5 +1,7 @@
 # C# Connector
 
+[中文版](./README-CN.md)
+
 `TDengine.Connector` is the C# language connector provided by TDengine. C# developers can use it to develop C# application software that accesses TDengine cluster data.
 
 The `TDengine.Connector` connector supports establishing a connection with the TDengine running instance through the TDengine client driver (taosc), and provides functions such as data writing, query, data subscription, schemaless data writing, and parameter binding interface data writing. `TDengine.Connector` also supports WebSocket since v3.0.1, establishes WebSocket connection, and provides functions such as data writing, query, and parameter binding interface data writing.
