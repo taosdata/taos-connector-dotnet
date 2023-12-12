@@ -5,7 +5,7 @@ using TDengine.Driver;
 using TDengine.Driver.Client;
 using TDengine.TMQ;
 
-namespace WSSubscription
+namespace WSObjectDeserialize
 {
     internal class Program
     {
@@ -35,7 +35,10 @@ namespace WSSubscription
                         { "enable.auto.commit", "true" },
                         { "msg.with.table.name", "false" },
                     };
-                    var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                    // set value deserializer to ReferenceDeserializer<Result>
+                    var tmqBuilder = new ConsumerBuilder<Result>(cfg);
+                    tmqBuilder.SetValueDeserializer(new ReferenceDeserializer<Result>());
+                    var consumer = tmqBuilder.Build();
                     consumer.Subscribe(new List<string>() { "topic_meters" });
                     Task.Run(InsertData);
                     while (true)
@@ -46,8 +49,8 @@ namespace WSSubscription
                             foreach (var message in cr.Message)
                             {
                                 Console.WriteLine(
-                                    $"message {{{((DateTime)message.Value["ts"]).ToString("yyyy-MM-dd HH:mm:ss.fff")}, " +
-                                    $"{message.Value["current"]}, {message.Value["voltage"]}, {message.Value["phase"]}}}");
+                                    $"message {{{((DateTime)message.Value.ts).ToString("yyyy-MM-dd HH:mm:ss.fff")}, " +
+                                    $"{message.Value.current}, {message.Value.voltage}, {message.Value.phase}}}");
                             }
                         }
                     }
@@ -59,7 +62,7 @@ namespace WSSubscription
                 }
             }
         }
-
+        
         static void InsertData()
         {
             var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
@@ -67,11 +70,19 @@ namespace WSSubscription
             {
                 while (true)
                 {
-                    client.Exec(
-                        "INSERT into power.d1001 using power.meters tags(2,'California.SanFrancisco') values(now,11.5,219,0.30)");
+                    client.Exec("INSERT into power.d1001 using power.meters tags(2,'California.SanFrancisco') values(now,11.5,219,0.30)");
                     Task.Delay(1000).Wait();
                 }
             }
         }
     }
+
+    class Result
+    {
+        public DateTime ts { get; set; }
+        public float current { get; set; }
+        public int voltage { get; set; }
+        public float phase { get; set; }
+    }
+    
 }

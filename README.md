@@ -92,7 +92,7 @@ using (var client = DbDriver.Open(builder))
 WebSocket connection
 
 ```csharp
-var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
 using (var client = DbDriver.Open(builder))
 {
      Console.WriteLine("connected");
@@ -101,10 +101,12 @@ using (var client = DbDriver.Open(builder))
 
 The parameters supported by `ConnectionStringBuilder` are as follows:
 * protocol: connection protocol, optional value is Native or WebSocket, default is Native
-* host: the address of the running instance of TDengine,
-    * When protocol is WebSocket, host is the URL of TDengine WebSocket service, such as `ws://localhost:6041/ws`. If it contains special characters, URLEncoding is required.
-    * When protocol is Native, host is the address of the TDengine running instance, such as `localhost`
-* port: The port of the running instance of TDengine. The default is 6030. It is only valid when the protocol is Native.
+* host: the address of the running instance of TDengine or taosadapter,
+* port: The port of the running instance of TDengine or taosadapter.
+  * When using WebSocket without SSL, the default is 6041.
+  * When using WebSocket with SSL, the default is 443.
+* useSSL: Whether to use SSL, the default is false, only valid when the protocol is WebSocket
+* token: The token used to connect to TDengine Cloud, only valid when the protocol is WebSocket
 * username: username to connect to TDengine
 * password: password to connect to TDengine
 * db: database connected to TDengine
@@ -172,7 +174,7 @@ namespace WSQuery
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -257,7 +259,7 @@ namespace WSQuery
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -347,7 +349,7 @@ namespace WSQuery
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -419,7 +421,7 @@ namespace WSQueryWithReqID
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -495,7 +497,7 @@ namespace WSStmt
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -579,7 +581,7 @@ namespace WSSchemaless
         public static void Main(string[] args)
         {
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+                new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 client.Exec("create database sml");
@@ -663,7 +665,7 @@ namespace WSSubscription
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -711,7 +713,9 @@ var cfg = new Dictionary<string, string>()
     { "td.connect.type", "WebSocket" },
     { "group.id", "group1" },
     { "auto.offset.reset", "latest" },
-    { "td.connect.ip", "ws://localhost:6041/rest/tmq" },
+    { "td.connect.ip", "localhost" },
+    { "td.connect.port","6041"},
+    { "useSSL", "false" },
     { "td.connect.user", "root" },
     { "td.connect.pass", "taosdata" },
     { "client.id", "tmq_example" },
@@ -723,10 +727,12 @@ var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
 
 The configuration parameters supported by consumer are as follows:
 * td.connect.type: connection type, optional value is Native or WebSocket, default is Native
-* td.connect.ip: The address of the TDengine running instance,
-  * When td.connect.type is WebSocket, td.connect.ip is the URL of TDengine WebSocket service, such as `ws://localhost:6041/rest/tmq`. If it contains special characters, URLEncoding is required.
-  * When td.connect.type is Native, td.connect.ip is the address of the TDengine running instance, such as `localhost`
-* td.connect.port: The port of the running instance of TDengine. The default is 6030. It is only valid when td.connect.type is Native.
+* td.connect.ip: The address of the TDengine running instance or taosadapter
+* td.connect.port: The port of the running instance of TDengine or taosadapter.
+  * When using WebSocket without SSL, the default is 6041.
+  * When using WebSocket with SSL, the default is 443.
+* useSSL: Whether to use SSL, the default is false, only valid when the protocol is WebSocket
+* token: The token used to connect to TDengine Cloud, only valid when the protocol is WebSocket
 * td.connect.user: username to connect to TDengine
 * td.connect.pass: Password for connecting to TDengine
 * group.id: consumer group ID
@@ -735,6 +741,44 @@ The configuration parameters supported by consumer are as follows:
 * auto.commit.interval.ms: The interval for automatically submitting offsets, the default is 5000 milliseconds
 * auto.offset.reset: When offset does not exist, where to start consumption, the optional value is earliest or latest, the default is latest
 * msg.with.table.name: Whether the message contains the table name
+
+Supports subscribing to the result set `Dictionary<string, object>` where the key is the column name and the value is the column value.
+
+If you use object to receive column values, you need to pay attention to:
+* There needs to be a one-to-one correspondence between the original C# column type and the TDengine column type. For specific correspondence, please refer to [TDengine DataType and C# DataType] (#tdengine-datatype-and-c-datatype).
+* The column name is consistent with the class attribute name and can be get and set.
+* Explicitly set the value parser `ConsumerBuilder.SetValueDeserializer(new ReferenceDeserializer<T>());`
+
+An example is as follows
+
+Result class
+
+```csharp
+     class Result
+     {
+         public DateTime ts { get; set; }
+         public float current { get; set; }
+         public int voltage { get; set; }
+         public float phase { get; set; }
+     }
+```
+
+Set up parser
+
+```csharp
+var tmqBuilder = new ConsumerBuilder<Result>(cfg);
+tmqBuilder.SetValueDeserializer(new ReferenceDeserializer<Result>());
+var consumer = tmqBuilder.Build();
+```
+
+You can also implement a custom deserializer, implement the `IDeserializer<T>` interface and pass it in through the `ConsumerBuilder.SetValueDeserializer` method.
+
+```csharp
+     public interface IDeserializer<T>
+     {
+         T Deserialize(ITMQRows data, bool isNull, SerializationContext context);
+     }
+```
 
 #### Subscribe to consume data
 
@@ -878,7 +922,7 @@ namespace WSSubscription
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -893,7 +937,9 @@ namespace WSSubscription
                         { "td.connect.type", "WebSocket" },
                         { "group.id", "group1" },
                         { "auto.offset.reset", "latest" },
-                        { "td.connect.ip", "ws://localhost:6041/rest/tmq" },
+                        { "td.connect.ip", "localhost" },
+                        { "td.connect.port","6041"},
+                        { "useSSL", "false" },
                         { "td.connect.user", "root" },
                         { "td.connect.pass", "taosdata" },
                         { "client.id", "tmq_example" },
@@ -927,7 +973,7 @@ namespace WSSubscription
         
         static void InsertData()
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 while (true)
@@ -1016,7 +1062,7 @@ namespace WSADO
     {
         public static void Main(string[] args)
         {
-            const string connectionString = "protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata";
+            const string connectionString = "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata";
             using (var connection = new TDengineConnection(connectionString))
             {
                 try

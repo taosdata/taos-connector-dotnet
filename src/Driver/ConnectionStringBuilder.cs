@@ -18,6 +18,8 @@ namespace TDengine.Driver
         private const string ConnTimeoutKey = "connTimeout";
         private const string ReadTimeoutKey = "readTimeout";
         private const string WriteTimeoutKey = "writeTimeout";
+        private const string TokenKey = "token";
+        private const string UseSSLKey = "useSSL";
 
         private enum KeysEnum
         {
@@ -31,10 +33,12 @@ namespace TDengine.Driver
             ConnTimeout,
             ReadTimeout,
             WriteTimeout,
+            Token,
+            UseSSL
         }
 
         private string _host = string.Empty;
-        private int _port = 6030;
+        private int _port = 0;
         private string _db = string.Empty;
         private string _user = string.Empty;
         private string _password = string.Empty;
@@ -43,13 +47,15 @@ namespace TDengine.Driver
         private TimeSpan _connTimeout = TimeSpan.Zero;
         private TimeSpan _readTimeout = TimeSpan.Zero;
         private TimeSpan _writeTimeout = TimeSpan.Zero;
+        private string _token = string.Empty;
+        private bool _useSSL = false;
 
         private static readonly IReadOnlyList<string> KeysList;
         private static readonly IReadOnlyDictionary<string, KeysEnum> KeysDict;
 
         static ConnectionStringBuilder()
         {
-            var list = new string[10];
+            var list = new string[12];
             list[(int)KeysEnum.Host] = HostKey;
             list[(int)KeysEnum.Port] = PortKey;
             list[(int)KeysEnum.Database] = DatabaseKey;
@@ -60,9 +66,11 @@ namespace TDengine.Driver
             list[(int)KeysEnum.ConnTimeout] = ConnTimeoutKey;
             list[(int)KeysEnum.ReadTimeout] = ReadTimeoutKey;
             list[(int)KeysEnum.WriteTimeout] = WriteTimeoutKey;
+            list[(int)KeysEnum.Token] = TokenKey;
+            list[(int)KeysEnum.UseSSL] = UseSSLKey;
             KeysList = list;
 
-            KeysDict = new Dictionary<string, KeysEnum>(10, StringComparer.OrdinalIgnoreCase)
+            KeysDict = new Dictionary<string, KeysEnum>(12, StringComparer.OrdinalIgnoreCase)
             {
                 [HostKey] = KeysEnum.Host,
                 [PortKey] = KeysEnum.Port,
@@ -74,6 +82,8 @@ namespace TDengine.Driver
                 [ConnTimeoutKey] = KeysEnum.ConnTimeout,
                 [ReadTimeoutKey] = KeysEnum.ReadTimeout,
                 [WriteTimeoutKey] = KeysEnum.WriteTimeout,
+                [TokenKey] = KeysEnum.Token,
+                [UseSSLKey] = KeysEnum.UseSSL
             };
         }
 
@@ -85,7 +95,7 @@ namespace TDengine.Driver
                 string[] queries = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (string query in queries)
                 {
-                    string[] keyValue = query.Split(new char[] { '=' },2);
+                    string[] keyValue = query.Split(new char[] { '=' }, 2);
                     if (keyValue.Length != 2)
                     {
                         throw new ArgumentException($"invalid connection param ${query}");
@@ -128,6 +138,12 @@ namespace TDengine.Driver
                                 break;
                             case KeysEnum.WriteTimeout:
                                 WriteTimeout = TimeSpan.Parse(value);
+                                break;
+                            case KeysEnum.Token:
+                                Token = value;
+                                break;
+                            case KeysEnum.UseSSL:
+                                UseSSL = Convert.ToBoolean(value);
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException(nameof(index), index, "get value error");
@@ -177,7 +193,7 @@ namespace TDengine.Driver
                 base[ProtocolKey] = _protocol = value;
             }
         }
-        
+
 
         public TimeZoneInfo Timezone
         {
@@ -201,6 +217,18 @@ namespace TDengine.Driver
         {
             get => _writeTimeout;
             set => base[WriteTimeoutKey] = _writeTimeout = value;
+        }
+        
+        public string Token
+        {
+            get => _token;
+            set => base[TokenKey] = _token = value;
+        }
+        
+        public bool UseSSL
+        {
+            get => _useSSL;
+            set => base[UseSSLKey] = _useSSL = value;
         }
 
         public override ICollection Keys => new ReadOnlyCollection<string>((string[])KeysList);
@@ -237,6 +265,16 @@ namespace TDengine.Driver
                     return Protocol;
                 case KeysEnum.Timezone:
                     return Timezone;
+                case KeysEnum.ConnTimeout:
+                    return ConnTimeout;
+                case KeysEnum.ReadTimeout:
+                    return ReadTimeout;
+                case KeysEnum.WriteTimeout:
+                    return WriteTimeout;
+                case KeysEnum.Token:
+                    return Token;
+                case KeysEnum.UseSSL:
+                    return UseSSL;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(index), index, "get value error");
             }
@@ -264,7 +302,7 @@ namespace TDengine.Driver
                     _host = string.Empty;
                     return;
                 case KeysEnum.Port:
-                    _port = 6030;
+                    _port = 0;
                     return;
                 case KeysEnum.Database:
                     _db = string.Empty;
@@ -289,6 +327,12 @@ namespace TDengine.Driver
                     return;
                 case KeysEnum.WriteTimeout:
                     _writeTimeout = TimeSpan.Zero;
+                    return;
+                case KeysEnum.Token:
+                    _token = string.Empty;
+                    return;
+                case KeysEnum.UseSSL:
+                    _useSSL = false;
                     return;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(index), index, null);
@@ -321,7 +365,7 @@ namespace TDengine.Driver
         public void DefaultNative()
         {
             Port = 6030;
-            Host = String.Empty;
+            Host = "localhost";
             Protocol = TDengineConstant.ProtocolNative;
         }
 

@@ -6,16 +6,42 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 {
     public class TMQConnection : BaseConnection
     {
-        private readonly string _user = string.Empty;
-        private readonly string _password = string.Empty;
-        private readonly string _db = string.Empty;
-
-        public TMQConnection(string addr, TimeSpan connectTimeout = default,
-            TimeSpan readTimeout = default, TimeSpan writeTimeout = default) : base(addr, connectTimeout, readTimeout,
+        public TMQConnection(TMQOptions options, TimeSpan connectTimeout = default,
+            TimeSpan readTimeout = default, TimeSpan writeTimeout = default) : base(GetUrl(options), connectTimeout, readTimeout,
             writeTimeout)
         {
         }
 
+        private static string GetUrl(TMQOptions options)
+        {
+            var schema = "ws";
+            var port = options.TDConnectPort;
+            if (options.TDUseSSL == "true")
+            {
+                schema = "wss";
+                if (string.IsNullOrEmpty(options.TDConnectPort))
+                {
+                    port = "443";
+                }
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(options.TDConnectPort))
+                {
+                    port = "6041";
+                }
+            }
+
+            if (string.IsNullOrEmpty(options.TDToken))
+            {
+                return $"{schema}://{options.TDConnectIp}:{port}/rest/tmq";
+            }
+            else
+            {
+                return $"{schema}://{options.TDConnectIp}:{port}/rest/tmq?token={options.TDToken}";
+            }
+        }
+        
         public WSTMQSubscribeResp Subscribe(List<string> topics, TMQOptions options)
         {
             return Subscribe(_GetReqId(), topics, options);
@@ -217,6 +243,10 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         public string MsgWithTableName => Get("msg.with.table.name");
 
         public string TDConnectIp => Get("td.connect.ip");
+        
+        public string TDUseSSL => Get("useSSL");
+        
+        public string TDToken => Get("token");
 
         public string TDConnectUser => Get("td.connect.user");
 

@@ -14,7 +14,7 @@ namespace Data.Tests
             builder.DefaultNative();
 
             Assert.Equal(6030, builder.Port);
-            Assert.Equal(string.Empty, builder.Host);
+            Assert.Equal("localhost", builder.Host);
             Assert.Equal(TDengineConstant.ProtocolNative, builder.Protocol);
         }
 
@@ -42,7 +42,7 @@ namespace Data.Tests
             Assert.Equal(TDengineConstant.ProtocolNative,builder.Protocol);
             builder.Clear();
             Assert.Equal(string.Empty,builder.Host);
-            Assert.Equal(6030,builder.Port);
+            Assert.Equal(0,builder.Port);
             Assert.Equal(string.Empty,builder.Username);
             Assert.Equal(string.Empty,builder.Password);
             Assert.Equal(string.Empty,builder.Database);

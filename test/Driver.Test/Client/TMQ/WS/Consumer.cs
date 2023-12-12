@@ -22,7 +22,8 @@ namespace Driver.Test.Client.TMQ.WS
         public void NewConsumerTest()
         {
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+                new ConnectionStringBuilder(
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -74,16 +75,17 @@ namespace Driver.Test.Client.TMQ.WS
                         { "td.connect.type", "WebSocket" },
                         { "group.id", "test" },
                         { "auto.offset.reset", "earliest" },
-                        { "td.connect.ip", "ws://localhost:6041/rest/tmq" },
+                        { "td.connect.ip", "localhost" },
                         { "td.connect.user", "root" },
                         { "td.connect.pass", "taosdata" },
-                        // { "td.connect.port", "6030" },
+                        { "td.connect.port", "6041" },
                         { "client.id", "test_tmq_c" },
                         { "enable.auto.commit", "false" },
                         { "msg.with.table.name", "true" },
+                        { "useSSL", "false" },
                     };
                     DoRequest(client, "use af_test_tmq_ws");
-                    var consumer = new ConsumerBuilder<Dictionary<string,object>>(cfg).Build();
+                    var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
                     DoRequest(client, "use af_test_tmq_ws");
                     consumer.Subscribe("test_tmq_common_ws");
                     DoRequest(client, "use af_test_tmq_ws");
@@ -155,7 +157,8 @@ namespace Driver.Test.Client.TMQ.WS
         public void ConsumerSeekTest()
         {
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+                new ConnectionStringBuilder(
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -207,15 +210,17 @@ namespace Driver.Test.Client.TMQ.WS
                         { "td.connect.type", "WebSocket" },
                         { "group.id", "test" },
                         { "auto.offset.reset", "earliest" },
-                        { "td.connect.ip", "ws://localhost:6041/rest/tmq" },
+                        { "td.connect.ip", "localhost" },
+                        { "td.connect.port", "6041" },
                         { "td.connect.user", "root" },
                         { "td.connect.pass", "taosdata" },
                         { "client.id", "test_tmq_c" },
                         { "enable.auto.commit", "false" },
                         { "msg.with.table.name", "true" },
+                        { "useSSL", "false" },
                     };
 
-                    var consumer = new ConsumerBuilder<Dictionary<string,object>>(cfg).Build();
+                    var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
                     consumer.Subscribe("test_tmq_ws_seek");
                     var assignment = consumer.Assignment;
                     Assert.Equal(2, assignment.Count);
@@ -267,6 +272,7 @@ namespace Driver.Test.Client.TMQ.WS
                     {
                         consumer.Seek(new TopicPartitionOffset(topicPartition.Topic, topicPartition.Partition, 0));
                     }
+
                     // poll after seek
                     messageCount = 0;
                     for (int i = 0; i < 5; i++)
@@ -321,12 +327,13 @@ namespace Driver.Test.Client.TMQ.WS
                 }
             }
         }
-        
+
         [Fact]
         public void ConsumerCommitTest()
         {
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+                new ConnectionStringBuilder(
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -378,16 +385,17 @@ namespace Driver.Test.Client.TMQ.WS
                         { "td.connect.type", "WebSocket" },
                         { "group.id", "test" },
                         { "auto.offset.reset", "earliest" },
-                        { "td.connect.ip", "ws://localhost:6041/rest/tmq" },
+                        { "td.connect.ip", "localhost" },
                         { "td.connect.user", "root" },
                         { "td.connect.pass", "taosdata" },
-                        // { "td.connect.port", "6030" },
+                        { "td.connect.port", "6041" },
                         { "client.id", "test_tmq_c" },
                         { "enable.auto.commit", "false" },
                         { "msg.with.table.name", "true" },
+                        { "useSSL", "false" }
                     };
 
-                    var consumer = new ConsumerBuilder<Dictionary<string,object>>(cfg).Build();
+                    var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
                     consumer.Subscribe("test_tmq_ws_commit");
                     var assignment = consumer.Assignment;
                     Assert.Equal(2, assignment.Count);
@@ -423,19 +431,19 @@ namespace Driver.Test.Client.TMQ.WS
                             }
 
                             var committed = consumer.Commit();
-                            
-                            Assert.Equal(2,committed.Count);
+
+                            Assert.Equal(2, committed.Count);
                             foreach (var c in committed)
                             {
                                 if (c.Partition == result.Partition)
                                 {
-                                    Assert.NotEqual(0,c.Offset);
+                                    Assert.NotEqual(0, c.Offset);
                                 }
                             }
 
                             var allCommitted = consumer.Committed(TimeSpan.Zero);
-                            allCommitted.Sort((x,y)=>x.Partition.Value.CompareTo(y.Partition.Value));
-                            committed.Sort((x,y)=>x.Partition.Value.CompareTo(y.Partition.Value));
+                            allCommitted.Sort((x, y) => x.Partition.Value.CompareTo(y.Partition.Value));
+                            committed.Sort((x, y) => x.Partition.Value.CompareTo(y.Partition.Value));
                             Assert.Equal(committed, allCommitted);
                         }
                     }
@@ -458,7 +466,7 @@ namespace Driver.Test.Client.TMQ.WS
                 }
             }
         }
-        
+
         private void DoRequest(ITDengineClient client, string sql)
         {
             client.Exec(sql);

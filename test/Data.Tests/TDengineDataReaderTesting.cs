@@ -23,7 +23,7 @@ namespace Data.Tests
 
             var wsBuilder =
                 new TDengineConnectionStringBuilder(
-                    "protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             _wsConnection = new TDengineConnection(wsBuilder.ConnectionString);
             _wsConnection.Open();
         }

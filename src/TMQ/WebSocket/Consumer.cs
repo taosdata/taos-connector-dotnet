@@ -23,7 +23,7 @@ namespace TDengine.TMQ.WebSocket
         public Consumer(ConsumerBuilder<TValue> builder)
         {
             _options = new TMQOptions(builder.Config);
-            _connection = new TMQConnection(_options.TDConnectIp);
+            _connection = new TMQConnection(_options);
             if (builder.ValueDeserializer == null)
             {
                 if (!defaultDeserializers.TryGetValue(typeof(TValue), out object deserializer))

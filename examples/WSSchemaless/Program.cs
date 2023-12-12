@@ -8,7 +8,7 @@ namespace WSSchemaless
         public static void Main(string[] args)
         {
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+                new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 client.Exec("create database sml");

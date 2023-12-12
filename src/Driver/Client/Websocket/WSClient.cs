@@ -13,10 +13,40 @@ namespace TDengine.Driver.Client.Websocket
         {
             Debug.Assert(builder.Protocol == TDengineConstant.ProtocolWebSocket);
             _tz = builder.Timezone;
-            _connection = new Connection(builder.Host, builder.Username, builder.Password,
+            _connection = new Connection(GetUrl(builder), builder.Username, builder.Password,
                 builder.Database, builder.ConnTimeout, builder.ReadTimeout, builder.WriteTimeout);
 
             _connection.Connect();
+        }
+
+        private static string GetUrl(ConnectionStringBuilder builder)
+        {
+            var schema = "ws";
+            var port = builder.Port;
+            if (builder.UseSSL)
+            {
+                schema = "wss";
+                if (builder.Port == 0)
+                {
+                    port = 443;
+                }
+            }
+            else
+            {
+                if (builder.Port == 0)
+                {
+                    port = 6041;
+                }
+            }
+
+            if (string.IsNullOrEmpty(builder.Token))
+            {
+                return $"{schema}://{builder.Host}:{port}/ws";
+            }
+            else
+            {
+                return $"{schema}://{builder.Host}:{port}/ws?token={builder.Token}";
+            }
         }
 
         public void Dispose()

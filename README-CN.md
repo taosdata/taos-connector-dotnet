@@ -92,7 +92,7 @@ using (var client = DbDriver.Open(builder))
 WebSocket 连接
 
 ```csharp
-var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
 using (var client = DbDriver.Open(builder))
 {
     Console.WriteLine("connected");
@@ -101,10 +101,12 @@ using (var client = DbDriver.Open(builder))
 
 ConnectionStringBuilder 支持的参数如下：
 * protocol: 连接协议，可选值为 Native 或 WebSocket，默认为 Native
-* host: TDengine 运行实例的地址，
-  * 当 protocol 为 WebSocket 时，host 为 TDengine WebSocket 服务的 URL，如 `ws://localhost:6041/ws`，如果包含特殊字符需要进行 URLEncode
-  * 当 protocol 为 Native 时，host 为 TDengine 运行实例的地址，如 `localhost`
-* port: TDengine 运行实例的端口，默认为 6030，仅当 protocol 为 Native 时有效
+* host: TDengine 或 taosadapter 运行实例的地址
+* port: TDengine 或 taosadapter 运行实例的端口
+  * 当 protocol 为 WebSocket 时 useSSL 为 false 时，port 默认为 6041
+  * 当 protocol 为 WebSocket 时 useSSL 为 true 时，port 默认为 443
+* useSSL: 是否使用 SSL 连接，仅当 protocol 为 WebSocket 时有效，默认为 false
+* token: 连接 TDengine cloud 的 token，仅当 protocol 为 WebSocket 时有效
 * username: 连接 TDengine 的用户名
 * password: 连接 TDengine 的密码
 * db: 连接 TDengine 的数据库
@@ -172,7 +174,7 @@ namespace WSQuery
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -257,7 +259,7 @@ namespace WSQuery
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -347,7 +349,7 @@ namespace WSQuery
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -419,7 +421,7 @@ namespace WSQueryWithReqID
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -495,7 +497,7 @@ namespace WSStmt
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -579,7 +581,7 @@ namespace WSSchemaless
         public static void Main(string[] args)
         {
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+                new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 client.Exec("create database sml");
@@ -663,7 +665,7 @@ namespace WSSubscription
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -711,7 +713,9 @@ var cfg = new Dictionary<string, string>()
     { "td.connect.type", "WebSocket" },
     { "group.id", "group1" },
     { "auto.offset.reset", "latest" },
-    { "td.connect.ip", "ws://localhost:6041/rest/tmq" },
+    { "td.connect.ip", "localhost" },
+    { "td.connect.port", "6041" },
+    { "useSSL", "false" },
     { "td.connect.user", "root" },
     { "td.connect.pass", "taosdata" },
     { "client.id", "tmq_example" },
@@ -723,10 +727,12 @@ var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
 
 consumer 支持的配置参数如下：
 * td.connect.type: 连接类型，可选值为 Native 或 WebSocket，默认为 Native
-* td.connect.ip: TDengine 运行实例的地址，
-  * 当 td.connect.type 为 WebSocket 时，td.connect.ip 为 TDengine WebSocket 服务的 URL，如 `ws://localhost:6041/rest/tmq`，如果包含特殊字符需要进行 URLEncode
-  * 当 td.connect.type 为 Native 时，td.connect.ip 为 TDengine 运行实例的地址，如 `localhost`
-* td.connect.port: TDengine 运行实例的端口，默认为 6030，仅当 td.connect.type 为 Native 时有效
+* td.connect.ip: TDengine 或 taosadapter 运行实例的地址
+* td.connect.port: TDengine 或 taosadapter 运行实例的端口
+  * 当 td.connect.type 为 WebSocket 且 useSSL 为 false 时，td.connect.port 默认为 6041
+  * 当 td.connect.type 为 WebSocket 且 useSSL 为 true 时，td.connect.port 默认为 443
+* useSSL: 是否使用 SSL 连接，仅当 td.connect.type 为 WebSocket 时有效，默认为 false
+* token: 连接 TDengine cloud 的 token，仅当 td.connect.type 为 WebSocket 时有效
 * td.connect.user: 连接 TDengine 的用户名
 * td.connect.pass: 连接 TDengine 的密码
 * group.id: 消费者组 ID
@@ -735,6 +741,44 @@ consumer 支持的配置参数如下：
 * auto.commit.interval.ms: 自动提交 offset 的间隔时间，默认为 5000 毫秒
 * auto.offset.reset: 当 offset 不存在时，从哪里开始消费，可选值为 earliest 或 latest，默认为 latest
 * msg.with.table.name: 消息是否包含表名
+
+支持订阅结果集 `Dictionary<string, object>` key 为列名，value 为列值。
+
+如果使用 object 接收列值，需要注意：
+* 原始 C# 列类型与 TDengine 列类型的需要一一对应，具体对应关系请参考 [TDengine DataType 和 C# DataType](#tdengine-datatype-和-c-datatype)。
+* 列名与 class 属性名一致，并可读写。
+* 明确设置 value 解析器`ConsumerBuilder.SetValueDeserializer(new ReferenceDeserializer<T>());`
+
+样例如下
+
+结果 class
+
+```csharp
+    class Result
+    {
+        public DateTime ts { get; set; }
+        public float current { get; set; }
+        public int voltage { get; set; }
+        public float phase { get; set; }
+    }
+```
+
+设置解析器
+
+```csharp
+var tmqBuilder = new ConsumerBuilder<Result>(cfg);
+tmqBuilder.SetValueDeserializer(new ReferenceDeserializer<Result>());
+var consumer = tmqBuilder.Build();
+```
+
+也可实现自定义解析器，实现 `IDeserializer<T>` 接口并通过`ConsumerBuilder.SetValueDeserializer`方法传入。
+
+```csharp
+    public interface IDeserializer<T>
+    {
+        T Deserialize(ITMQRows data, bool isNull, SerializationContext context);
+    }
+```
 
 #### 订阅消费数据
 
@@ -878,7 +922,7 @@ namespace WSSubscription
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -893,7 +937,9 @@ namespace WSSubscription
                         { "td.connect.type", "WebSocket" },
                         { "group.id", "group1" },
                         { "auto.offset.reset", "latest" },
-                        { "td.connect.ip", "ws://localhost:6041/rest/tmq" },
+                        { "td.connect.ip", "localhost" },
+                        { "td.connect.port", "6041" },
+                        { "useSSL", "false" },
                         { "td.connect.user", "root" },
                         { "td.connect.pass", "taosdata" },
                         { "client.id", "tmq_example" },
@@ -927,7 +973,7 @@ namespace WSSubscription
         
         static void InsertData()
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 while (true)
@@ -1016,7 +1062,7 @@ namespace WSADO
     {
         public static void Main(string[] args)
         {
-            const string connectionString = "protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata";
+            const string connectionString = "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata";
             using (var connection = new TDengineConnection(connectionString))
             {
                 try

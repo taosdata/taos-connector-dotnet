@@ -7,7 +7,7 @@ namespace WSADO
     {
         public static void Main(string[] args)
         {
-            const string connectionString = "protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata";
+            const string connectionString = "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata";
             using (var connection = new TDengineConnection(connectionString))
             {
                 try

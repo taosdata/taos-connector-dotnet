@@ -12,7 +12,7 @@ internal class Program
     {
         public static void Main(string[] args)
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -27,7 +27,9 @@ internal class Program
                         { "td.connect.type", "WebSocket" },
                         { "group.id", "group1" },
                         { "auto.offset.reset", "latest" },
-                        { "td.connect.ip", "ws://localhost:6041/rest/tmq" },
+                        { "td.connect.ip", "localhost" },
+                        { "td.connect.port","6041"},
+                        { "useSSL", "false" },
                         { "td.connect.user", "root" },
                         { "td.connect.pass", "taosdata" },
                         { "client.id", "tmq_example" },
@@ -68,7 +70,7 @@ internal class Program
 
         static void InsertData()
         {
-            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+            var builder = new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
             using (var client = DbDriver.Open(builder))
             {
                 for (int i = 0; i < 5; i++)

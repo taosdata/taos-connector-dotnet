@@ -58,6 +58,18 @@ namespace TDengine.TMQ
             set => this.SetObject("td.connect.ip", value);
         }
 
+        public string TDUseSSL
+        {
+            get => Get("useSSL");
+            set => this.SetObject("useSSL", value);
+        }
+
+        public string TDToken
+        {
+            get => Get("token");
+            set => this.SetObject("token", value);
+        }
+
         public string TDConnectUser
         {
             get => Get("td.connect.user");

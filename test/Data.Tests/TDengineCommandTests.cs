@@ -28,7 +28,7 @@ namespace Data.Tests
 
             _wsConnection =
                 new TDengineConnection(
-                    "username=root;password=taosdata;protocol=WebSocket;host=ws://localhost:6041/ws");
+                    "username=root;password=taosdata;protocol=WebSocket;host=localhost;port=6041;useSSL=false");
             _wsConnection.Open();
             using (var command = new TDengineCommand(_wsConnection))
             {
