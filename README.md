@@ -6,7 +6,7 @@ The `TDengine.Connector` connector supports establishing a connection with the T
 
 This article introduces how to install `TDengine.Connector` in a Linux or Windows environment, and connect to the TDengine cluster through `TDengine.Connector` to perform basic operations such as data writing and querying.
 
-Notice:
+**Notice**:
 
 * `TDengine.Connector` 3.x is not compatible with TDengine 2.x. If you need to use the C# connector in an environment running TDengine 2.x version, please use the 1.x version of TDengine.Connector.
 * `TDengine.Connector` version 3.1.0 has been completely refactored and is no longer compatible with 3.0.2 and previous versions. For 3.0.2 documents, please refer to [nuget](https://www.nuget.org/packages/TDengine.Connector/3.0.2)
@@ -71,7 +71,7 @@ You can also modify the `.csproj` file of the current project and add the follow
 
 ``` XML
    <ItemGroup>
-     <PackageReference Include="TDengine.Connector" Version="3.1.0" />
+     <PackageReference Include="TDengine.Connector" Version="3.1.*" />
    </ItemGroup>
 ```
 

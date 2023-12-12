@@ -6,7 +6,7 @@
 
 本文介绍如何在 Linux 或 Windows 环境中安装 `TDengine.Connector`，并通过 `TDengine.Connector` 连接 TDengine 集群，进行数据写入、查询等基本操作。
 
-**注意：
+**注意**：
 
 * `TDengine.Connector` 3.x 不兼容 TDengine 2.x，如果在运行 TDengine 2.x 版本的环境下需要使用 C# 连接器请使用 TDengine.Connector 的 1.x 版本 。
 * `TDengine.Connector` 3.1.0 版本进行了完整的重构，不再兼容 3.0.2 及以前版本。3.0.2 文档请参考 [nuget](https://www.nuget.org/packages/TDengine.Connector/3.0.2)
@@ -71,7 +71,7 @@ dotnet add package TDengine.Connector
 
 ``` XML
   <ItemGroup>
-    <PackageReference Include="TDengine.Connector" Version="3.1.0" />
+    <PackageReference Include="TDengine.Connector" Version="3.1.*" />
   </ItemGroup>
 ```
 
