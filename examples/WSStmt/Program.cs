@@ -4,7 +4,7 @@ using TDengine.Driver.Client;
 
 namespace WSStmt
 {
-    internal abstract class NativeStmt
+    internal abstract class WSStmt
     {
         public static void Main(string[] args)
         {

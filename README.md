@@ -83,7 +83,7 @@ Native connection
 var builder = new ConnectionStringBuilder("host=localhost;port=6030;username=root;password=taosdata");
 using (var client = DbDriver.Open(builder))
 {
-     Console.WriteLine("connected")
+     Console.WriteLine("connected");
 }
 ```
 
@@ -93,7 +93,7 @@ WebSocket connection
 var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
 using (var client = DbDriver.Open(builder))
 {
-     Console.WriteLine("connected")
+     Console.WriteLine("connected");
 }
 ```
 
@@ -411,7 +411,7 @@ using System.Text;
 using TDengine.Driver;
 using TDengine.Driver.Client;
 
-namespace NativeQueryWithReqID
+namespace WSQueryWithReqID
 {
     internal abstract class QueryWithReqID
     {
@@ -489,7 +489,7 @@ using TDengine.Driver.Client;
 
 namespace WSStmt
 {
-    internal abstract class NativeStmt
+    internal abstract class WSStmt
     {
         public static void Main(string[] args)
         {
@@ -498,7 +498,7 @@ namespace WSStmt
             {
                 try
                 {
-                    client.Exec(create database power");
+                    client.Exec("create database power");
                     client.Exec(
                         "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
                     var stmt = client.StmtInit();
@@ -634,7 +634,7 @@ namespace NativeSubscription
                 {
                     client.Exec("create database power");
                     client.Exec("CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
-                    client.exec("CREATE TOPIC topic_meters as SELECT * from power.meters");
+                    client.Exec("CREATE TOPIC topic_meters as SELECT * from power.meters");
                 }
                 catch (Exception e)
                 {
@@ -668,7 +668,7 @@ namespace WSSubscription
                 {
                     client.Exec("create database power");
                     client.Exec("CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
-                    client.exec("CREATE TOPIC topic_meters as SELECT * from power.meters");
+                    client.Exec("CREATE TOPIC topic_meters as SELECT * from power.meters");
                 }
                 catch (Exception e)
                 {
