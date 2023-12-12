@@ -90,7 +90,7 @@ using (var client = DbDriver.Open(builder))
 WebSocket connection
 
 ```csharp
-new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
 using (var client = DbDriver.Open(builder))
 {
      Console.WriteLine("connected")
@@ -312,6 +312,7 @@ namespace NativeQuery
             {
                 try
                 {
+                    client.Exec("use power");
                     string query = "SELECT * FROM meters";
                     var rows = client.Query(query);
                     while (rows.Read())
@@ -349,7 +350,7 @@ namespace WSQuery
             {
                 try
                 {
-                    client.Exec(use power");
+                    client.Exec("use power");
                     string query = "SELECT * FROM meters";
                     var rows = client.Query(query);
                     while (rows.Read())
@@ -620,9 +621,9 @@ using System.Text;
 using TDengine.Driver;
 using TDengine.Driver.Client;
 
-namespace NativeQuery
+namespace NativeSubscription
 {
-    internal class Query
+    internal class Program
     {
         public static void Main(string[] args)
         {
@@ -654,9 +655,9 @@ using System.Text;
 using TDengine.Driver;
 using TDengine.Driver.Client;
 
-namespace WSQuery
+namespace WSSubscription
 {
-    internal class Query
+    internal class Program
     {
         public static void Main(string[] args)
         {
@@ -1062,3 +1063,7 @@ namespace WSADO
 
 * The connection parameters are consistent with those in [Establishing a connection](#establishing-a-connection).
 * The name of TDengineParameter needs to start with @, such as @0, @1, @2, etc. The value needs to have a one-to-one correspondence between the C# column type and the TDengine column type. For the specific correspondence, please refer to [TDengine DataType and C# DataType](#tdengine-datatype-vs-c-datatype).
+
+### More sample programs
+
+[sample program](https://github.com/taosdata/taos-connector-dotnet/tree/3.0/examples)

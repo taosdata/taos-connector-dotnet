@@ -90,7 +90,7 @@ using (var client = DbDriver.Open(builder))
 WebSocket 连接
 
 ```csharp
-new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
+var builder = new ConnectionStringBuilder("protocol=WebSocket;host=ws://localhost:6041/ws;username=root;password=taosdata");
 using (var client = DbDriver.Open(builder))
 {
     Console.WriteLine("connected")
@@ -312,6 +312,7 @@ namespace NativeQuery
             {
                 try
                 {
+                    client.Exec("use power");
                     string query = "SELECT * FROM meters";
                     var rows = client.Query(query);
                     while (rows.Read())
@@ -349,7 +350,7 @@ namespace WSQuery
             {
                 try
                 {
-                    client.Exec(use power");
+                    client.Exec("use power");
                     string query = "SELECT * FROM meters";
                     var rows = client.Query(query);
                     while (rows.Read())
@@ -497,7 +498,7 @@ namespace WSStmt
             {
                 try
                 {
-                    client.Exec(create database power");
+                    client.Exec("create database power");
                     client.Exec(
                         "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
                     var stmt = client.StmtInit();
@@ -620,9 +621,9 @@ using System.Text;
 using TDengine.Driver;
 using TDengine.Driver.Client;
 
-namespace NativeQuery
+namespace NativeSubscription
 {
-    internal class Query
+    internal class Program
     {
         public static void Main(string[] args)
         {
@@ -654,9 +655,9 @@ using System.Text;
 using TDengine.Driver;
 using TDengine.Driver.Client;
 
-namespace WSQuery
+namespace WSSubscription
 {
-    internal class Query
+    internal class Program
     {
         public static void Main(string[] args)
         {
@@ -1062,3 +1063,7 @@ namespace WSADO
 
 * 连接参数与[建立连接](#建立连接)中的连接参数一致。
 * TDengineParameter 的 name 需要以 @ 开头，如 @0、@1、@2 等，value 需要 C# 列类型与 TDengine 列类型一一对应，具体对应关系请参考 [TDengine DataType 和 C# DataType](#tdengine-datatype-和-c-datatype)。
+
+### 更多示例程序
+
+[示例程序](https://github.com/taosdata/taos-connector-dotnet/tree/3.0/examples)
