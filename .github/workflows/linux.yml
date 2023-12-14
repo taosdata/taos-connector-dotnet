@@ -34,6 +34,13 @@ jobs:
           repository: 'taosdata/TDengine'
           path: 'TDengine'
           ref: ${{ github.base_ref }}
+          
+      - name: checkout TDengine by push
+        if: github.event_name == 'push'
+        uses: actions/checkout@v3
+        with:
+          repository: 'taosdata/TDengine'
+          ref: ${{ github.ref_name }}
 
       - name: checkout TDengine manually
         if: github.event_name == 'workflow_dispatch'
@@ -57,6 +64,14 @@ jobs:
           path: server.tar.gz
           key: ${{ runner.os }}-build-${{ github.base_ref }}-${{ steps.get_commit_id.outputs.commit_id }}
 
+      - name: Cache server by push
+        if: github.event_name == 'push'
+        id: cache-server-push
+        uses: actions/cache@v3
+        with:
+          path: C:/TDengine
+          key: ${{ runner.os }}-build-${{ github.ref_name }}-${{ steps.get_commit_id.outputs.commit_id }}
+
       - name: Cache server manually
         if: github.event_name == 'workflow_dispatch'
         id: cache-server-manually
@@ -68,13 +83,15 @@ jobs:
       - name: prepare install
         if: >
           (github.event_name == 'workflow_dispatch' && steps.cache-server-manually.outputs.cache-hit != 'true') ||
-          (github.event_name == 'pull_request' && steps.cache-server-pr.outputs.cache-hit != 'true')
+          (github.event_name == 'pull_request' && steps.cache-server-pr.outputs.cache-hit != 'true') ||
+          (github.event_name == 'push' && steps.cache-server-push.outputs.cache-hit != 'true')
         run: sudo apt install -y libgeos-dev
 
       - name: install TDengine
         if: >
           (github.event_name == 'workflow_dispatch' && steps.cache-server-manually.outputs.cache-hit != 'true') ||
-          (github.event_name == 'pull_request' && steps.cache-server-pr.outputs.cache-hit != 'true')
+          (github.event_name == 'pull_request' && steps.cache-server-pr.outputs.cache-hit != 'true') ||
+          (github.event_name == 'push' && steps.cache-server-push.outputs.cache-hit != 'true')
         run: |
           cd TDengine
           mkdir debug
@@ -85,7 +102,8 @@ jobs:
       - name: package
         if: >
           (github.event_name == 'workflow_dispatch' && steps.cache-server-manually.outputs.cache-hit != 'true') ||
-          (github.event_name == 'pull_request' && steps.cache-server-pr.outputs.cache-hit != 'true')
+          (github.event_name == 'pull_request' && steps.cache-server-pr.outputs.cache-hit != 'true') ||
+          (github.event_name == 'push' && steps.cache-server-push.outputs.cache-hit != 'true')
         run: |
           mkdir -p ./release
           cp ./TDengine/debug/build/bin/taos ./release/
@@ -158,6 +176,16 @@ jobs:
           key: ${{ runner.os }}-build-${{ github.base_ref }}-${{ needs.build.outputs.commit_id }}
           restore-keys: |
             ${{ runner.os }}-build-${{ github.base_ref }}-
+            
+      - name: get cache server by push
+        if: github.event_name == 'push'
+        id: get-cache-server-push
+        uses: actions/cache@v3
+        with:
+          path: server.tar.gz
+          key: ${{ runner.os }}-build-${{ github.ref_name }}-${{ needs.build.outputs.commit_id }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ github.ref_name }}-
 
       - name: get cache server manually
         if: github.event_name == 'workflow_dispatch'
