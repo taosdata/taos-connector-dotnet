@@ -93,6 +93,10 @@ namespace TDengine.Driver.Client.Websocket
         public long Exec(string query, long reqId)
         {
             var resp = _connection.Query(query, (ulong)reqId);
+            if (!resp.IsUpdate)
+            {
+                _connection.FreeResult(resp.ResultId);
+            }
             return resp.AffectedRows;
         }
 

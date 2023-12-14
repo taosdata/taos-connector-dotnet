@@ -38,10 +38,13 @@ namespace NativeQuery
                         "('2023-10-03 14:38:06.500', 11.50000, 221, 0.35000)";
                     client.Exec(insertQuery);
                     string query = "SELECT * FROM meters";
-                    var rows = client.Query(query);
-                    while (rows.Read())
+                    using (var rows = client.Query(query))
                     {
-                        Console.WriteLine($"{((DateTime)rows.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {rows.GetValue(1)}, {rows.GetValue(2)}, {rows.GetValue(3)}, {rows.GetValue(4)}, {Encoding.UTF8.GetString((byte[])rows.GetValue(5))}");
+                        while (rows.Read())
+                        {
+                            Console.WriteLine(
+                                $"{((DateTime)rows.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {rows.GetValue(1)}, {rows.GetValue(2)}, {rows.GetValue(3)}, {rows.GetValue(4)}, {Encoding.UTF8.GetString((byte[])rows.GetValue(5))}");
+                        }
                     }
                 }
                 catch (Exception e)

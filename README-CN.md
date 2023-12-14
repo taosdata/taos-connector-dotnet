@@ -318,10 +318,12 @@ namespace NativeQuery
                 {
                     client.Exec("use power");
                     string query = "SELECT * FROM meters";
-                    var rows = client.Query(query);
-                    while (rows.Read())
+                    using (var rows = client.Query(query))
                     {
-                        Console.WriteLine($"{((DateTime)rows.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {rows.GetValue(1)}, {rows.GetValue(2)}, {rows.GetValue(3)}, {rows.GetValue(4)}, {Encoding.UTF8.GetString((byte[])rows.GetValue(5))}");
+                       while (rows.Read())
+                       {
+                           Console.WriteLine($"{((DateTime)rows.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {rows.GetValue(1)}, {rows.GetValue(2)}, {rows.GetValue(3)}, {rows.GetValue(4)}, {Encoding.UTF8.GetString((byte[])rows.GetValue(5))}");
+                       }
                     }
                 }
                 catch (Exception e)
@@ -356,10 +358,12 @@ namespace WSQuery
                 {
                     client.Exec("use power");
                     string query = "SELECT * FROM meters";
-                    var rows = client.Query(query);
-                    while (rows.Read())
+                    using (var rows = client.Query(query))
                     {
-                        Console.WriteLine($"{((DateTime)rows.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {rows.GetValue(1)}, {rows.GetValue(2)}, {rows.GetValue(3)}, {rows.GetValue(4)}, {Encoding.UTF8.GetString((byte[])rows.GetValue(5))}");
+                        while (rows.Read())
+                        {
+                            Console.WriteLine($"{((DateTime)rows.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {rows.GetValue(1)}, {rows.GetValue(2)}, {rows.GetValue(3)}, {rows.GetValue(4)}, {Encoding.UTF8.GetString((byte[])rows.GetValue(5))}");
+                        }
                     }
                 }
                 catch (Exception e)
@@ -462,16 +466,17 @@ namespace NativeStmt
                     client.Exec("create database power");
                     client.Exec(
                         "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
-                    var stmt = client.StmtInit();
-                    stmt.Prepare(
-                        "Insert into power.d1001 using power.meters tags(2,'California.SanFrancisco') values(?,?,?,?)");
-                    var ts = new DateTime(2023, 10, 03, 14, 38, 05, 000);
-                    stmt.BindRow(new object[] { ts, (float)10.30000, (int)219, (float)0.31000 });
-                    stmt.AddBatch();
-                    stmt.Exec();
-                    var affected = stmt.Affected();
-                    Console.WriteLine($"affected rows: {affected}");
-                    stmt.Dispose();
+                    using (var stmt = client.StmtInit())
+                    {
+                        stmt.Prepare(
+                            "Insert into power.d1001 using power.meters tags(2,'California.SanFrancisco') values(?,?,?,?)");
+                        var ts = new DateTime(2023, 10, 03, 14, 38, 05, 000);
+                        stmt.BindRow(new object[] { ts, (float)10.30000, (int)219, (float)0.31000 });
+                        stmt.AddBatch();
+                        stmt.Exec();
+                        var affected = stmt.Affected();
+                        Console.WriteLine($"affected rows: {affected}");
+                    }
                 }
                 catch (Exception e)
                 {
@@ -505,16 +510,17 @@ namespace WSStmt
                     client.Exec("create database power");
                     client.Exec(
                         "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))");
-                    var stmt = client.StmtInit();
-                    stmt.Prepare(
-                        "Insert into power.d1001 using power.meters tags(2,'California.SanFrancisco') values(?,?,?,?)");
-                    var ts = new DateTime(2023, 10, 03, 14, 38, 05, 000);
-                    stmt.BindRow(new object[] { ts, (float)10.30000, (int)219, (float)0.31000 });
-                    stmt.AddBatch();
-                    stmt.Exec();
-                    var affected = stmt.Affected();
-                    Console.WriteLine($"affected rows: {affected}");
-                    stmt.Dispose();
+                    using (var stmt = client.StmtInit())
+                    {
+                        stmt.Prepare(
+                            "Insert into power.d1001 using power.meters tags(2,'California.SanFrancisco') values(?,?,?,?)");
+                        var ts = new DateTime(2023, 10, 03, 14, 38, 05, 000);
+                        stmt.BindRow(new object[] { ts, (float)10.30000, (int)219, (float)0.31000 });
+                        stmt.AddBatch();
+                        stmt.Exec();
+                        var affected = stmt.Affected();
+                        Console.WriteLine($"affected rows: {affected}");
+                    }
                 }
                 catch (Exception e)
                 {

@@ -14,10 +14,11 @@ namespace NativeQueryWithReqID
             {
                 try
                 {
-                    client.Exec($"create database power",ReqId.GetReqId());
-                    client.Exec($"use power",ReqId.GetReqId());
+                    client.Exec($"create database power", ReqId.GetReqId());
+                    client.Exec($"use power", ReqId.GetReqId());
                     client.Exec(
-                        "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))",ReqId.GetReqId());
+                        "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT) TAGS (groupId INT, location BINARY(24))",
+                        ReqId.GetReqId());
                     string insertQuery =
                         "INSERT INTO " +
                         "power.d1001 USING power.meters TAGS(2,'California.SanFrancisco') " +
@@ -36,13 +37,15 @@ namespace NativeQueryWithReqID
                         "VALUES " +
                         "('2023-10-03 14:38:05.000', 10.80000, 223, 0.29000) " +
                         "('2023-10-03 14:38:06.500', 11.50000, 221, 0.35000)";
-                    client.Exec(insertQuery,ReqId.GetReqId());
+                    client.Exec(insertQuery, ReqId.GetReqId());
                     string query = "SELECT * FROM meters";
-                    var rows = client.Query(query,ReqId.GetReqId());
-                    while (rows.Read())
+                    using (var rows = client.Query(query, ReqId.GetReqId()))
                     {
-                        Console.WriteLine(
-                            $"{((DateTime)rows.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {rows.GetValue(1)}, {rows.GetValue(2)}, {rows.GetValue(3)}, {rows.GetValue(4)}, {Encoding.UTF8.GetString((byte[])rows.GetValue(5))}");
+                        while (rows.Read())
+                        {
+                            Console.WriteLine(
+                                $"{((DateTime)rows.GetValue(0)):yyyy-MM-dd HH:mm:ss.fff}, {rows.GetValue(1)}, {rows.GetValue(2)}, {rows.GetValue(3)}, {rows.GetValue(4)}, {Encoding.UTF8.GetString((byte[])rows.GetValue(5))}");
+                        }
                     }
                 }
                 catch (Exception e)
