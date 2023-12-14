@@ -2,7 +2,8 @@ using System;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Runtime.InteropServices;
-using TDengineDriver;
+using TDengine.Driver;
+using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
 
 namespace Test.Fixture
 {
@@ -16,33 +17,33 @@ namespace Test.Fixture
             string user = "root";
             string password = "taosdata";
             string ip;
-            short port = 0;
+            ushort port = 0;
 
 
-            TDengineDriver.TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
-            TDengineDriver.TDengine.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "90");
-            TDengineDriver.TDengine.Options((int)TDengineInitOption.TSDB_OPTION_LOCALE, "C");
-            TDengineDriver.TDengine.Options((int)TDengineInitOption.TSDB_OPTION_CHARSET, "UTF-8");
+            NativeMethods.Options((int)TDengineInitOption.TSDB_OPTION_CONFIGDIR, GetConfigPath());
+            NativeMethods.Options((int)TDengineInitOption.TSDB_OPTION_SHELL_ACTIVITY_TIMER, "90");
+            NativeMethods.Options((int)TDengineInitOption.TSDB_OPTION_LOCALE, "C");
+            NativeMethods.Options((int)TDengineInitOption.TSDB_OPTION_CHARSET, "UTF-8");
             string? ENV_HOST = Environment.GetEnvironmentVariable("TEST_HOST");
             ip = string.IsNullOrEmpty(ENV_HOST) == true ? "127.0.0.1" : ENV_HOST;
-            this.Conn = TDengineDriver.TDengine.Connect(ip, user, password, "", port);
+            this.Conn = NativeMethods.Connect(ip, user, password, "", port);
             IntPtr res;
             if (Conn != IntPtr.Zero)
             {
-                if ((res = TDengineDriver.TDengine.Query(Conn, $"create database if not exists {db} keep 3650")) != IntPtr.Zero)
+                if ((res = NativeMethods.Query(Conn, $"create database if not exists {db} keep 3650 WAL_RETENTION_PERIOD 86400")) != IntPtr.Zero)
                 {
-                    if ((res = TDengineDriver.TDengine.Query(Conn, $"use {db}")) != IntPtr.Zero)
+                    if ((res = NativeMethods.Query(Conn, $"use {db}")) != IntPtr.Zero)
                     {
                         Console.WriteLine("Get connection success");
                     }
                     else
                     {
-                        throw new Exception(TDengineDriver.TDengine.Error(res));
+                        throw new Exception(NativeMethods.Error(res));
                     }
                 }
                 else
                 {
-                    throw new Exception(TDengineDriver.TDengine.Error(res));
+                    throw new Exception(NativeMethods.Error(res));
                 }
             }
             else
@@ -61,17 +62,17 @@ namespace Test.Fixture
             IntPtr res = IntPtr.Zero;
             if (Conn != IntPtr.Zero)
             {
-                res = TDengineDriver.TDengine.Query(Conn, $"drop database if exists {db}");
+                res = NativeMethods.Query(Conn, $"drop database if exists {db}");
                 if (res != IntPtr.Zero)
                 {
-                    TDengineDriver.TDengine.Close(Conn);
+                    NativeMethods.Close(Conn);
                     Console.WriteLine("close connection success");
 
                 }
                 else
                 {
-                    TDengineDriver.TDengine.Close(Conn);
-                    throw new Exception(TDengineDriver.TDengine.Error(res));
+                    NativeMethods.Close(Conn);
+                    throw new Exception(NativeMethods.Error(res));
                 }
             }
             else

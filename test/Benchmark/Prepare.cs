@@ -1,11 +1,12 @@
-﻿using TDengineDriver;
+﻿using TDengine.Driver;
+using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
 
 namespace Benchmark
 {
     internal class Prepare
     {
         string Host { get; set; }
-        short Port { get; set; }
+        ushort Port { get; set; }
         string Username { get; set; }
         string Password { get; set; }
         string db = "benchmark";
@@ -67,7 +68,7 @@ namespace Benchmark
                                      ",'ncr_tag_1');";
         readonly string createJtb1 = "create table if not exists jtb_2 using jtb tags('{\"jtag_bool\":false,\"jtag_num\":3.141592653,\"jtag_str\":\"beijing\",\"jtag_null\":null}');";
 
-        public Prepare(string host, string userName, string passwd, short port)
+        public Prepare(string host, string userName, string passwd, ushort port)
         {
             Host = host;
             Username = userName;
@@ -78,7 +79,7 @@ namespace Benchmark
         {
             // Console.WriteLine("Prepare {0}... ", type);
 
-            IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, "", 0);
+            IntPtr conn = NativeMethods.Connect(Host, Username, Password, "", 0);
 
             if (conn != IntPtr.Zero)
             {
@@ -100,28 +101,28 @@ namespace Benchmark
             {
                 throw new Exception("create TD connection failed");
             }
-            TDengineDriver.TDengine.Close(conn);
+            NativeMethods.Close(conn);
         }
 
         public void SQLExe(IntPtr conn, string sql)
         {
             IntPtr res;
 
-            res = TDengineDriver.TDengine.Query(conn, sql);
+            res = NativeMethods.Query(conn, sql);
             IfTaosQuerySucc(res, sql);
-            TDengineDriver.TDengine.FreeResult(res);
+            NativeMethods.FreeResult(res);
 
         }
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
+            if (NativeMethods.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {NativeMethods.Error(res)}, code{NativeMethods.ErrorNo(res)}");
             }
         }
     }

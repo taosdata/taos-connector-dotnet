@@ -1,14 +1,13 @@
 ﻿using System;
-using Test.Utils;
-using TDengineDriver;
-using TDengineDriver.Impl;
-using Xunit;
 using System.Collections.Generic;
-using Test.Utils.ResultSet;
+using System.Text;
+using TDengine.Driver;
+using TDengine.Driver.Impl.NativeMethods;
 using Test.Case.Attributes;
 using Test.Fixture;
+using Test.Utils;
+using Xunit;
 using Xunit.Abstractions;
-
 
 namespace Function.Test.Taosc
 {
@@ -46,8 +45,8 @@ namespace Function.Test.Taosc
 
             // assert 
             IntPtr res = Tools.ExecuteQuery(conn, selectSql, _output);
-            List<TDengineMeta> actualResMeta = LibTaos.GetMeta(res);
-            List<object> actualResData = LibTaos.GetData(res);
+            List<TDengineMeta> actualResMeta = NativeMethods.FetchFields(res);
+            List<object> actualResData = Tools.GetData(res);
 
             _output.WriteLine("Assert meta");
             expectResMeta.ForEach(meta =>
@@ -90,8 +89,8 @@ namespace Function.Test.Taosc
 
             // Assert 
             IntPtr res = Tools.ExecuteQuery(conn, selectSql, _output);
-            List<TDengineMeta> actualResMeta = LibTaos.GetMeta(res);
-            List<object> actualResData = LibTaos.GetData(res);
+            List<TDengineMeta> actualResMeta = NativeMethods.FetchFields(res);
+            List<object> actualResData = Tools.GetData(res);
 
 
             _output.WriteLine("Assert meta");
@@ -134,8 +133,8 @@ namespace Function.Test.Taosc
 
             // Assert 
             IntPtr res = Tools.ExecuteQuery(conn, selectSql, _output);
-            List<TDengineMeta> actualResMeta = LibTaos.GetMeta(res);
-            List<object> actualResData = LibTaos.GetData(res);
+            List<TDengineMeta> actualResMeta = NativeMethods.FetchFields(res);
+            List<object> actualResData = Tools.GetData(res);
 
 
             _output.WriteLine("Assert meta");
@@ -153,6 +152,43 @@ namespace Function.Test.Taosc
                 Assert.Equal(expectResData[i], actualResData[i]);
             }
 
+        }
+        
+        [Fact(DisplayName = "Query.ReqId"), TestExeOrder(4), Trait("Category", "ReqId")]
+        public void ReqId()
+        {
+            IntPtr conn = database.Conn;
+            string tableName = "query_req_id";
+            string createTable = Tools.CreateTable(tableName, false, false);
+            List<Object> columns = Tools.ColumnsList(5);
+            List<TDengineMeta> expectResMeta = Tools.GetMetaFromDDL(createTable);
+            string insertSql = Tools.ConstructInsertSql(tableName, "", columns, null, 5);
+            string selectSql = $"select * from {tableName}";
+
+            // prepare 
+            Tools.ExecuteUpdate(conn, createTable, _output);
+            Tools.ExecuteUpdate(conn, insertSql, _output);
+
+            // assert 
+            IntPtr res = Tools.ExecuteQueryWithReqId(conn, selectSql, _output,TDengine.Driver.ReqId.GetReqId());
+            List<TDengineMeta> actualResMeta = NativeMethods.FetchFields(res);
+            List<object> actualResData = Tools.GetData(res);
+
+            _output.WriteLine("Assert meta");
+            expectResMeta.ForEach(meta =>
+            {
+                Assert.Equal(meta.name, actualResMeta[expectResMeta.IndexOf(meta)].name);
+                Assert.Equal(meta.type, actualResMeta[expectResMeta.IndexOf(meta)].type);
+                Assert.Equal(meta.size, actualResMeta[expectResMeta.IndexOf(meta)].size);
+            });
+
+            _output.WriteLine("Assert data");
+            for (int i = 0; i < columns.Count; i++)
+            {
+                //_output.WriteLine("{0},{1},{2}",i, columns[i], actualResData[i]);
+                Assert.Equal(columns[i], actualResData[i]);
+            }
+            Tools.FreeResult(res);
         }
     }
 }

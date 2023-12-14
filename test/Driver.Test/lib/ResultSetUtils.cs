@@ -1,7 +1,9 @@
 using System;
-using TDengineDriver;
-using TDengineDriver.Impl;
 using System.Collections.Generic;
+using TDengine.Driver;
+using TDengine.Driver.Impl;
+using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
+
 namespace Test.Utils.ResultSet
 {
     public class ResultSet
@@ -11,9 +13,9 @@ namespace Test.Utils.ResultSet
         public ResultSet(IntPtr res)
         {
 
-            ResultMeta = LibTaos.GetMeta(res);
-            ResultData = LibTaos.GetData(res);
-            TDengineDriver.TDengine.FreeResult(res);
+            ResultMeta = NativeMethods.FetchFields(res);
+            ResultData = Tools.GetData(res);
+            NativeMethods.FreeResult(res);
         }
 
         public ResultSet(List<TDengineMeta> meta, List<Object> data)

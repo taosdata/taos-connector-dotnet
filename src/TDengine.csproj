@@ -5,33 +5,31 @@
     <PackageId>TDengine.Connector</PackageId>
     <PackageIcon>image\logo.jpg</PackageIcon>
     <PackageReadmeFile>docs\README.md</PackageReadmeFile>
-    <Version>3.0.2</Version>
+    <Version>3.1.0</Version>
     <Authors>taosdata</Authors>
     <Company>https://tdengine.com/</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Taos;Data;Microsoft.NET.Sdk;IOT;bigdata;TDengine;taosdata</PackageTags>
     <Description>
 		This is the C# connector's classlib that lets you connect to TDengine 3.0.
-		This C # connector supports: Linux 64/Windows x64/Windows x86.
+		This C # connector supports: Linux 64/Windows x64.
 		more information please visit: https://tdengine.com/
     </Description>
-    <PackageProjectUrl>https://docs.tdengine.com/reference/connector/csharp/</PackageProjectUrl>
+    <PackageProjectUrl>https://docs.tdengine.com/client-libraries/csharp/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/taosdata/taos-connector-dotnet.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryBranch>"3.0"</RepositoryBranch>
     <NoWarn>CS1591</NoWarn>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+<!--    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
     <IsPackable>true</IsPackable>
     <!--<Nullable>enable</Nullable>-->
   </PropertyGroup>
   <ItemGroup>
     <None Include="resource\logo.jpg" Pack="true" PackagePath="image" />
     <None Include="../README.md" Pack="True" PackagePath="docs" />
-    <None Include="runtimes/**" Pack="True" PackagePath="runtimes" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
-    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
 </Project>

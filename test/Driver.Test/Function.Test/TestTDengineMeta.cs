@@ -1,6 +1,6 @@
 using System;
 using Xunit;
-using TDengineDriver;
+using TDengine.Driver;
 
 namespace Function.Test
 {

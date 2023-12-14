@@ -1,6 +1,8 @@
 using System;
 using System.Text;
-using TDengineDriver;
+using TDengine.Driver;
+using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
+
 namespace Benchmark
 {
     internal class InsertGenerator
@@ -106,13 +108,13 @@ namespace Benchmark
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
+            if (NativeMethods.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {NativeMethods.Error(res)}, code{NativeMethods.ErrorNo(res)}");
             }
         }
 

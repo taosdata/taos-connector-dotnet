@@ -1,13 +1,14 @@
 ﻿using System;
-using TDengineDriver;
+using TDengine.Driver;
 using System.Threading;
+using NativeMethods = TDengine.Driver.Impl.NativeMethods.NativeMethods;
 
 namespace Benchmark
 {
     internal class Batch
     {
         string Host { get; set; }
-        short Port { get; set; }
+        ushort Port { get; set; }
         string Username { get; set; }
         string Password { get; set; }
         readonly string db = "benchmark";
@@ -19,7 +20,7 @@ namespace Benchmark
         readonly long begineTime = 1659283200000;
         ManualResetEvent _doneEvent = new ManualResetEvent(false);
 
-        public Batch(string host, string userName, string passwd, short port, int maxSqlLength)
+        public Batch(string host, string userName, string passwd, ushort port, int maxSqlLength)
         {
             Host = host;
             Username = userName;
@@ -30,13 +31,13 @@ namespace Benchmark
         public void  Run(string types, int recordNum, int tableCnt, int loopTime)
         {
             // Console.WriteLine("Insert {0} ... ", types);
-            IntPtr conn = TDengineDriver.TDengine.Connect(Host, Username, Password, db, Port);
+            IntPtr conn = NativeMethods.Connect(Host, Username, Password, db, Port);
             IntPtr res;
             if (conn != IntPtr.Zero)
             {
-                res = TDengineDriver.TDengine.Query(conn, $"use {db}");
+                res = NativeMethods.Query(conn, $"use {db}");
                 IfTaosQuerySucc(res, $"use {db}");
-                TDengineDriver.TDengine.FreeResult(res);
+                NativeMethods.FreeResult(res);
 
                 if (types == "normal")
                 {
@@ -52,7 +53,7 @@ namespace Benchmark
                 throw new Exception("create TD connection failed");
             }
             
-            TDengineDriver.TDengine.Close(conn);
+            NativeMethods.Close(conn);
             Console.WriteLine("======TDengineDriver.TDengine.Close(conn);");
         }
 
@@ -82,10 +83,10 @@ namespace Benchmark
                     int tmpRecords = Math.Min(MaxSqlLength, numOfRecord);        
                     string sql = generator.RandomSQL(context.tableName, tmpRecords);
                     // Console.WriteLine(sql);
-                    IntPtr res = TDengineDriver.TDengine.Query(context.conn, sql);
+                    IntPtr res = NativeMethods.Query(context.conn, sql);
                     IfTaosQuerySucc(res, sql);
                     numOfRecord -= tmpRecords;
-                    TDengineDriver.TDengine.FreeResult(res);
+                    NativeMethods.FreeResult(res);
                 }
             }
             finally
@@ -98,13 +99,13 @@ namespace Benchmark
 
         public bool IfTaosQuerySucc(IntPtr res, string sql)
         {
-            if (TDengineDriver.TDengine.ErrorNo(res) == 0)
+            if (NativeMethods.ErrorNo(res) == 0)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"execute {sql} failed,reason {TDengineDriver.TDengine.Error(res)}, code{TDengineDriver.TDengine.ErrorNo(res)}");
+                throw new Exception($"execute {sql} failed,reason {NativeMethods.Error(res)}, code{NativeMethods.ErrorNo(res)}");
             }
         }
     }

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Threading.Tasks;
+using TDengine.Driver;
 
 namespace TDengine.Data.Client
 {
@@ -11,20 +14,34 @@ namespace TDengine.Data.Client
 
         private TDengineConnection _connection;
         private string _commandText;
+        private IStmt _stmt;
 
         public TDengineCommand()
         {
-            
         }
 
         public TDengineCommand(TDengineConnection connection)
         {
             _connection = connection;
-        }
-        public override void Cancel()
-        {
+            _stmt = connection.client.StmtInit();
         }
 
+        public override void Cancel()
+        {
+            throw new NotSupportedException();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_stmt != null)
+            {
+                _stmt.Dispose();
+                _stmt = null;
+            }
+
+            base.Dispose(disposing);
+        }
+        
         public override int ExecuteNonQuery()
         {
             if (_connection?.State != ConnectionState.Open)
@@ -38,7 +55,7 @@ namespace TDengine.Data.Client
             }
 
             int result;
-            using (var rows = _connection.client.Statement(_connection.connection, _commandText,_parameters))
+            using (var rows = Statement())
             {
                 result = rows.AffectRows;
             }
@@ -59,7 +76,7 @@ namespace TDengine.Data.Client
             }
 
             object result;
-            using (var rows = _connection.client.Statement(_connection.connection, _commandText, _parameters))
+            using (var rows = Statement())
             {
                 result = rows.Read() ? rows.GetValue(0) : null;
             }
@@ -83,7 +100,17 @@ namespace TDengine.Data.Client
         public override string CommandText
         {
             get => _commandText;
-            set => _commandText = value;
+            set
+            {
+                try
+                {
+                    _stmt.Prepare(value);
+                }
+                finally
+                {
+                    _commandText = value;
+                }
+            }
         }
 
         public override int CommandTimeout { get; set; }
@@ -116,10 +143,86 @@ namespace TDengine.Data.Client
 
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
         {
-            var rows = _connection.client.Statement(_connection.connection, _commandText,_parameters);
+            var rows = Statement();
             return new TDengineDataReader(rows);
         }
 
         public new virtual TDengineParameterCollection Parameters => _parameters.Value;
+
+        private IRows Query()
+        {
+            return _connection.client.Query(_commandText);
+        }
+
+        private IRows Statement()
+        {
+            if (!_parameters.IsValueCreated || _parameters.Value.Count == 0)
+            {
+                return Query();
+            }
+            var isInsert = _stmt.IsInsert();
+
+            var pms = _parameters.Value;
+            var tableName = string.Empty;
+            List<object> tags = new List<object>();
+            List<object> data = new List<object>();
+            for (int i = 0; i < pms.Count; i++)
+            {
+                var parameter = pms[i];
+                if (parameter.ParameterName.StartsWith("$"))
+                {
+                    tags.Add(parameter.Value);
+                }
+                else if (parameter.ParameterName.StartsWith("@"))
+                {
+                    data.Add(parameter.Value);
+                }
+                else if (parameter.ParameterName.StartsWith("#"))
+                {
+                    if (string.IsNullOrEmpty(tableName))
+                    {
+                        tableName = parameter.Value as string;
+                    }
+                    else
+                    {
+                        throw new ArgumentException("table name already set");
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException($"Invalid parameter name: {parameter.ParameterName}, " +
+                                                $"parameter name should start with $, @ or #");
+                }
+            }
+
+            if (isInsert)
+            {
+                if (!string.IsNullOrEmpty(tableName))
+                {
+                    _stmt.SetTableName(tableName);
+                }
+
+                if (tags.Count > 0)
+                {
+                    _stmt.SetTags(tags.ToArray());
+                }
+
+                if (data.Count > 0)
+                {
+                    _stmt.BindRow(data.ToArray());
+                }
+            }
+            else
+            {
+                if (data.Count > 0)
+                {
+                    _stmt.BindRow(data.ToArray());
+                }
+            }
+
+            _stmt.AddBatch();
+            _stmt.Exec();
+            return _stmt.Result();
+        }
     }
 }

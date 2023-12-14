@@ -51,4 +51,39 @@ namespace TDengineHelper
         }
 
     }
+    public static class StringHelper
+    {
+        public static string PtrToStringUTF8(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero)
+            {
+                return string.Empty;
+            }
+#if NETSTANDARD2_1_OR_GREATER ||NET5_0_OR_GREATER||NETCOREAPP1_1_OR_GREATER
+            return Marshal.PtrToStringUTF8(ptr);
+#else
+            int len = 0;
+            while (Marshal.ReadByte(ptr, len) != 0)
+                len++;
+
+            byte[] buffer = new byte[len];
+            Marshal.Copy(ptr, buffer, 0, len);
+
+            return Encoding.UTF8.GetString(buffer);
+#endif
+        }
+        public static string PtrToStringUTF8(IntPtr ptr, int byteLen)
+        {
+#if NETSTANDARD2_1_OR_GREATER ||NET5_0_OR_GREATER||NETCOREAPP1_1_OR_GREATER
+            return Marshal.PtrToStringUTF8(ptr,byteLen);
+#else
+            byte[] buffer = new byte[byteLen];
+            Marshal.Copy(ptr, buffer, 0, byteLen);
+
+            return Encoding.UTF8.GetString(buffer);
+#endif
+        }
+    }
+    
+
 }

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Linq;
 
 namespace TDengine.Data.Client
 {
@@ -108,7 +107,16 @@ namespace TDengine.Data.Client
 
         public override void AddRange(Array values)
         {
-            _parameters.AddRange(values.Cast<TDengineParameter>());
+            List<TDengineParameter> result = new List<TDengineParameter>();
+
+            foreach (var value in values)
+            {
+                if (value is TDengineParameter parameter)
+                {
+                    result.Add(parameter);
+                }
+            }
+            _parameters.AddRange(result);
         }
 
         public new virtual TDengineParameter this[int index]
