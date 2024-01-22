@@ -114,6 +114,7 @@ ConnectionStringBuilder 支持的参数如下：
 * connTimeout: WebSocket 连接超时时间，仅当 protocol 为 WebSocket 时有效，默认为 1 分钟，使用 `TimeSpan.Parse` 方法解析字符串为 `TimeSpan` 对象。
 * readTimeout: WebSocket 读超时时间，仅当 protocol 为 WebSocket 时有效，默认为 5 分钟，使用 `TimeSpan.Parse` 方法解析字符串为 `TimeSpan` 对象。
 * writeTimeout: WebSocket 写超时时间，仅当 protocol 为 WebSocket 时有效，默认为 10 秒，使用 `TimeSpan.Parse` 方法解析字符串为 `TimeSpan` 对象。
+* enableCompression: 是否启用 WebSocket 压缩（dotnet 版本 6 及以上，连接器版本 3.1.1 及以上生效），默认为 false
 
 ### 指定 URL 和 Properties 获取连接
 
@@ -747,6 +748,7 @@ consumer 支持的配置参数如下：
 * auto.commit.interval.ms: 自动提交 offset 的间隔时间，默认为 5000 毫秒
 * auto.offset.reset: 当 offset 不存在时，从哪里开始消费，可选值为 earliest 或 latest，默认为 latest
 * msg.with.table.name: 消息是否包含表名
+* ws.message.enableCompression: 是否启用 WebSocket 压缩（dotnet 版本 6 及以上，连接器版本 3.1.1 及以上生效），默认为 false
 
 支持订阅结果集 `Dictionary<string, object>` key 为列名，value 为列值。
 
