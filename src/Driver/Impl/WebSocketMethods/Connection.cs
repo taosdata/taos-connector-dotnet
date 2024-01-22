@@ -12,7 +12,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         private readonly string _db = string.Empty;
 
         public Connection(string addr, string user, string password, string db, TimeSpan connectTimeout = default,
-            TimeSpan readTimeout = default, TimeSpan writeTimeout = default) : base(addr, connectTimeout, readTimeout, writeTimeout)
+            TimeSpan readTimeout = default, TimeSpan writeTimeout = default, bool enableCompression = false) : base(addr, connectTimeout, readTimeout, writeTimeout,enableCompression)
         {
             _user = user;
             _password = password;

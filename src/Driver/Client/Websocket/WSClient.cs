@@ -14,7 +14,8 @@ namespace TDengine.Driver.Client.Websocket
             Debug.Assert(builder.Protocol == TDengineConstant.ProtocolWebSocket);
             _tz = builder.Timezone;
             _connection = new Connection(GetUrl(builder), builder.Username, builder.Password,
-                builder.Database, builder.ConnTimeout, builder.ReadTimeout, builder.WriteTimeout);
+                builder.Database, builder.ConnTimeout, builder.ReadTimeout, builder.WriteTimeout,
+                builder.EnableCompression);
 
             _connection.Connect();
         }
@@ -97,6 +98,7 @@ namespace TDengine.Driver.Client.Websocket
             {
                 _connection.FreeResult(resp.ResultId);
             }
+
             return resp.AffectedRows;
         }
 

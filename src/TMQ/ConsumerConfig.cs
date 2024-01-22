@@ -69,6 +69,12 @@ namespace TDengine.TMQ
             get => Get("token");
             set => this.SetObject("token", value);
         }
+        
+        public string TDEnableCompression
+        {
+            get => Get("ws.message.enableCompression");
+            set => this.SetObject("ws.message.enableCompression", value);
+        }
 
         public string TDConnectUser
         {

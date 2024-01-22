@@ -20,6 +20,7 @@ namespace TDengine.Driver
         private const string WriteTimeoutKey = "writeTimeout";
         private const string TokenKey = "token";
         private const string UseSSLKey = "useSSL";
+        private const string EnableCompressionKey = "enableCompression";
 
         private enum KeysEnum
         {
@@ -34,7 +35,9 @@ namespace TDengine.Driver
             ReadTimeout,
             WriteTimeout,
             Token,
-            UseSSL
+            UseSSL,
+            EnableCompression,
+            Total
         }
 
         private string _host = string.Empty;
@@ -49,13 +52,14 @@ namespace TDengine.Driver
         private TimeSpan _writeTimeout = TimeSpan.Zero;
         private string _token = string.Empty;
         private bool _useSSL = false;
+        private bool _enableCompression = false;
 
         private static readonly IReadOnlyList<string> KeysList;
         private static readonly IReadOnlyDictionary<string, KeysEnum> KeysDict;
 
         static ConnectionStringBuilder()
         {
-            var list = new string[12];
+            var list = new string[(int)KeysEnum.Total];
             list[(int)KeysEnum.Host] = HostKey;
             list[(int)KeysEnum.Port] = PortKey;
             list[(int)KeysEnum.Database] = DatabaseKey;
@@ -68,9 +72,10 @@ namespace TDengine.Driver
             list[(int)KeysEnum.WriteTimeout] = WriteTimeoutKey;
             list[(int)KeysEnum.Token] = TokenKey;
             list[(int)KeysEnum.UseSSL] = UseSSLKey;
+            list[(int)KeysEnum.EnableCompression] = EnableCompressionKey;
             KeysList = list;
 
-            KeysDict = new Dictionary<string, KeysEnum>(12, StringComparer.OrdinalIgnoreCase)
+            KeysDict = new Dictionary<string, KeysEnum>((int)KeysEnum.Total, StringComparer.OrdinalIgnoreCase)
             {
                 [HostKey] = KeysEnum.Host,
                 [PortKey] = KeysEnum.Port,
@@ -83,7 +88,8 @@ namespace TDengine.Driver
                 [ReadTimeoutKey] = KeysEnum.ReadTimeout,
                 [WriteTimeoutKey] = KeysEnum.WriteTimeout,
                 [TokenKey] = KeysEnum.Token,
-                [UseSSLKey] = KeysEnum.UseSSL
+                [UseSSLKey] = KeysEnum.UseSSL,
+                [EnableCompressionKey] = KeysEnum.EnableCompression
             };
         }
 
@@ -144,6 +150,9 @@ namespace TDengine.Driver
                                 break;
                             case KeysEnum.UseSSL:
                                 UseSSL = Convert.ToBoolean(value);
+                                break;
+                            case KeysEnum.EnableCompression:
+                                EnableCompression = Convert.ToBoolean(value);
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException(nameof(index), index, "get value error");
@@ -230,6 +239,12 @@ namespace TDengine.Driver
             get => _useSSL;
             set => base[UseSSLKey] = _useSSL = value;
         }
+        
+        public bool EnableCompression
+        {
+            get => _enableCompression;
+            set => base[EnableCompressionKey] = _enableCompression = value;
+        }
 
         public override ICollection Keys => new ReadOnlyCollection<string>((string[])KeysList);
 
@@ -275,6 +290,8 @@ namespace TDengine.Driver
                     return Token;
                 case KeysEnum.UseSSL:
                     return UseSSL;
+                case KeysEnum.EnableCompression:
+                    return EnableCompression;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(index), index, "get value error");
             }
@@ -333,6 +350,9 @@ namespace TDengine.Driver
                     return;
                 case KeysEnum.UseSSL:
                     _useSSL = false;
+                    return;
+                case KeysEnum.EnableCompression:
+                    _enableCompression = false;
                     return;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(index), index, null);
