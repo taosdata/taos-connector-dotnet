@@ -365,9 +365,9 @@ namespace Driver.Test.Client.WS
                     Assert.True(isInsert);
                     stmt.SetTableName("t1");
                     stmt.SetTags(new object[] { "{\"a\":\"b\"}" });
-                    stmt.BindRow(new Object[]
+                    stmt.BindRow(new object[]
                         { now, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, "test_binary", "test_nchar" });
-                    stmt.BindRow(new Object[]
+                    stmt.BindRow(new object?[]
                         { nextSecond, null, null, null, null, null, null, null, null, null, null, null, null, null });
                     stmt.AddBatch();
                     stmt.Exec();
