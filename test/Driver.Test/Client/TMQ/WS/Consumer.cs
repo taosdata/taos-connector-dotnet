@@ -23,7 +23,7 @@ namespace Driver.Test.Client.TMQ.WS
         {
             var builder =
                 new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -83,6 +83,7 @@ namespace Driver.Test.Client.TMQ.WS
                         { "enable.auto.commit", "false" },
                         { "msg.with.table.name", "true" },
                         { "useSSL", "false" },
+                        { "ws.message.enableCompression", "true" }
                     };
                     DoRequest(client, "use af_test_tmq_ws");
                     var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
@@ -158,7 +159,7 @@ namespace Driver.Test.Client.TMQ.WS
         {
             var builder =
                 new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -218,6 +219,7 @@ namespace Driver.Test.Client.TMQ.WS
                         { "enable.auto.commit", "false" },
                         { "msg.with.table.name", "true" },
                         { "useSSL", "false" },
+                        { "ws.message.enableCompression", "true" }
                     };
 
                     var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
@@ -333,7 +335,7 @@ namespace Driver.Test.Client.TMQ.WS
         {
             var builder =
                 new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -392,7 +394,8 @@ namespace Driver.Test.Client.TMQ.WS
                         { "client.id", "test_tmq_c" },
                         { "enable.auto.commit", "false" },
                         { "msg.with.table.name", "true" },
-                        { "useSSL", "false" }
+                        { "useSSL", "false" },
+                        { "ws.message.enableCompression", "true" }
                     };
 
                     var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();

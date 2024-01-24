@@ -7,8 +7,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
     public class TMQConnection : BaseConnection
     {
         public TMQConnection(TMQOptions options, TimeSpan connectTimeout = default,
-            TimeSpan readTimeout = default, TimeSpan writeTimeout = default) : base(GetUrl(options), connectTimeout, readTimeout,
-            writeTimeout)
+            TimeSpan readTimeout = default, TimeSpan writeTimeout = default) : base(
+            GetUrl(options), connectTimeout, readTimeout,
+            writeTimeout, options.TDEnableCompression == "true")
         {
         }
 
@@ -41,7 +42,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 return $"{schema}://{options.TDConnectIp}:{port}/rest/tmq?token={options.TDToken}";
             }
         }
-        
+
         public WSTMQSubscribeResp Subscribe(List<string> topics, TMQOptions options)
         {
             return Subscribe(_GetReqId(), topics, options);
@@ -153,8 +154,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         public WSTMQOffsetSeekResp Seek(string topic, int vgroupId, long offset)
         {
-            return Seek(_GetReqId(), topic,vgroupId, offset);
+            return Seek(_GetReqId(), topic, vgroupId, offset);
         }
+
         public WSTMQOffsetSeekResp Seek(ulong reqId, string topic, int vgroupId, long offset)
         {
             return SendJsonBackJson<WSTMQOffsetSeekReq, WSTMQOffsetSeekResp>(WSTMQAction.TMQSeek,
@@ -186,8 +188,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         public WSTMQCommittedResp Committed(List<WSTopicVgroupId> tvIds)
         {
-            return Committed(_GetReqId(),tvIds);
+            return Committed(_GetReqId(), tvIds);
         }
+
         public WSTMQCommittedResp Committed(ulong reqId, List<WSTopicVgroupId> tvIds)
         {
             return SendJsonBackJson<WSTMQCommittedReq, WSTMQCommittedResp>(WSTMQAction.TMQCommitted,
@@ -202,6 +205,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         {
             return Position(_GetReqId(), tvIds);
         }
+
         public WSTMQPositionResp Position(ulong reqId, List<WSTopicVgroupId> tvIds)
         {
             return SendJsonBackJson<WSTMQPositionReq, WSTMQPositionResp>(WSTMQAction.TMQPosition,
@@ -243,10 +247,12 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         public string MsgWithTableName => Get("msg.with.table.name");
 
         public string TDConnectIp => Get("td.connect.ip");
-        
+
         public string TDUseSSL => Get("useSSL");
-        
+
         public string TDToken => Get("token");
+        
+        public string TDEnableCompression => Get("ws.message.enableCompression");
 
         public string TDConnectUser => Get("td.connect.user");
 
@@ -255,7 +261,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         public string TDConnectPort => Get("td.connect.port");
 
         public string TDDatabase => Get("td.connect.db");
-        
+
         public string TDConnectType => Get("td.connect.type");
 
         public TMQOptions(IEnumerable<KeyValuePair<string, string>> config)

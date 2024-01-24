@@ -24,11 +24,22 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         private readonly TimeSpan _defaultWriteTimeout = TimeSpan.FromSeconds(10);
 
         protected BaseConnection(string addr, TimeSpan connectTimeout = default,
-            TimeSpan readTimeout = default, TimeSpan writeTimeout = default)
+            TimeSpan readTimeout = default, TimeSpan writeTimeout = default, bool enableCompression = false)
         {
             _client = new ClientWebSocket();
             _client.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
-
+#if NET6_0_OR_GREATER
+            if (enableCompression)
+            {
+                _client.Options.DangerousDeflateOptions = new WebSocketDeflateOptions()
+                {
+                    ClientMaxWindowBits = 15, // Default value
+                    ServerMaxWindowBits = 15, // Default value
+                    ClientContextTakeover = true, // Default value
+                    ServerContextTakeover = true // Default value
+                };
+            }
+#endif
             if (connectTimeout == default)
             {
                 connectTimeout = _defaultConnTimeout;
@@ -105,8 +116,10 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             // Console.WriteLine(Encoding.UTF8.GetString(respBytes));
             if (resp.Action != action)
             {
-                throw new TDengineError(-1, $"receive unexpected action {resp.Action},req:{reqStr}",Encoding.UTF8.GetString(respBytes));
+                throw new TDengineError(-1, $"receive unexpected action {resp.Action},req:{reqStr}",
+                    Encoding.UTF8.GetString(respBytes));
             }
+
             if (resp.Code == 0) return resp;
             throw new TDengineError(resp.Code, resp.Message);
         }

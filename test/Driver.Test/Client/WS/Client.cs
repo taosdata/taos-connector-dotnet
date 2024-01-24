@@ -40,7 +40,7 @@ namespace Driver.Test.Client.WS
 
             var builder =
                 new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -135,7 +135,7 @@ namespace Driver.Test.Client.WS
 
             var builder =
                 new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -234,7 +234,7 @@ namespace Driver.Test.Client.WS
 
             var builder =
                 new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -334,7 +334,7 @@ namespace Driver.Test.Client.WS
 
             var builder =
                 new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -365,9 +365,9 @@ namespace Driver.Test.Client.WS
                     Assert.True(isInsert);
                     stmt.SetTableName("t1");
                     stmt.SetTags(new object[] { "{\"a\":\"b\"}" });
-                    stmt.BindRow(new Object[]
+                    stmt.BindRow(new object[]
                         { now, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, "test_binary", "test_nchar" });
-                    stmt.BindRow(new Object[]
+                    stmt.BindRow(new object?[]
                         { nextSecond, null, null, null, null, null, null, null, null, null, null, null, null, null });
                     stmt.AddBatch();
                     stmt.Exec();
@@ -438,14 +438,15 @@ namespace Driver.Test.Client.WS
                 }
             }
         }
-        
+
         [Fact]
         public void TDengineInfluxDBTest()
         {
             var db = "sml_influx_ws";
 
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
+                new ConnectionStringBuilder(
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -565,7 +566,8 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             var db = "sml_telnet_ws";
 
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
+                new ConnectionStringBuilder(
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -599,7 +601,8 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             var db = "sml_json_ws";
 
             var builder =
-                new ConnectionStringBuilder("protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata");
+                new ConnectionStringBuilder(
+                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
             using (var client = DbDriver.Open(builder))
             {
                 try

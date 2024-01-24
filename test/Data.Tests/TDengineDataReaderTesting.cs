@@ -126,7 +126,7 @@ namespace Data.Tests
                 Assert.Equal((sbyte)7, (sbyte)reader.GetByte(7));
 
                 Assert.Equal(true, reader.GetValue(8));
-                Assert.Equal(true, reader.GetBoolean(8));
+                Assert.True(reader.GetBoolean(8));
 
                 Assert.Equal("9nchar", reader.GetValue(9));
                 Assert.Equal("9nchar", reader.GetString(9));
@@ -255,7 +255,7 @@ namespace Data.Tests
                 Assert.Equal((sbyte)7, (sbyte)reader.GetByte(7));
 
                 Assert.Equal(true, reader.GetValue(8));
-                Assert.Equal(true, reader.GetBoolean(8));
+                Assert.True(reader.GetBoolean(8));
 
                 Assert.Equal("9nchar", reader.GetValue(9));
                 Assert.Equal("9nchar", reader.GetString(9));
@@ -385,7 +385,7 @@ namespace Data.Tests
                 Assert.Equal((sbyte)7, (sbyte)reader.GetByte(7));
 
                 Assert.Equal(true, reader.GetValue(8));
-                Assert.Equal(true, reader.GetBoolean(8));
+                Assert.True(reader.GetBoolean(8));
 
                 Assert.Equal("9nchar", reader.GetValue(9));
                 Assert.Equal("9nchar", reader.GetString(9));
@@ -469,7 +469,7 @@ namespace Data.Tests
                 Assert.Equal((sbyte)7, (sbyte)reader.GetByte(7));
 
                 Assert.Equal(true, reader.GetValue(8));
-                Assert.Equal(true, reader.GetBoolean(8));
+                Assert.True(reader.GetBoolean(8));
 
                 Assert.Equal("9nchar", reader.GetValue(9));
                 Assert.Equal("9nchar", reader.GetString(9));
@@ -598,7 +598,7 @@ namespace Data.Tests
                 Assert.Equal((sbyte)7, (sbyte)reader.GetByte(7));
 
                 Assert.Equal(true, reader.GetValue(8));
-                Assert.Equal(true, reader.GetBoolean(8));
+                Assert.True(reader.GetBoolean(8));
 
                 Assert.Equal("9nchar", reader.GetValue(9));
                 Assert.Equal("9nchar", reader.GetString(9));
@@ -728,7 +728,7 @@ namespace Data.Tests
                 Assert.Equal((sbyte)7, (sbyte)reader.GetByte(7));
 
                 Assert.Equal(true, reader.GetValue(8));
-                Assert.Equal(true, reader.GetBoolean(8));
+                Assert.True(reader.GetBoolean(8));
 
                 Assert.Equal("9nchar", reader.GetValue(9));
                 Assert.Equal("9nchar", reader.GetString(9));

@@ -360,9 +360,9 @@ namespace Driver.Test.Client.Native
                     Assert.True(isInsert);
                     stmt.SetTableName("t1");
                     stmt.SetTags(new object[] { "{\"a\":\"b\"}" });
-                    stmt.BindRow(new Object[]
+                    stmt.BindRow(new object[]
                         { now, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, "test_binary", "test_nchar" });
-                    stmt.BindRow(new Object[]
+                    stmt.BindRow(new object?[]
                         { nextSecond, null, null, null, null, null, null, null, null, null, null, null, null, null });
                     stmt.AddBatch();
                     stmt.Exec();
@@ -494,9 +494,9 @@ namespace Driver.Test.Client.Native
                     var tagFields = stmt.GetTagFields();
                     Assert.Single(tagFields);
                     stmt.SetTags(new object[] { "{\"a\":\"b\"}" });
-                    stmt.BindRow(new Object[]
+                    stmt.BindRow(new object[]
                         { now, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, "test_binary", "test_nchar" });
-                    stmt.BindRow(new Object[]
+                    stmt.BindRow(new object?[]
                         { nextSecond, null, null, null, null, null, null, null, null, null, null, null, null, null });
                     stmt.AddBatch();
                     stmt.Exec();
@@ -629,9 +629,9 @@ namespace Driver.Test.Client.Native
                     Assert.True(isInsert);
                     stmt.SetTableName("t1");
                     stmt.SetTags(new object[] { "{\"a\":\"b\"}" });
-                    stmt.BindRow(new Object[]
+                    stmt.BindRow(new object[]
                         { now, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, "test_binary", "test_nchar" });
-                    stmt.BindRow(new Object[]
+                    stmt.BindRow(new object?[]
                         { nextSecond, null, null, null, null, null, null, null, null, null, null, null, null, null });
                     stmt.AddBatch();
                     stmt.Exec();
@@ -792,7 +792,7 @@ namespace Driver.Test.Client.Native
                     var a9 = new ulong?[] { v9, null, vv9 };
                     var a10 = new float?[] { v10, null, vv10 };
                     var a11 = new double?[]{v11,null,vv11};
-                    stmt.BindColumn(fields,new DateTime[]{now,nextSecond,next2Second},a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,new string[]{ "test_binary",null,"b中文b"},new string[]{ "test_nchar",null,"n中文n"});
+                    stmt.BindColumn(fields,new DateTime[]{now,nextSecond,next2Second},a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,new string?[]{ "test_binary",null,"b中文b"},new string?[]{ "test_nchar",null,"n中文n"});
                     stmt.AddBatch();
                     stmt.Exec();
                     var affected = stmt.Affected();

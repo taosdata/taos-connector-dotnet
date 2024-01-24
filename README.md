@@ -114,6 +114,7 @@ The parameters supported by `ConnectionStringBuilder` are as follows:
 * connTimeout: WebSocket connection timeout, only valid when the protocol is WebSocket, the default is 1 minute, use the `TimeSpan.Parse` method to parse the string into a `TimeSpan` object.
 * readTimeout: WebSocket read timeout, only valid when the protocol is WebSocket, the default is 5 minutes, use the `TimeSpan.Parse` method to parse the string into a `TimeSpan` object.
 * writeTimeout: WebSocket write timeout, only valid when the protocol is WebSocket, the default is 10 seconds, use the `TimeSpan.Parse` method to parse the string into a `TimeSpan` object.
+* enableCompression: Whether to enable WebSocket compression (effective for dotnet version 6 and above, connector version 3.1.1 and above). The default is false.
 
 ### Specify the URL and Properties to get the connection
 
@@ -747,6 +748,7 @@ The configuration parameters supported by consumer are as follows:
 * auto.commit.interval.ms: The interval for automatically submitting offsets, the default is 5000 milliseconds
 * auto.offset.reset: When offset does not exist, where to start consumption, the optional value is earliest or latest, the default is latest
 * msg.with.table.name: Whether the message contains the table name
+* ws.message.enableCompression: Whether to enable WebSocket compression (effective for dotnet version 6 and above, connector version 3.1.1 and above). The default is false.
 
 Supports subscribing to the result set `Dictionary<string, object>` where the key is the column name and the value is the column value.
 
