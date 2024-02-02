@@ -21,7 +21,6 @@ namespace TDengine.Driver
 
     public static class BlockWriter
     {
-
         public static byte[] Serialize(int rows, TaosFieldE[] fields, params Array[] arrays)
         {
             if (fields.Length == 0)
@@ -84,7 +83,8 @@ namespace TDengine.Driver
                         var v = (DateTime[])array;
                         for (int i = 0; i < rows; i++)
                         {
-                            vv[i] = TDengineConstant.ConvertDatetimeToTick(v[i], (TDenginePrecision)fields[colIndex].precision);
+                            vv[i] = TDengineConstant.ConvertDatetimeToTick(v[i],
+                                (TDenginePrecision)fields[colIndex].precision);
                         }
 
                         WriteData(data, colInfoData, lengthData, rows, bitMapLen, vv,
@@ -123,106 +123,132 @@ namespace TDengine.Driver
                 {
                     if (elementType == typeof(byte[]))
                     {
-                        WriteUTF8(data, colInfoData, lengthData, rows, (byte[][])array,(TDengineDataType)fields[colIndex].type);
+                        WriteUTF8(data, colInfoData, lengthData, rows, (byte[][])array,
+                            (TDengineDataType)fields[colIndex].type);
                     }
                     else if (elementType == typeof(string))
                     {
-                        WriteUTF8(data, colInfoData, lengthData, rows, (string[])array,(TDengineDataType)fields[colIndex].type);
+                        WriteUTF8(data, colInfoData, lengthData, rows, (string[])array,
+                            (TDengineDataType)fields[colIndex].type);
                     }
                     else
                     {
                         throw new ArgumentException(
                             $"Unsupported binary type: {elementType},db type {(TDengineDataType)fields[colIndex].type}");
                     }
+
                     continue;
                 }
+
+                if ((TDengineDataType)fields[colIndex].type == TDengineDataType.TSDB_DATA_TYPE_VARBINARY ||
+                    (TDengineDataType)fields[colIndex].type == TDengineDataType.TSDB_DATA_TYPE_GEOMETRY)
+                {
+                    if (elementType == typeof(byte[]))
+                    {
+                        WriteUTF8(data, colInfoData, lengthData, rows, (byte[][])array,
+                            (TDengineDataType)fields[colIndex].type);
+                    }
+                    else
+                    {
+                        throw new ArgumentException(
+                            $"Unsupported varbinary/geometry type: {elementType},db type {(TDengineDataType)fields[colIndex].type}");
+                    }
+
+                    continue;
+                }
+
                 if ((TDengineDataType)fields[colIndex].type == TDengineDataType.TSDB_DATA_TYPE_NCHAR)
                 {
                     if (elementType == typeof(byte[]))
                     {
-                        WriteUTF32(data, colInfoData, lengthData, rows, (byte[][])array,(TDengineDataType)fields[colIndex].type);
+                        WriteUTF32(data, colInfoData, lengthData, rows, (byte[][])array,
+                            (TDengineDataType)fields[colIndex].type);
                     }
                     else if (elementType == typeof(string))
                     {
-                        WriteUTF32(data, colInfoData, lengthData, rows, (string[])array,(TDengineDataType)fields[colIndex].type);
+                        WriteUTF32(data, colInfoData, lengthData, rows, (string[])array,
+                            (TDengineDataType)fields[colIndex].type);
                     }
                     else
                     {
                         throw new ArgumentException(
                             $"Unsupported nchar type: {elementType}");
                     }
+
                     continue;
                 }
+
                 switch (elementType)
-                    {
-                        case Type byteType when byteType == typeof(bool?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (bool?[])array);
-                            break;
-                        case Type byteType when byteType == typeof(bool):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (bool[])array);
-                            break;
-                        case Type byteType when byteType == typeof(sbyte?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (sbyte?[])array);
-                            break;
-                        case Type byteType when byteType == typeof(sbyte):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (sbyte[])array);
-                            break;
-                        case Type byteType when byteType == typeof(short):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (short[])array);
-                            break;
-                        case Type byteType when byteType == typeof(short?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (short?[])array);
-                            break;
-                        case Type byteType when byteType == typeof(int):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (int[])array);
-                            break;
-                        case Type byteType when byteType == typeof(int?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (int?[])array);
-                            break;
-                        case Type byteType when byteType == typeof(long):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (long[])array);
-                            break;
-                        case Type byteType when byteType == typeof(long?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (long?[])array);
-                            break;
-                        case Type byteType when byteType == typeof(byte):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (byte[])array);
-                            break;
-                        case Type byteType when byteType == typeof(byte?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (byte?[])array);
-                            break;
-                        case Type byteType when byteType == typeof(ushort):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (ushort[])array);
-                            break;
-                        case Type byteType when byteType == typeof(ushort?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (ushort?[])array);
-                            break;
-                        case Type byteType when byteType == typeof(uint):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (uint[])array);
-                            break;
-                        case Type byteType when byteType == typeof(uint?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (uint?[])array);
-                            break;
-                        case Type byteType when byteType == typeof(ulong):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (ulong[])array);
-                            break;
-                        case Type byteType when byteType == typeof(ulong?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (ulong?[])array);
-                            break;
-                        case Type byteType when byteType == typeof(float):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (float[])array);
-                            break;
-                        case Type byteType when byteType == typeof(float?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (float?[])array);
-                            break;
-                        case Type byteType when byteType == typeof(double):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (double[])array);
-                            break;
-                        case Type byteType when byteType == typeof(double?):
-                            WriteData(data, colInfoData, lengthData, rows, bitMapLen, (double?[])array);
-                            break;
-                    }
+                {
+                    case Type byteType when byteType == typeof(bool?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (bool?[])array);
+                        break;
+                    case Type byteType when byteType == typeof(bool):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (bool[])array);
+                        break;
+                    case Type byteType when byteType == typeof(sbyte?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (sbyte?[])array);
+                        break;
+                    case Type byteType when byteType == typeof(sbyte):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (sbyte[])array);
+                        break;
+                    case Type byteType when byteType == typeof(short):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (short[])array);
+                        break;
+                    case Type byteType when byteType == typeof(short?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (short?[])array);
+                        break;
+                    case Type byteType when byteType == typeof(int):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (int[])array);
+                        break;
+                    case Type byteType when byteType == typeof(int?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (int?[])array);
+                        break;
+                    case Type byteType when byteType == typeof(long):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (long[])array);
+                        break;
+                    case Type byteType when byteType == typeof(long?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (long?[])array);
+                        break;
+                    case Type byteType when byteType == typeof(byte):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (byte[])array);
+                        break;
+                    case Type byteType when byteType == typeof(byte?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (byte?[])array);
+                        break;
+                    case Type byteType when byteType == typeof(ushort):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (ushort[])array);
+                        break;
+                    case Type byteType when byteType == typeof(ushort?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (ushort?[])array);
+                        break;
+                    case Type byteType when byteType == typeof(uint):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (uint[])array);
+                        break;
+                    case Type byteType when byteType == typeof(uint?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (uint?[])array);
+                        break;
+                    case Type byteType when byteType == typeof(ulong):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (ulong[])array);
+                        break;
+                    case Type byteType when byteType == typeof(ulong?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (ulong?[])array);
+                        break;
+                    case Type byteType when byteType == typeof(float):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (float[])array);
+                        break;
+                    case Type byteType when byteType == typeof(float?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (float?[])array);
+                        break;
+                    case Type byteType when byteType == typeof(double):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (double[])array);
+                        break;
+                    case Type byteType when byteType == typeof(double?):
+                        WriteData(data, colInfoData, lengthData, rows, bitMapLen, (double?[])array);
+                        break;
+                }
             }
+
             block.AddRange(colInfoData);
             block.AddRange(lengthData);
             block.AddRange(data);
@@ -231,6 +257,7 @@ namespace TDengine.Driver
             {
                 block[4 + i] = (byte)(blockLength >> (8 * i));
             }
+
             return block.ToArray();
         }
 
@@ -284,7 +311,7 @@ namespace TDengine.Driver
                 else
                 {
                     var bytesToAdd = ConvertToBytes(value[rowIndex].Value, length);
-                    Array.Copy(bytesToAdd, 0, dataTmp, rowIndex* length + bitMapLen, length);
+                    Array.Copy(bytesToAdd, 0, dataTmp, rowIndex * length + bitMapLen, length);
                 }
             }
 
@@ -303,7 +330,7 @@ namespace TDengine.Driver
             for (int rowIndex = 0; rowIndex < rows; rowIndex++)
             {
                 var bytesToAdd = ConvertToBytes(value[rowIndex], length);
-                Array.Copy(bytesToAdd, 0, dataTmp, rowIndex* length + bitMapLen, length);
+                Array.Copy(bytesToAdd, 0, dataTmp, rowIndex * length + bitMapLen, length);
             }
 
             bytes.AddRange(dataTmp);

@@ -20,8 +20,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameTINYINT</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's TinnyInt's meta info</describe>
@@ -36,8 +36,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameSMALLINT</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's SMALLINT's meta info</describe>
@@ -52,8 +52,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameINT</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's INT's meta info</describe>
@@ -68,8 +68,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameBIGINT</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's BIGINT's meta info</describe>
@@ -84,8 +84,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameUTINYINT</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's TINYINT UNSIGNED's meta info</describe>
@@ -100,8 +100,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameUSMALLINT</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's SMALLINT UNSIGNED's meta info</describe>
@@ -116,8 +116,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameUINT</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's INT UNSIGNED's meta info</describe>
@@ -132,8 +132,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameUBIGINT</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's BIGINT UNSIGNED's meta info</describe>
@@ -148,8 +148,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameFLOAT</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's FLOAT's meta info</describe>
@@ -164,8 +164,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameDOUBLE</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's DOUBLE's meta info</describe>
@@ -180,8 +180,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameSTRING</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's BINARY's meta info</describe>
@@ -196,8 +196,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameTIMESTAMP</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's TIMESTAMP's meta info</describe>
@@ -212,8 +212,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameNCHAR</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's NCHAR's meta info</describe>
@@ -228,8 +228,8 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
+
         /// <author>xiaolei</author>
         /// <Name>TestTDengineMeta.TestTypeNameUndefined</Name>
         /// <describe>Unit test for object TDengineDriver.TDengineMeta's undefine's meta info</describe>
@@ -244,8 +244,39 @@ namespace Function.Test
             string metaTypeName = meta.TypeName();
 
             Assert.Equal(metaTypeName, typeName);
-
         }
 
+        [Fact]
+        public void TestTypeNameJson()
+        {
+            string typeName = "JSON";
+            TDengineMeta meta = new TDengineMeta();
+            meta.type = 15;
+            string metaTypeName = meta.TypeName();
+
+            Assert.Equal(metaTypeName, typeName);
+        }
+
+        [Fact]
+        public void TestTypeNameVarbinary()
+        {
+            string typeName = "VARBINARY";
+            TDengineMeta meta = new TDengineMeta();
+            meta.type = 16;
+            string metaTypeName = meta.TypeName();
+
+            Assert.Equal(metaTypeName, typeName);
+        }
+
+        [Fact]
+        public void TestTypeNameGeometry()
+        {
+            string typeName = "GEOMETRY";
+            TDengineMeta meta = new TDengineMeta();
+            meta.type = 20;
+            string metaTypeName = meta.TypeName();
+
+            Assert.Equal(metaTypeName, typeName);
+        }
     }
 }

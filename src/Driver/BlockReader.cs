@@ -25,19 +25,20 @@ namespace TDengine.Driver
 
         private int _precision;
         private int[] _colHeadOffset;
-        private  int _cols;
-        private  byte[] _colType;
-        private  TimeZoneInfo _tz;
-        
+        private int _cols;
+        private byte[] _colType;
+        private TimeZoneInfo _tz;
+
         private readonly int _offset;
         private readonly bool _disableParseTime;
-        
+
 
         private readonly Dictionary<TDengineDataType, Func<int, int, object>> _methodMap =
             new Dictionary<TDengineDataType, Func<int, int, object>>();
 
 
-        public BlockReader(int offset, int cols, int precision, byte[] colType, TimeZoneInfo tz =default): this(offset,tz)
+        public BlockReader(int offset, int cols, int precision, byte[] colType, TimeZoneInfo tz = default) :
+            this(offset, tz)
         {
             _cols = cols;
             _precision = precision;
@@ -45,7 +46,7 @@ namespace TDengine.Driver
             _colType = colType;
         }
 
-        public BlockReader(int offset,TimeZoneInfo tz = default)
+        public BlockReader(int offset, TimeZoneInfo tz = default)
         {
             _offset = offset;
             if (tz == default)
@@ -69,12 +70,15 @@ namespace TDengine.Driver
             _methodMap[TDengineDataType.TSDB_DATA_TYPE_UINT] = ConvertUInt;
             _methodMap[TDengineDataType.TSDB_DATA_TYPE_UBIGINT] = ConvertUBigInt;
             _methodMap[TDengineDataType.TSDB_DATA_TYPE_JSONTAG] = ConvertJson;
-            
+            _methodMap[TDengineDataType.TSDB_DATA_TYPE_VARBINARY] = ConvertBinary;
+            _methodMap[TDengineDataType.TSDB_DATA_TYPE_GEOMETRY] = ConvertBinary;
         }
-        public BlockReader(int offset, int cols, byte[] colType):this(offset,cols,0,colType)
+
+        public BlockReader(int offset, int cols, byte[] colType) : this(offset, cols, 0, colType)
         {
             _disableParseTime = true;
         }
+
         public void SetBlockPtr(IntPtr pBlock, int rows)
         {
             var blockSize = GetBlockSize(pBlock);
@@ -111,7 +115,7 @@ namespace TDengine.Driver
             }
         }
 
-        public void SetTMQBlock(byte[] block,int precision)
+        public void SetTMQBlock(byte[] block, int precision)
         {
             _block = block;
             _rows = GetRowCount();
@@ -119,7 +123,7 @@ namespace TDengine.Driver
             _cols = GetColumnCount();
             _colHeadOffset = new int[_cols];
             _colType = GetColTypes();
-            SetBlock(_block,_rows);
+            SetBlock(_block, _rows);
         }
 
         private int GetColumnCount()
@@ -143,13 +147,13 @@ namespace TDengine.Driver
 
             return result;
         }
-        
+
         public void SetTMQBlock(IntPtr pBlock, int precision)
         {
             var blockSize = GetBlockSize(pBlock);
             byte[] dataArray = new byte[blockSize];
             Marshal.Copy(pBlock, dataArray, 0, blockSize);
-            SetTMQBlock(dataArray,precision);
+            SetTMQBlock(dataArray, precision);
         }
 
         private bool ItemIsNull(int headOffset, int row) =>
@@ -162,6 +166,8 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_BINARY:
                 case TDengineDataType.TSDB_DATA_TYPE_NCHAR:
                 case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
+                case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
+                case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
                     return true;
                 default:
                     return false;
@@ -180,9 +186,9 @@ namespace TDengine.Driver
 
         private object ConvertBool(int row, int col) => _block[_colHeadOffset[col] + _nullBitMapOffset + row] != 0;
 
-        private object ConvertTinyint(int row, int col){
-
-           return (sbyte)_block[_colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int8Size];
+        private object ConvertTinyint(int row, int col)
+        {
+            return (sbyte)_block[_colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int8Size];
         }
 
         private object ConvertSmallint(int row, int col) =>
@@ -220,6 +226,7 @@ namespace TDengine.Driver
             {
                 return ts;
             }
+
             return TDengineConstant.ConvertTimeToDatetime(ts, (TDenginePrecision)_precision, _tz);
         }
 

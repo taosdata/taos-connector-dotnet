@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using TDengine.Driver;
 using Xunit;
 using Xunit.Abstractions;
@@ -27,12 +28,18 @@ namespace Driver.Test.Function.Test
                 new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_FLOAT },
                 new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_DOUBLE },
                 new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY },
-                new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP,precision = (byte)TDenginePrecision.TSDB_TIME_PRECISION_MILLI},
+                new TaosFieldE
+                {
+                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP,
+                    precision = (byte)TDenginePrecision.TSDB_TIME_PRECISION_MILLI
+                },
                 new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_NCHAR },
                 new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UTINYINT },
                 new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_USMALLINT },
                 new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UINT },
                 new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UBIGINT },
+                new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_VARBINARY },
+                new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_GEOMETRY },
                 new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_JSONTAG },
             };
             Random rand = new Random();
@@ -87,14 +94,35 @@ namespace Driver.Test.Function.Test
             var at = new long[] { 1692754030419, 1692754031419, 1692754032419 };
             var an = new string?[] { "中文n", null, "n中文" };
             var aj = new string?[] { "{\"a\":\"b\"}", null, "{\"a\":\"b\"}" };
+            var aVarBinary = new byte[]?[]
+                { Encoding.UTF8.GetBytes("test_varbinary"), null, Encoding.UTF8.GetBytes("test_varbinary") };
+            var aGeometry = new byte[]?[]
+            {
+                new byte[]
+                {
+                    0x01, 0x01, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x59,
+                    0x40, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x59, 0x40
+                },
+                null, new byte[]
+                {
+                    0x01, 0x01, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x59,
+                    0x40, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x59, 0x40
+                }
+            };
             var block = BlockWriter.Serialize(3, allType, ab, ai8, ai16,
-                ai32, ai64, af, ad, av, at, an, au8, au16, au32, au64, aj);
+                ai32, ai64, af, ad, av, at, an, au8, au16, au32, au64, aVarBinary, aGeometry, aj);
             var expect = new byte[]
             {
                 0x01, 0x00, 0x00, 0x00, //version
-                0xAD, 0x01, 0x00, 0x00, //length
+                0x25, 0x02, 0x00, 0x00, //length
                 0x03, 0x00, 0x00, 0x00, //rows
-                0x0F, 0x00, 0x00, 0x00, //columns
+                0x11, 0x00, 0x00, 0x00, //columns
                 0x00, 0x00, 0x00, 0x00, //flagSegment
 
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //groupID
@@ -114,6 +142,8 @@ namespace Driver.Test.Function.Test
                 0x0C, 0x02, 0x00, 0x00, 0x00,
                 0x0D, 0x04, 0x00, 0x00, 0x00,
                 0x0E, 0x08, 0x00, 0x00, 0x00,
+                0x10, 0x00, 0x00, 0x00, 0x00,
+                0x14, 0x00, 0x00, 0x00, 0x00,
                 0x0F, 0x00, 0x00, 0x00, 0x00,
 
 //lengths
@@ -131,6 +161,8 @@ namespace Driver.Test.Function.Test
                 0x06, 0x00, 0x00, 0x00,
                 0x0C, 0x00, 0x00, 0x00,
                 0x18, 0x00, 0x00, 0x00,
+                0x20, 0x00, 0x00, 0x00,
+                0x2e, 0x00, 0x00, 0x00,
                 0x16, 0x00, 0x00, 0x00,
 
                 0x40, //bool
@@ -209,6 +241,26 @@ namespace Driver.Test.Function.Test
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
+                //varbinary
+                0x00, 0x00, 0x00, 0x00,
+                0xFF, 0xFF, 0xFF, 0xFF,
+                0x10, 0x00, 0x00, 0x00,
+                0x0E, 0x00,
+                0x74, 0x65, 0x73, 0x74, 0x5F, 0x76, 0x61, 0x72, 0x62, 0x69, 0x6E, 0x61, 0x72, 0x79,
+                0x0E, 0x00,
+                0x74, 0x65, 0x73, 0x74, 0x5F, 0x76, 0x61, 0x72, 0x62, 0x69, 0x6E, 0x61, 0x72, 0x79,
+
+                //geometry
+                0x00, 0x00, 0x00, 0x00,
+                0xFF, 0xFF, 0xFF, 0xFF,
+                0x17, 0x00, 0x00, 0x00,
+                0x15, 0x00,
+                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x59, 0x40,
+                0x15, 0x00,
+                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x59, 0x40,
+
                 0x00, 0x00, 0x00, 0x00, //json
                 0xFF, 0xFF, 0xFF, 0xFF,
                 0x0B, 0x00, 0x00, 0x00,
@@ -217,7 +269,7 @@ namespace Driver.Test.Function.Test
                 0x09, 0x00,
                 0x7B, 0x22, 0x61, 0x22, 0x3A, 0x22, 0x62, 0x22, 0x7D,
             };
-            Assert.Equal(expect,block);
+            Assert.Equal(expect, block);
         }
     }
 }

@@ -21,7 +21,9 @@ namespace TDengine.Driver
         TSDB_DATA_TYPE_USMALLINT = 12, // 2 bytes
         TSDB_DATA_TYPE_UINT = 13, // 4 bytes
         TSDB_DATA_TYPE_UBIGINT = 14, // 8 bytes
-        TSDB_DATA_TYPE_JSONTAG = 15 //4096 bytes 
+        TSDB_DATA_TYPE_JSONTAG = 15, //4096 bytes 
+        TSDB_DATA_TYPE_VARBINARY = 16,
+        TSDB_DATA_TYPE_GEOMETRY = 20,
     }
 
     public enum TDengineInitOption
@@ -100,6 +102,10 @@ namespace TDengine.Driver
                     return "NCHAR";
                 case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
                     return "JSON";
+                case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
+                    return "VARBINARY";
+                case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
+                    return "GEOMETRY";
                 default:
                     return "undefine";
             }
@@ -187,6 +193,7 @@ namespace TDengine.Driver
     {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 65)]
         public string name;
+
         public sbyte type;
         public byte precision;
         public byte scale;
@@ -238,6 +245,7 @@ namespace TDengine.Driver
             {
                 tz = TimeZoneInfo.Local;
             }
+
             switch (precision)
             {
                 case TDenginePrecision.TSDB_TIME_PRECISION_MILLI:
@@ -299,7 +307,7 @@ namespace TDengine.Driver
 
         public const string ProtocolNative = "Native";
         public const string ProtocolWebSocket = "WebSocket";
-        
+
         public static Type ScanType(sbyte type)
         {
             switch ((TDengineDataType)type)
@@ -333,6 +341,10 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_NCHAR:
                     return typeof(string);
                 case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
+                    return typeof(byte[]);
+                case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
+                    return typeof(byte[]);
+                case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
                     return typeof(byte[]);
                 default:
                     return typeof(DBNull);
@@ -372,6 +384,10 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_NCHAR:
                     return typeof(string);
                 case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
+                    return typeof(byte[]);
+                case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
+                    return typeof(byte[]);
+                case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
                     return typeof(byte[]);
                 default:
                     return typeof(DBNull);
