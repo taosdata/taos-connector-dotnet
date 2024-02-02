@@ -23,9 +23,10 @@ Note TDengine no longer supports 32-bit Windows platforms.
 
 ## Version support
 
-| **Connector version** | **TDengine version** |
-|-----------------------|----------------------|
-| 3.1.0                 | 3.2.1.0/3.1.1.18     |
+| **Connector version** | **TDengine version** | **major features**                   |
+|-----------------------|----------------------|--------------------------------------|
+| 3.1.1                 | 3.2.1.0/3.1.1.18     | support varbinary and geometry       |
+| 3.1.0                 | 3.2.1.0/3.1.1.18     | WebSocket uses native implementation |
 
 ## Handling exceptions
 
