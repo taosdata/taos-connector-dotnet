@@ -50,6 +50,8 @@ Note TDengine no longer supports 32-bit Windows platforms.
 | BINARY            | byte[]                  |
 | NCHAR             | string (utf-8 encoding) |
 | JSON              | byte[]                  |
+| VARBINARY         | byte[]                  |
+| GEOMETRY          | byte[]                  |
 
 **Note**: JSON type is only supported in tag.
 

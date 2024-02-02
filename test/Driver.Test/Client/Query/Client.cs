@@ -5,21 +5,43 @@ using TDengine.Driver.Client;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Driver.Test.Client.WS
+namespace Driver.Test.Client.Query
 {
-    public class Client
+    public partial class Client
     {
         private readonly ITestOutputHelper _output;
+        private readonly string _createTableSql;
+        private readonly string _nativeConnectString;
+        private readonly string _wsConnectString;
 
         public Client(ITestOutputHelper output)
         {
             this._output = output;
+            this._createTableSql = "create table if not exists all_type(ts timestamp," +
+                                   "c1 bool," +
+                                   "c2 tinyint," +
+                                   "c3 smallint," +
+                                   "c4 int," +
+                                   "c5 bigint," +
+                                   "c6 tinyint unsigned," +
+                                   "c7 smallint unsigned," +
+                                   "c8 int unsigned," +
+                                   "c9 bigint unsigned," +
+                                   "c10 float," +
+                                   "c11 double," +
+                                   "c12 binary(20)," +
+                                   "c13 nchar(20)," +
+                                   "c14 varbinary(20)," +
+                                   "c15 geometry(100)" +
+                                   ")" +
+                                   "tags(t json)";
+            this._nativeConnectString = "host=localhost;port=6030;username=root;password=taosdata";
+            this._wsConnectString =
+                "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true";
         }
 
-        [Fact]
-        public void TDengineWSDriverTest()
+        private object?[][] GenerateValue(TDenginePrecision precision, out string sql)
         {
-            var db = "driver_test_ws";
             Random rand = new Random();
             bool v1 = true;
             sbyte v2 = (sbyte)rand.Next(sbyte.MinValue, sbyte.MaxValue);
@@ -32,72 +54,113 @@ namespace Driver.Test.Client.WS
             ulong v9 = (ulong)rand.Next();
             float v10 = (float)rand.NextDouble();
             double v11 = rand.NextDouble();
+            var dateTime = DateTime.Now;
+            long ts = 0;
+            long nextSecond = 0;
+            switch (precision)
+            {
+                case TDenginePrecision.TSDB_TIME_PRECISION_MILLI:
+                    ts = (dateTime.ToUniversalTime().Ticks - TDengineConstant.TimeZero.Ticks) / 10000;
+                    nextSecond = (dateTime.Add(TimeSpan.FromSeconds(1)).ToUniversalTime().Ticks -
+                                  TDengineConstant.TimeZero.Ticks) / 10000;
+                    break;
+                case TDenginePrecision.TSDB_TIME_PRECISION_NANO:
+                    ts = (dateTime.ToUniversalTime().Ticks - TDengineConstant.TimeZero.Ticks) * 100;
+                    nextSecond = (dateTime.Add(TimeSpan.FromSeconds(1)).ToUniversalTime().Ticks -
+                                  TDengineConstant.TimeZero.Ticks) * 100;
+                    break;
+                case TDenginePrecision.TSDB_TIME_PRECISION_MICRO:
+                    ts = (dateTime.ToUniversalTime().Ticks - TDengineConstant.TimeZero.Ticks) / 10;
+                    nextSecond = (dateTime.Add(TimeSpan.FromSeconds(1)).ToUniversalTime().Ticks -
+                                  TDengineConstant.TimeZero.Ticks) / 10;
+                    break;
+            }
 
-            DateTime dateTime = DateTime.Now;
-            DateTime now = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute,
-                dateTime.Second, dateTime.Millisecond, dateTime.Kind);
-            DateTime nextSecond = now.Add(TimeSpan.FromSeconds(1));
+            sql = string.Format(
+                "values({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},'test_binary','test_nchar','test_varbinary','POINT(100 100)')({12},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)",
+                ts,
+                v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,
+                nextSecond);
+            return new object?[][]
+            {
+                new object[]
+                {
+                    TDengineConstant.ConvertTimeToDatetime(ts, precision), v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,
+                    Encoding.UTF8.GetBytes("test_binary"),
+                    "test_nchar", Encoding.UTF8.GetBytes("test_varbinary"),
+                    new byte[]
+                    {
+                        0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                    }
+                },
+                new object?[]
+                {
+                    TDengineConstant.ConvertTimeToDatetime(nextSecond, precision), null, null, null, null, null, null,
+                    null, null, null, null, null, null, null, null, null
+                }
+            };
+        }
 
-            var builder =
-                new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
+        private static Array[] TransposeToTypedArrays(object?[][] data)
+        {
+            var aTs = new DateTime[] { (DateTime)data[0][0]!, (DateTime)data[1][0]! };
+            var a1 = new bool?[] { (bool)data[0][1]!, (bool?)data[1][1], };
+            var a2 = new sbyte?[] { (sbyte)data[0][2]!, (sbyte?)data[1][2] };
+            var a3 = new short?[] { (short)data[0][3]!, (short?)data[1][3] };
+            var a4 = new int?[] { (int)data[0][4]!, (int?)data[1][4] };
+            var a5 = new long?[] { (long)data[0][5]!, (long?)data[1][5] };
+            var a6 = new byte?[] { (byte)data[0][6]!, (byte?)data[1][6] };
+            var a7 = new ushort?[] { (ushort)data[0][7]!, (ushort?)data[1][7] };
+            var a8 = new uint?[] { (uint)data[0][8]!, (uint?)data[1][8] };
+            var a9 = new ulong?[] { (ulong)data[0][9]!, (ulong?)data[1][9] };
+            var a10 = new float?[] { (float)data[0][10]!, (float?)data[1][10] };
+            var a11 = new double?[] { (double)data[0][11]!, (double?)data[1][11] };
+            var aBinary = new byte[]?[] { (byte[]?)data[0][12]!, (byte[]?)data[1][12] };
+            var aNchar = new string?[] { (string?)data[0][13]!, (string?)data[1][13] };
+            var aVarBinary = new byte[]?[] { (byte[]?)data[0][14]!, (byte[]?)data[1][14] };
+            var aGeometry = new byte[]?[] { (byte[]?)data[0][15]!, (byte[]?)data[1][15] };
+            return new Array[]
+                { aTs, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, aBinary, aNchar, aVarBinary, aGeometry };
+        }
+
+        private string PrecisionString(TDenginePrecision precision)
+        {
+            switch (precision)
+            {
+                case TDenginePrecision.TSDB_TIME_PRECISION_NANO:
+                    return "ns";
+                case TDenginePrecision.TSDB_TIME_PRECISION_MICRO:
+                    return "us";
+                case TDenginePrecision.TSDB_TIME_PRECISION_MILLI:
+                    return "ms";
+            }
+
+            return "ms";
+        }
+
+        private void QueryTest(string connectString, string db, TDenginePrecision precision)
+        {
+            var data = this.GenerateValue(precision, out var insertSql);
+
+            var builder = new ConnectionStringBuilder(connectString);
             using (var client = DbDriver.Open(builder))
             {
                 try
                 {
                     client.Exec($"drop database if exists {db}");
-                    client.Exec($"create database {db}");
+                    client.Exec($"create database {db} precision '{PrecisionString(precision)}'");
                     client.Exec($"use {db}");
-                    client.Exec("create table if not exists all_type(ts timestamp," +
-                                "c1 bool," +
-                                "c2 tinyint," +
-                                "c3 smallint," +
-                                "c4 int," +
-                                "c5 bigint," +
-                                "c6 tinyint unsigned," +
-                                "c7 smallint unsigned," +
-                                "c8 int unsigned," +
-                                "c9 bigint unsigned," +
-                                "c10 float," +
-                                "c11 double," +
-                                "c12 binary(20)," +
-                                "c13 nchar(20)" +
-                                ")" +
-                                "tags(t json)");
-                    string insertQuery = string.Format(
-                        "insert into t1 using all_type tags('{{\"a\":\"b\"}}') values('{0}',{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},'test_binary','test_nchar')('{12}',null,null,null,null,null,null,null,null,null,null,null,null,null)",
-                        now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK"),
-                        v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,
-                        nextSecond.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK"));
+                    client.Exec(this._createTableSql);
+                    string insertQuery = string.Format("insert into t1 using all_type tags('{{\"a\":\"b\"}}') {0}",
+                        insertSql);
                     client.Exec(insertQuery);
                     string query = "select * from all_type order by ts asc";
-                    var rows = client.Query(query);
-                    var haveNext = rows.Read();
-                    Assert.True(haveNext);
-                    Assert.Equal(now, rows.GetValue(0));
-                    Assert.Equal(v1, (bool)rows.GetValue(1));
-                    Assert.Equal(v2, (sbyte)rows.GetValue(2));
-                    Assert.Equal(v3, (short)rows.GetValue(3));
-                    Assert.Equal(v4, (int)rows.GetValue(4));
-                    Assert.Equal(v5, (long)rows.GetValue(5));
-                    Assert.Equal(v6, (byte)rows.GetValue(6));
-                    Assert.Equal(v7, (ushort)rows.GetValue(7));
-                    Assert.Equal(v8, (uint)rows.GetValue(8));
-                    Assert.Equal(v9, (ulong)rows.GetValue(9));
-                    Assert.Equal(v10, (float)rows.GetValue(10));
-                    Assert.Equal(v11, (double)rows.GetValue(11));
-                    Assert.Equal(Encoding.UTF8.GetBytes("test_binary"), rows.GetValue(12));
-                    Assert.Equal("test_nchar", rows.GetValue(13));
-                    Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(14));
-                    haveNext = rows.Read();
-                    Assert.True(haveNext);
-                    Assert.Equal(nextSecond, rows.GetValue(0));
-                    for (int i = 1; i < 13; i++)
+                    using (var rows = client.Query(query))
                     {
-                        Assert.Null(rows.GetValue(i));
+                        this.AssertColumn(rows);
+                        this.AssertValue(rows, data);
                     }
-
-                    Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(14));
                 }
                 catch (Exception e)
                 {
@@ -111,191 +174,28 @@ namespace Driver.Test.Client.WS
             }
         }
 
-        [Fact]
-        public void TDengineWSDriverNanoTest()
+        private void QueryWithReqIDTest(string connectString, string db, TDenginePrecision precision)
         {
-            var db = "driver_test_ns_ws";
-            Random rand = new Random();
-            bool v1 = true;
-            sbyte v2 = (sbyte)rand.Next(sbyte.MinValue, sbyte.MaxValue);
-            short v3 = (short)rand.Next(short.MinValue, short.MaxValue);
-            int v4 = rand.Next();
-            long v5 = rand.Next();
-            byte v6 = (byte)rand.Next(byte.MinValue, byte.MaxValue);
-            ushort v7 = (ushort)rand.Next(ushort.MinValue, ushort.MaxValue);
-            uint v8 = (uint)rand.Next();
-            ulong v9 = (ulong)rand.Next();
-            float v10 = (float)rand.NextDouble();
-            double v11 = rand.NextDouble();
+            var data = this.GenerateValue(precision, out var insertSql);
 
-            DateTime dateTime = DateTime.Now;
-            var ts = (dateTime.ToUniversalTime().Ticks - TDengineConstant.TimeZero.Ticks) * 100;
-            var nextSecond = (dateTime.Add(TimeSpan.FromSeconds(1)).ToUniversalTime().Ticks -
-                              TDengineConstant.TimeZero.Ticks) * 100;
-
-            var builder =
-                new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
-            using (var client = DbDriver.Open(builder))
-            {
-                try
-                {
-                    client.Exec($"drop database if exists {db}");
-                    client.Exec($"create database {db} precision 'ns'");
-                    client.Exec($"use {db}");
-                    client.Exec("create table if not exists all_type(ts timestamp," +
-                                "c1 bool," +
-                                "c2 tinyint," +
-                                "c3 smallint," +
-                                "c4 int," +
-                                "c5 bigint," +
-                                "c6 tinyint unsigned," +
-                                "c7 smallint unsigned," +
-                                "c8 int unsigned," +
-                                "c9 bigint unsigned," +
-                                "c10 float," +
-                                "c11 double," +
-                                "c12 binary(20)," +
-                                "c13 nchar(20)" +
-                                ")" +
-                                "tags(t json)");
-                    string insertQuery = string.Format(
-                        "insert into t1 using all_type tags('{{\"a\":\"b\"}}') values({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},'test_binary','test_nchar')({12},null,null,null,null,null,null,null,null,null,null,null,null,null)",
-                        ts,
-                        v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,
-                        nextSecond);
-                    client.Exec(insertQuery);
-                    string query = "select * from all_type order by ts asc";
-                    var rows = client.Query(query);
-                    var haveNext = rows.Read();
-                    Assert.True(haveNext);
-                    Assert.Equal(
-                        TDengineConstant.ConvertTimeToDatetime(ts, TDenginePrecision.TSDB_TIME_PRECISION_NANO),
-                        rows.GetValue(0));
-                    Assert.Equal(v1, (bool)rows.GetValue(1));
-                    Assert.Equal(v2, (sbyte)rows.GetValue(2));
-                    Assert.Equal(v3, (short)rows.GetValue(3));
-                    Assert.Equal(v4, (int)rows.GetValue(4));
-                    Assert.Equal(v5, (long)rows.GetValue(5));
-                    Assert.Equal(v6, (byte)rows.GetValue(6));
-                    Assert.Equal(v7, (ushort)rows.GetValue(7));
-                    Assert.Equal(v8, (uint)rows.GetValue(8));
-                    Assert.Equal(v9, (ulong)rows.GetValue(9));
-                    Assert.Equal(v10, (float)rows.GetValue(10));
-                    Assert.Equal(v11, (double)rows.GetValue(11));
-                    Assert.Equal(Encoding.UTF8.GetBytes("test_binary"), rows.GetValue(12));
-                    Assert.Equal("test_nchar", rows.GetValue(13));
-                    Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(14));
-                    haveNext = rows.Read();
-                    Assert.True(haveNext);
-                    Assert.Equal(
-                        TDengineConstant.ConvertTimeToDatetime(nextSecond,
-                            TDenginePrecision.TSDB_TIME_PRECISION_NANO), rows.GetValue(0));
-                    for (int i = 1; i < 13; i++)
-                    {
-                        Assert.Null(rows.GetValue(i));
-                    }
-
-                    Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(14));
-                }
-                catch (Exception e)
-                {
-                    _output.WriteLine(e.ToString());
-                    throw;
-                }
-                finally
-                {
-                    client.Exec($"drop database if exists {db}");
-                }
-            }
-        }
-
-        [Fact]
-        public void TDengineWSDriverNanoReqTest()
-        {
-            var db = "driver_test_ns_req_ws";
-            Random rand = new Random();
-            bool v1 = true;
-            sbyte v2 = (sbyte)rand.Next(sbyte.MinValue, sbyte.MaxValue);
-            short v3 = (short)rand.Next(short.MinValue, short.MaxValue);
-            int v4 = rand.Next();
-            long v5 = rand.Next();
-            byte v6 = (byte)rand.Next(byte.MinValue, byte.MaxValue);
-            ushort v7 = (ushort)rand.Next(ushort.MinValue, ushort.MaxValue);
-            uint v8 = (uint)rand.Next();
-            ulong v9 = (ulong)rand.Next();
-            float v10 = (float)rand.NextDouble();
-            double v11 = rand.NextDouble();
-
-            DateTime dateTime = DateTime.Now;
-            var ts = (dateTime.ToUniversalTime().Ticks - TDengineConstant.TimeZero.Ticks) * 100;
-            var nextSecond = (dateTime.Add(TimeSpan.FromSeconds(1)).ToUniversalTime().Ticks -
-                              TDengineConstant.TimeZero.Ticks) * 100;
-
-            var builder =
-                new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
+            var builder = new ConnectionStringBuilder(connectString);
             using (var client = DbDriver.Open(builder))
             {
                 try
                 {
                     client.Exec($"drop database if exists {db}", ReqId.GetReqId());
-                    client.Exec($"create database {db} precision 'ns'");
-                    client.Exec($"use {db}");
-                    client.Exec("create table if not exists all_type(ts timestamp," +
-                                "c1 bool," +
-                                "c2 tinyint," +
-                                "c3 smallint," +
-                                "c4 int," +
-                                "c5 bigint," +
-                                "c6 tinyint unsigned," +
-                                "c7 smallint unsigned," +
-                                "c8 int unsigned," +
-                                "c9 bigint unsigned," +
-                                "c10 float," +
-                                "c11 double," +
-                                "c12 binary(20)," +
-                                "c13 nchar(20)" +
-                                ")" +
-                                "tags(t json)");
-                    string insertQuery = string.Format(
-                        "insert into t1 using all_type tags('{{\"a\":\"b\"}}') values({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},'test_binary','test_nchar')({12},null,null,null,null,null,null,null,null,null,null,null,null,null)",
-                        ts,
-                        v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,
-                        nextSecond);
-                    client.Exec(insertQuery);
+                    client.Exec($"create database {db} precision '{PrecisionString(precision)}'", ReqId.GetReqId());
+                    client.Exec($"use {db}", ReqId.GetReqId());
+                    client.Exec(this._createTableSql, ReqId.GetReqId());
+                    string insertQuery = string.Format("insert into t1 using all_type tags('{{\"a\":\"b\"}}') {0}",
+                        insertSql);
+                    client.Exec(insertQuery, ReqId.GetReqId());
                     string query = "select * from all_type order by ts asc";
-                    var rows = client.Query(query, ReqId.GetReqId());
-                    var haveNext = rows.Read();
-                    Assert.True(haveNext);
-                    Assert.Equal(
-                        TDengineConstant.ConvertTimeToDatetime(ts, TDenginePrecision.TSDB_TIME_PRECISION_NANO),
-                        rows.GetValue(0));
-                    Assert.Equal(v1, (bool)rows.GetValue(1));
-                    Assert.Equal(v2, (sbyte)rows.GetValue(2));
-                    Assert.Equal(v3, (short)rows.GetValue(3));
-                    Assert.Equal(v4, (int)rows.GetValue(4));
-                    Assert.Equal(v5, (long)rows.GetValue(5));
-                    Assert.Equal(v6, (byte)rows.GetValue(6));
-                    Assert.Equal(v7, (ushort)rows.GetValue(7));
-                    Assert.Equal(v8, (uint)rows.GetValue(8));
-                    Assert.Equal(v9, (ulong)rows.GetValue(9));
-                    Assert.Equal(v10, (float)rows.GetValue(10));
-                    Assert.Equal(v11, (double)rows.GetValue(11));
-                    Assert.Equal(Encoding.UTF8.GetBytes("test_binary"), rows.GetValue(12));
-                    Assert.Equal("test_nchar", rows.GetValue(13));
-                    Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(14));
-                    haveNext = rows.Read();
-                    Assert.True(haveNext);
-                    Assert.Equal(
-                        TDengineConstant.ConvertTimeToDatetime(nextSecond,
-                            TDenginePrecision.TSDB_TIME_PRECISION_NANO), rows.GetValue(0));
-                    for (int i = 1; i < 13; i++)
+                    using (var rows = client.Query(query, ReqId.GetReqId()))
                     {
-                        Assert.Null(rows.GetValue(i));
+                        this.AssertColumn(rows);
+                        this.AssertValue(rows, data);
                     }
-
-                    Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(14));
                 }
                 catch (Exception e)
                 {
@@ -309,66 +209,40 @@ namespace Driver.Test.Client.WS
             }
         }
 
-        [Fact]
-        public void TDengineWSStmtTest()
+
+        private void StmtTest(string connectString, string db, TDenginePrecision precision)
         {
-            var db = "stmt_test_ws";
-            Random rand = new Random();
-            bool v1 = true;
-            sbyte v2 = (sbyte)rand.Next(sbyte.MinValue, sbyte.MaxValue);
-            short v3 = (short)rand.Next(short.MinValue, short.MaxValue);
-            int v4 = rand.Next();
-            long v5 = rand.Next();
-            byte v6 = (byte)rand.Next(byte.MinValue, byte.MaxValue);
-            ushort v7 = (ushort)rand.Next(ushort.MinValue, ushort.MaxValue);
-            uint v8 = (uint)rand.Next();
-            ulong v9 = (ulong)rand.Next();
-            float v10 = (float)rand.NextDouble();
-            double v11 = rand.NextDouble();
+            var data = this.GenerateValue(precision, out _);
 
-            DateTime dateTime = DateTime.Now;
-            DateTime now = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute,
-                dateTime.Second, dateTime.Millisecond, dateTime.Kind);
-            DateTime nextSecond = now.Add(TimeSpan.FromSeconds(1));
-
-
-            var builder =
-                new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
+            var builder = new ConnectionStringBuilder(connectString);
             using (var client = DbDriver.Open(builder))
             {
                 try
                 {
                     client.Exec($"drop database if exists {db}");
-                    client.Exec($"create database {db}");
+                    client.Exec($"create database {db} precision '{PrecisionString(precision)}'");
                     client.Exec($"use {db}");
-                    client.Exec("create table if not exists all_type(ts timestamp," +
-                                "c1 bool," +
-                                "c2 tinyint," +
-                                "c3 smallint," +
-                                "c4 int," +
-                                "c5 bigint," +
-                                "c6 tinyint unsigned," +
-                                "c7 smallint unsigned," +
-                                "c8 int unsigned," +
-                                "c9 bigint unsigned," +
-                                "c10 float," +
-                                "c11 double," +
-                                "c12 binary(20)," +
-                                "c13 nchar(20)" +
-                                ")" +
-                                "tags(t json)");
-
+                    client.Exec(this._createTableSql);
                     var stmt = client.StmtInit();
-                    stmt.Prepare("insert into ? using all_type tags(?) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                    StringBuilder questionMarks = new StringBuilder();
+                    var count = data[0].Length;
+                    for (int i = 0; i < count; i++)
+                    {
+                        questionMarks.Append("?");
+                        if (i < count - 1)
+                        {
+                            questionMarks.Append(", ");
+                        }
+                    }
+
+                    var values = questionMarks.ToString();
+                    stmt.Prepare($"insert into ? using all_type tags(?) values({values})");
                     var isInsert = stmt.IsInsert();
                     Assert.True(isInsert);
                     stmt.SetTableName("t1");
                     stmt.SetTags(new object[] { "{\"a\":\"b\"}" });
-                    stmt.BindRow(new object[]
-                        { now, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, "test_binary", "test_nchar" });
-                    stmt.BindRow(new object?[]
-                        { nextSecond, null, null, null, null, null, null, null, null, null, null, null, null, null });
+                    stmt.BindRow(data[0]);
+                    stmt.BindRow(data[1]);
                     stmt.AddBatch();
                     stmt.Exec();
                     var affected = stmt.Affected();
@@ -376,55 +250,13 @@ namespace Driver.Test.Client.WS
                     stmt.Prepare("select * from all_type where ts >= ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
-                    stmt.BindRow(new object[] { now });
+                    stmt.BindRow(new object[] { data[0][0]! });
                     stmt.AddBatch();
                     stmt.Exec();
-                    using (var result = stmt.Result())
+                    using (var rows = stmt.Result())
                     {
-                        var fieldCount = result.FieldCount;
-                        Assert.Equal(15, fieldCount);
-                        Assert.Equal("ts", result.GetName(0));
-                        Assert.Equal("c1", result.GetName(1));
-                        Assert.Equal("c2", result.GetName(2));
-                        Assert.Equal("c3", result.GetName(3));
-                        Assert.Equal("c4", result.GetName(4));
-                        Assert.Equal("c5", result.GetName(5));
-                        Assert.Equal("c6", result.GetName(6));
-                        Assert.Equal("c7", result.GetName(7));
-                        Assert.Equal("c8", result.GetName(8));
-                        Assert.Equal("c9", result.GetName(9));
-                        Assert.Equal("c10", result.GetName(10));
-                        Assert.Equal("c11", result.GetName(11));
-                        Assert.Equal("c12", result.GetName(12));
-                        Assert.Equal("c13", result.GetName(13));
-                        Assert.Equal("t", result.GetName(14));
-                        Assert.Equal(-1, result.AffectRows);
-                        var haveNext = result.Read();
-                        Assert.True(haveNext);
-                        Assert.Equal(now, result.GetValue(0));
-                        Assert.Equal(v1, (bool)result.GetValue(1));
-                        Assert.Equal(v2, (sbyte)result.GetValue(2));
-                        Assert.Equal(v3, (short)result.GetValue(3));
-                        Assert.Equal(v4, (int)result.GetValue(4));
-                        Assert.Equal(v5, (long)result.GetValue(5));
-                        Assert.Equal(v6, (byte)result.GetValue(6));
-                        Assert.Equal(v7, (ushort)result.GetValue(7));
-                        Assert.Equal(v8, (uint)result.GetValue(8));
-                        Assert.Equal(v9, (ulong)result.GetValue(9));
-                        Assert.Equal(v10, (float)result.GetValue(10));
-                        Assert.Equal(v11, (double)result.GetValue(11));
-                        Assert.Equal(Encoding.UTF8.GetBytes("test_binary"), result.GetValue(12));
-                        Assert.Equal("test_nchar", result.GetValue(13));
-                        Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), result.GetValue(14));
-                        haveNext = result.Read();
-                        Assert.True(haveNext);
-                        Assert.Equal(nextSecond, result.GetValue(0));
-                        for (int i = 1; i < 13; i++)
-                        {
-                            Assert.Null(result.GetValue(i));
-                        }
-
-                        Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), result.GetValue(14));
+                        this.AssertColumn(rows);
+                        this.AssertValue(rows, data);
                     }
                 }
                 catch (Exception e)
@@ -439,14 +271,182 @@ namespace Driver.Test.Client.WS
             }
         }
 
-        [Fact]
-        public void TDengineInfluxDBTest()
+
+        private void StmtWithReqIDTest(string connectString, string db, TDenginePrecision precision)
         {
-            var db = "sml_influx_ws";
+            var data = this.GenerateValue(precision, out _);
+
+            var builder = new ConnectionStringBuilder(connectString);
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec($"drop database if exists {db}", ReqId.GetReqId());
+                    client.Exec($"create database {db} precision '{PrecisionString(precision)}'", ReqId.GetReqId());
+                    client.Exec($"use {db}", ReqId.GetReqId());
+                    client.Exec(this._createTableSql, ReqId.GetReqId());
+                    var stmt = client.StmtInit(ReqId.GetReqId());
+                    StringBuilder questionMarks = new StringBuilder();
+                    var count = data[0].Length;
+                    for (int i = 0; i < count; i++)
+                    {
+                        questionMarks.Append("?");
+                        if (i < count - 1)
+                        {
+                            questionMarks.Append(", ");
+                        }
+                    }
+
+                    var values = questionMarks.ToString();
+                    stmt.Prepare($"insert into ? using all_type tags(?) values({values})");
+                    var isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    stmt.SetTableName("t1");
+                    stmt.SetTags(new object[] { "{\"a\":\"b\"}" });
+                    stmt.BindRow(data[0]);
+                    stmt.BindRow(data[1]);
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    var affected = stmt.Affected();
+                    Assert.Equal((long)2, affected);
+                    stmt.Prepare("select * from all_type where ts >= ? order by ts asc");
+                    isInsert = stmt.IsInsert();
+                    Assert.False(isInsert);
+                    stmt.BindRow(new object[] { data[0][0]! });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var rows = stmt.Result())
+                    {
+                        this.AssertColumn(rows);
+                        this.AssertValue(rows, data);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
+                finally
+                {
+                    client.Exec($"drop database if exists {db}");
+                }
+            }
+        }
+
+
+        private void StmtBindColumnsTest(string connectString, string db, TDenginePrecision precision)
+        {
+            var data = this.GenerateValue(precision, out _);
+            var transposedData = TransposeToTypedArrays(data);
 
             var builder =
-                new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
+                new ConnectionStringBuilder(connectString);
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec($"drop database if exists {db}", ReqId.GetReqId());
+                    client.Exec($"create database {db} precision '{PrecisionString(precision)}'", ReqId.GetReqId());
+                    client.Exec($"use {db}");
+                    client.Exec(this._createTableSql);
+                    var stmt = client.StmtInit(ReqId.GetReqId());
+                    stmt.Prepare("insert into ? using all_type tags(?) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                    var isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    stmt.SetTableName("t1");
+                    stmt.SetTags(new object[] { "{\"a\":\"b\"}" });
+                    var fields = stmt.GetColFields();
+                    stmt.BindColumn(fields, transposedData);
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    var affected = stmt.Affected();
+                    Assert.Equal((long)2, affected);
+                    stmt.Prepare("select * from all_type where ts >= ? order by ts asc");
+                    isInsert = stmt.IsInsert();
+                    Assert.False(isInsert);
+                    stmt.BindRow(new object[] { data[0][0]! });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var result = stmt.Result())
+                    {
+                        this.AssertColumn(result);
+                        this.AssertValue(result, data);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
+                finally
+                {
+                    client.Exec($"drop database if exists {db}");
+                }
+            }
+        }
+
+
+        private void VarbinaryTest(string connectString, string db)
+        {
+            DateTime dateTime = DateTime.Now;
+            var ts = (dateTime.ToUniversalTime().Ticks - TDengineConstant.TimeZero.Ticks) * 100;
+            var now = TDengineConstant.ConvertTimeToDatetime(ts, TDenginePrecision.TSDB_TIME_PRECISION_NANO);
+            var builder =
+                new ConnectionStringBuilder(connectString);
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    client.Exec($"drop database if exists {db}", ReqId.GetReqId());
+                    client.Exec($"create database {db} precision 'ns'");
+                    client.Exec($"use {db}");
+                    client.Exec("create table if not exists test_varbinary(ts timestamp,c1 varbinary(65517))");
+                    var stmt = client.StmtInit(ReqId.GetReqId());
+                    stmt.Prepare("insert into test_varbinary values(?,?)");
+                    var isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    var fields = stmt.GetColFields();
+                    var size = 65517;
+                    var data = new byte[size];
+                    for (int i = 0; i < size; i++)
+                    {
+                        data[i] = (byte)'a';
+                    }
+
+                    stmt.BindColumn(fields, new DateTime[] { now }, new byte[][] { data });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    var affected = stmt.Affected();
+                    Assert.Equal((long)1, affected);
+                    stmt.Prepare("select * from test_varbinary where c1 = ?");
+                    stmt.BindRow(new object[] { data });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var resut = stmt.Result())
+                    {
+                        var haveNext = resut.Read();
+                        Assert.True(haveNext);
+                        Assert.Equal(now, resut.GetValue(0));
+                        Assert.Equal(data, resut.GetValue(1));
+                    }
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
+                finally
+                {
+                    client.Exec($"drop database if exists {db}");
+                }
+            }
+        }
+
+
+        private void InfluxDBTest(string connectString, string db)
+        {
+            var builder =
+                new ConnectionStringBuilder(connectString);
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -560,14 +560,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             }
         }
 
-        [Fact]
-        public void TDengineTelnetTest()
+        private void TelnetTest(string connectString, string db)
         {
-            var db = "sml_telnet_ws";
-
             var builder =
-                new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
+                new ConnectionStringBuilder(connectString);
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -595,14 +591,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             }
         }
 
-        [Fact]
-        public void TDengineJsonTest()
+        private void SMLJsonTest(string connectString, string db)
         {
-            var db = "sml_json_ws";
-
             var builder =
-                new ConnectionStringBuilder(
-                    "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true");
+                new ConnectionStringBuilder(connectString);
             using (var client = DbDriver.Open(builder))
             {
                 try
@@ -634,6 +626,47 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 {
                     client.Exec($"drop database if exists {db}");
                 }
+            }
+        }
+
+        private void AssertColumn(IRows result)
+        {
+            Assert.Equal(1, result.GetOrdinal("c1"));
+            var fieldCount = result.FieldCount;
+            Assert.Equal(17, fieldCount);
+            Assert.Equal("ts", result.GetName(0));
+            Assert.Equal("c1", result.GetName(1));
+            Assert.Equal("c2", result.GetName(2));
+            Assert.Equal("c3", result.GetName(3));
+            Assert.Equal("c4", result.GetName(4));
+            Assert.Equal("c5", result.GetName(5));
+            Assert.Equal("c6", result.GetName(6));
+            Assert.Equal("c7", result.GetName(7));
+            Assert.Equal("c8", result.GetName(8));
+            Assert.Equal("c9", result.GetName(9));
+            Assert.Equal("c10", result.GetName(10));
+            Assert.Equal("c11", result.GetName(11));
+            Assert.Equal("c12", result.GetName(12));
+            Assert.Equal("c13", result.GetName(13));
+            Assert.Equal("c14", result.GetName(14));
+            Assert.Equal("c15", result.GetName(15));
+            Assert.Equal("t", result.GetName(16));
+            Assert.Equal(-1, result.AffectRows);
+        }
+
+        private void AssertValue(IRows rows, object?[][] data)
+        {
+            for (int i = 0; i < data.Length; i++)
+            {
+                var haveNext = rows.Read();
+                Assert.True(haveNext);
+                for (int j = 0; j < data[i].Length; j++)
+                {
+                    // this._output.WriteLine($"{data[i][j]}:{rows.GetValue(j)}");
+                    Assert.Equal(data[i][j], rows.GetValue(j));
+                }
+
+                Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(data[i].Length));
             }
         }
     }
