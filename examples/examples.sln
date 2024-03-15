@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30114.105
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeQuery", "NativeQuery\NativeQuery.csproj", "{EDAE50A9-7CB8-4683-8630-BC016C524410}"
 EndProject
@@ -35,13 +35,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeObjectDeserialize", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WSObjectDeserialize", "WSObjectDeserialize\WSObjectDeserialize.csproj", "{BE6ADFD4-DE57-4F98-8656-F710ED6D7A04}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsApp4.8", "WindowsFormsApp4.8\WindowsFormsApp4.8.csproj", "{3002B815-EBD4-446D-B572-7212849EFF61}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{EDAE50A9-7CB8-4683-8630-BC016C524410}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -108,5 +107,12 @@ Global
 		{BE6ADFD4-DE57-4F98-8656-F710ED6D7A04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE6ADFD4-DE57-4F98-8656-F710ED6D7A04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE6ADFD4-DE57-4F98-8656-F710ED6D7A04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3002B815-EBD4-446D-B572-7212849EFF61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3002B815-EBD4-446D-B572-7212849EFF61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3002B815-EBD4-446D-B572-7212849EFF61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3002B815-EBD4-446D-B572-7212849EFF61}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

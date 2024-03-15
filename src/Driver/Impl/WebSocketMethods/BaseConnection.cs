@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Net.WebSockets;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -155,7 +154,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 cts.CancelAfter(_writeTimeout);
                 try
                 {
-                    await _client.SendAsync(data, messageType, true, cts.Token);
+                    await _client.SendAsync(data, messageType, true, cts.Token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -167,16 +166,30 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         private void SendText(string request)
         {
             var data = new ArraySegment<byte>(Encoding.UTF8.GetBytes(request));
-            SendAsync(data, WebSocketMessageType.Text).Wait();
+            Task.Run(async () =>
+            {
+                await SendAsync(data, WebSocketMessageType.Text).ConfigureAwait(true);
+            });
         }
 
         private void SendBinary(byte[] request)
         {
             var data = new ArraySegment<byte>(request);
-            SendAsync(data, WebSocketMessageType.Binary).Wait();
+            Task.Run(async () =>
+            {
+                await SendAsync(data, WebSocketMessageType.Binary).ConfigureAwait(true);
+            });
         }
-
+        
         private byte[] Receive(out WebSocketMessageType messageType)
+        {
+            var task = Task.Run(async () => await ReceiveAsync().ConfigureAwait(true));
+            task.Wait();
+            messageType = task.Result.Item2;
+            return task.Result.Item1;
+        }
+        
+        private async Task<Tuple<byte[],WebSocketMessageType>> ReceiveAsync()
         {
             using (var cts = new CancellationTokenSource())
             {
@@ -189,21 +202,17 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
                     do
                     {
-                        result = _client.ReceiveAsync(new ArraySegment<byte>(buffer), cts.Token).GetAwaiter()
-                            .GetResult();
+                        result = await _client.ReceiveAsync(new ArraySegment<byte>(buffer), cts.Token).ConfigureAwait(false);
 
                         if (result.MessageType == WebSocketMessageType.Close)
                         {
-                            _client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None)
-                                .Wait(-1);
+                            await _client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).ConfigureAwait(false);
                             throw new TDengineError(InternalError, "receive websocket close frame");
                         }
-
-                        messageType = result.MessageType;
                         memoryStream.Write(buffer, 0, result.Count);
                     } while (!result.EndOfMessage);
 
-                    return memoryStream.ToArray();
+                    return Tuple.Create(memoryStream.ToArray(), result.MessageType);
                 }
             }
         }
@@ -212,8 +221,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         {
             try
             {
-                _client.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).GetAwaiter()
-                    .GetResult();
+                _client.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).Wait();
             }
             catch (Exception)
             {
