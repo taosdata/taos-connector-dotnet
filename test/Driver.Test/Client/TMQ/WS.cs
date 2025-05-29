@@ -79,7 +79,7 @@ namespace Driver.Test.Client.TMQ
         public void GetUrl_ShouldHandleNullBuilder()
         {
             // Arrange
-            TMQOptions options = null;
+            TMQOptions? options = null;
 
             // Act & Assert
             Assert.Throws<NullReferenceException>(() => TMQConnection.GetUrl(options));
