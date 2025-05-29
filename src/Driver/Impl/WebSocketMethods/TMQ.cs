@@ -39,7 +39,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 Scheme = schema,
                 Host = options.TDConnectIp,
                 Port = Convert.ToInt32(port),
-                Path = "/ws"
+                Path = "/rest/tmq"
             };
 
             if (!string.IsNullOrEmpty(token))

@@ -41,20 +41,20 @@ namespace Driver.Test.Client.TMQ
 
         [Theory]
         // Test SSL and non-SSL cases
-        [InlineData("false", "", "localhost", "", "ws://localhost:6041/ws")]
-        [InlineData("true", "", "example.com", "xyz", "wss://example.com:443/ws?token=xyz")]
+        [InlineData("false", "", "localhost", "", "ws://localhost:6041/rest/tmq")]
+        [InlineData("true", "", "example.com", "xyz", "wss://example.com:443/rest/tmq?token=xyz")]
 
         // Test custom ports
-        [InlineData("false", "8080", "127.0.0.1", "abc", "ws://127.0.0.1:8080/ws?token=abc")]
-        [InlineData("true", "8443", "api.test", "", "wss://api.test:8443/ws")]
+        [InlineData("false", "8080", "127.0.0.1", "abc", "ws://127.0.0.1:8080/rest/tmq?token=abc")]
+        [InlineData("true", "8443", "api.test", "", "wss://api.test:8443/rest/tmq")]
 
         // Test IPv6 addresses
-        [InlineData("false", "", "2001:db8::1", "a&b", "ws://[2001:db8::1]:6041/ws?token=a&b")]
-        [InlineData("true", "443", "2001:db8::1", "", "wss://[2001:db8::1]:443/ws")]
+        [InlineData("false", "", "2001:db8::1", "a&b", "ws://[2001:db8::1]:6041/rest/tmq?token=a&b")]
+        [InlineData("true", "443", "2001:db8::1", "", "wss://[2001:db8::1]:443/rest/tmq")]
 
         // Test edge cases
-        [InlineData("false", "6041", "localhost", null, "ws://localhost:6041/ws")]
-        [InlineData("true", "443", "localhost", " ", "wss://localhost:443/ws?token= ")]
+        [InlineData("false", "6041", "localhost", null, "ws://localhost:6041/rest/tmq")]
+        [InlineData("true", "443", "localhost", " ", "wss://localhost:443/rest/tmq?token= ")]
         public void GetUrl_ShouldReturnCorrectUrl(string useSsl, string port, string host, string token,
             string expectedUrl)
         {
