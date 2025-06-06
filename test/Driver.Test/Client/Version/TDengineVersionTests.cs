@@ -38,6 +38,7 @@ namespace Driver.Test.Client.Version
         {
             TDengineVersion.CheckVersionCompatibility("3.3.2.0");
             TDengineVersion.CheckVersionCompatibility("3.3.6.3");
+            TDengineVersion.CheckVersionCompatibility("3.3.10.0");
         }
     }
 }
