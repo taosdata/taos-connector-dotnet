@@ -12,7 +12,7 @@ namespace Driver.Test.Client.Query
         private readonly ITestOutputHelper _output;
         private readonly string _nativeConnectString;
         private readonly string _wsConnectString;
-        private readonly string _cloudConnectString;
+        private readonly string? _cloudConnectString;
 
         public Client(ITestOutputHelper output)
         {

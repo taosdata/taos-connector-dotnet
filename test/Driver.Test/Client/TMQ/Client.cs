@@ -16,12 +16,12 @@ namespace Driver.Test.Client.TMQ
         private readonly string _nativeConnectString;
         private readonly string _wsConnectString;
         private readonly string _createTableSql;
-        private readonly string _cloudConnectString;
+        private readonly string? _cloudConnectString;
         private readonly Dictionary<string, string> _nativeTMQCfg;
         private readonly Dictionary<string, string> _nativeTMQCfgAutoCommit;
         private readonly Dictionary<string, string> _wsTMQCfg;
         private readonly Dictionary<string, string> _wsTMQCfgAutoCommit;
-        private readonly Dictionary<string, string> _cloudTMQCfg;
+        private readonly Dictionary<string, string>? _cloudTMQCfg;
 
 
         public Consumer(ITestOutputHelper output)
