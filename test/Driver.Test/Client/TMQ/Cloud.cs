@@ -12,7 +12,7 @@ namespace Driver.Test.Client.TMQ
         {
             var db = "cs_test";
             var topic = "cs_tmq_test_topic";
-            if (string.IsNullOrEmpty(this._cloudConnectString))
+            if (string.IsNullOrEmpty(this._cloudConnectString) || this._cloudTMQCfg == null)
             {
                 _output.WriteLine("Cloud connection string is not set. Skipping CloudConsumerTest.");
                 return;
