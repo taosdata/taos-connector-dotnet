@@ -631,6 +631,7 @@ namespace Driver.Test.Client.TMQ
             }
         }
 
+        // test consumer multi poll without duplicating messages
         private void ConsumerMultiPollTest(string connectString, string db, string topic,
             Dictionary<string, string> cfg)
         {
@@ -674,8 +675,7 @@ namespace Driver.Test.Client.TMQ
                             {
                                 if (i == 0)
                                 {
-                                    // 获取当前时间戳毫秒值
-
+                                    // insert data for the first time
                                     var sql = $"insert into t values('{nowTs}',{0})";
                                     DoRequest(client, sql);
                                 }
@@ -686,6 +686,7 @@ namespace Driver.Test.Client.TMQ
                             foreach (var message in result.Message)
                             {
                                 messageCount += 1;
+                                // check message
                                 var tsData = (DateTime)message.Value["ts"];
                                 var v = (int)message.Value["v"];
                                 var ts = TDengineConstant.ConvertDatetimeToTick(tsData,
@@ -702,12 +703,14 @@ namespace Driver.Test.Client.TMQ
                                 TimeSpan.Zero);
                             Assert.Single(committed);
                             Assert.Equal(result.TopicPartitionOffset.Offset, committed[0].Offset);
+                            // insert next data
                             insertIndex++;
                             DoRequest(client, $"insert into t values('{nowTs + 1000 * insertIndex}',{insertIndex})");
                         }
                     }
 
                     Assert.True(messageCount > 1);
+                    // check message count
                     Assert.Equal(4, messageCount);
                     consumer.Unsubscribe();
                     consumer.Close();
