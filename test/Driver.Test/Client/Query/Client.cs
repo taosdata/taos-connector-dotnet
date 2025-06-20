@@ -122,17 +122,17 @@ namespace Driver.Test.Client.Query
         private static Array[] TransposeToTypedArrays(object[][] data)
         {
             var aTs = new DateTime[] { (DateTime)data[0][0], (DateTime)data[1][0] };
-            var a1 = new bool[] { (bool)data[0][1], (bool)data[1][1], };
-            var a2 = new sbyte[] { (sbyte)data[0][2], (sbyte)data[1][2] };
-            var a3 = new short[] { (short)data[0][3], (short)data[1][3] };
-            var a4 = new int[] { (int)data[0][4], (int)data[1][4] };
-            var a5 = new long[] { (long)data[0][5], (long)data[1][5] };
-            var a6 = new byte[] { (byte)data[0][6], (byte)data[1][6] };
-            var a7 = new ushort[] { (ushort)data[0][7], (ushort)data[1][7] };
-            var a8 = new uint[] { (uint)data[0][8], (uint)data[1][8] };
-            var a9 = new ulong[] { (ulong)data[0][9], (ulong)data[1][9] };
-            var a10 = new float[] { (float)data[0][10], (float)data[1][10] };
-            var a11 = new double[] { (double)data[0][11], (double)data[1][11] };
+            var a1 = new bool?[] { (bool)data[0][1], (bool?)data[1][1], };
+            var a2 = new sbyte?[] { (sbyte)data[0][2], (sbyte?)data[1][2] };
+            var a3 = new short?[] { (short)data[0][3], (short?)data[1][3] };
+            var a4 = new int?[] { (int)data[0][4], (int?)data[1][4] };
+            var a5 = new long?[] { (long)data[0][5], (long?)data[1][5] };
+            var a6 = new byte?[] { (byte)data[0][6], (byte?)data[1][6] };
+            var a7 = new ushort?[] { (ushort)data[0][7], (ushort?)data[1][7] };
+            var a8 = new uint?[] { (uint)data[0][8], (uint?)data[1][8] };
+            var a9 = new ulong?[] { (ulong)data[0][9], (ulong?)data[1][9] };
+            var a10 = new float?[] { (float)data[0][10], (float?)data[1][10] };
+            var a11 = new double?[] { (double)data[0][11], (double?)data[1][11] };
             var aBinary = new byte[][] { (byte[])data[0][12], (byte[])data[1][12] };
             var aNchar = new string[] { (string)data[0][13], (string)data[1][13] };
             var aVarBinary = new byte[][] { (byte[])data[0][14], (byte[])data[1][14] };
