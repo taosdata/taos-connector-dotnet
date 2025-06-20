@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net5;net6;net45;net451;netcoreapp3.1</TargetFrameworks>
     <!--<ImplicitUsings>enable</ImplicitUsings>-->
-    <Nullable>enable</Nullable>
+    <!--    <Nullable>enable</Nullable>-->
     <NoWarn>CS1591;CS0168</NoWarn>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

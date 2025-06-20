@@ -12,7 +12,7 @@ namespace Driver.Test.Client.Query
         private readonly ITestOutputHelper _output;
         private readonly string _nativeConnectString;
         private readonly string _wsConnectString;
-        private readonly string? _cloudConnectString;
+        private readonly string _cloudConnectString;
 
         public Client(ITestOutputHelper output)
         {
@@ -34,7 +34,7 @@ namespace Driver.Test.Client.Query
                 $"protocol=WebSocket;host={host};port=443;useSSL=true;token={token};enableCompression=true";
         }
 
-        private object?[][] GenerateValue(TDenginePrecision precision, out string sql)
+        private object[][] GenerateValue(TDenginePrecision precision, out string sql)
         {
             Random rand = new Random();
             bool v1 = true;
@@ -75,7 +75,7 @@ namespace Driver.Test.Client.Query
                 ts,
                 v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,
                 nextSecond);
-            return new object?[][]
+            return new object[][]
             {
                 new object[]
                 {
@@ -88,7 +88,7 @@ namespace Driver.Test.Client.Query
                         0x00, 0x00, 0x00, 0x00, 0x59, 0x40
                     }
                 },
-                new object?[]
+                new object[]
                 {
                     TDengineConstant.ConvertTimeToDatetime(nextSecond, precision), null, null, null, null, null, null,
                     null, null, null, null, null, null, null, null, null
@@ -119,24 +119,24 @@ namespace Driver.Test.Client.Query
             return createTableSql;
         }
 
-        private static Array[] TransposeToTypedArrays(object?[][] data)
+        private static Array[] TransposeToTypedArrays(object[][] data)
         {
-            var aTs = new DateTime[] { (DateTime)data[0][0]!, (DateTime)data[1][0]! };
-            var a1 = new bool?[] { (bool)data[0][1]!, (bool?)data[1][1], };
-            var a2 = new sbyte?[] { (sbyte)data[0][2]!, (sbyte?)data[1][2] };
-            var a3 = new short?[] { (short)data[0][3]!, (short?)data[1][3] };
-            var a4 = new int?[] { (int)data[0][4]!, (int?)data[1][4] };
-            var a5 = new long?[] { (long)data[0][5]!, (long?)data[1][5] };
-            var a6 = new byte?[] { (byte)data[0][6]!, (byte?)data[1][6] };
-            var a7 = new ushort?[] { (ushort)data[0][7]!, (ushort?)data[1][7] };
-            var a8 = new uint?[] { (uint)data[0][8]!, (uint?)data[1][8] };
-            var a9 = new ulong?[] { (ulong)data[0][9]!, (ulong?)data[1][9] };
-            var a10 = new float?[] { (float)data[0][10]!, (float?)data[1][10] };
-            var a11 = new double?[] { (double)data[0][11]!, (double?)data[1][11] };
-            var aBinary = new byte[]?[] { (byte[]?)data[0][12]!, (byte[]?)data[1][12] };
-            var aNchar = new string?[] { (string?)data[0][13]!, (string?)data[1][13] };
-            var aVarBinary = new byte[]?[] { (byte[]?)data[0][14]!, (byte[]?)data[1][14] };
-            var aGeometry = new byte[]?[] { (byte[]?)data[0][15]!, (byte[]?)data[1][15] };
+            var aTs = new DateTime[] { (DateTime)data[0][0], (DateTime)data[1][0] };
+            var a1 = new bool[] { (bool)data[0][1], (bool)data[1][1], };
+            var a2 = new sbyte[] { (sbyte)data[0][2], (sbyte)data[1][2] };
+            var a3 = new short[] { (short)data[0][3], (short)data[1][3] };
+            var a4 = new int[] { (int)data[0][4], (int)data[1][4] };
+            var a5 = new long[] { (long)data[0][5], (long)data[1][5] };
+            var a6 = new byte[] { (byte)data[0][6], (byte)data[1][6] };
+            var a7 = new ushort[] { (ushort)data[0][7], (ushort)data[1][7] };
+            var a8 = new uint[] { (uint)data[0][8], (uint)data[1][8] };
+            var a9 = new ulong[] { (ulong)data[0][9], (ulong)data[1][9] };
+            var a10 = new float[] { (float)data[0][10], (float)data[1][10] };
+            var a11 = new double[] { (double)data[0][11], (double)data[1][11] };
+            var aBinary = new byte[][] { (byte[])data[0][12], (byte[])data[1][12] };
+            var aNchar = new string[] { (string)data[0][13], (string)data[1][13] };
+            var aVarBinary = new byte[][] { (byte[])data[0][14], (byte[])data[1][14] };
+            var aGeometry = new byte[][] { (byte[])data[0][15], (byte[])data[1][15] };
             return new Array[]
                 { aTs, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, aBinary, aNchar, aVarBinary, aGeometry };
         }
@@ -304,7 +304,7 @@ namespace Driver.Test.Client.Query
                     stmt.Prepare($"select * from {superTableName} where ts >= ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
-                    stmt.BindRow(new object[] { data[0][0]! });
+                    stmt.BindRow(new object[] { data[0][0] });
                     stmt.AddBatch();
                     stmt.Exec();
                     using (var rows = stmt.Result())
@@ -378,7 +378,7 @@ namespace Driver.Test.Client.Query
                     stmt.Prepare($"select * from {superTableName} where ts >= ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
-                    stmt.BindRow(new object[] { data[0][0]! });
+                    stmt.BindRow(new object[] { data[0][0] });
                     stmt.AddBatch();
                     stmt.Exec();
                     using (var rows = stmt.Result())
@@ -444,7 +444,7 @@ namespace Driver.Test.Client.Query
                     stmt.Prepare($"select * from {superTableName} where ts >= ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
-                    stmt.BindRow(new object[] { data[0][0]! });
+                    stmt.BindRow(new object[] { data[0][0] });
                     stmt.AddBatch();
                     stmt.Exec();
                     using (var result = stmt.Result())
@@ -772,7 +772,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             Assert.Equal(-1, result.AffectRows);
         }
 
-        private void AssertValue(IRows rows, object?[][] data)
+        private void AssertValue(IRows rows, object[][] data)
         {
             for (int i = 0; i < data.Length; i++)
             {
