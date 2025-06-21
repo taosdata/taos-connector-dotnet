@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Net.Http;
-using System.Runtime.InteropServices;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using TDengine.Driver;
@@ -15,7 +14,7 @@ namespace Driver.Test.Client.Query
         private Process NewTaosAdapter(string port)
         {
             string exec;
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
                 exec = "C:\\TDengine\\taosadapter.exe";
             }
@@ -47,16 +46,15 @@ namespace Driver.Test.Client.Query
 
         private async Task WaitForStart(string port)
         {
-            HttpClient client = new HttpClient();
             string url = $"http://127.0.0.1:{port}/-/ping";
-            bool success = await WaitForPingSuccess(client, url);
+            bool success = await WaitForPingSuccess(url);
             if (!success)
             {
                 throw new Exception("Failed to start taosadapter");
             }
         }
 
-        static async Task<bool> WaitForPingSuccess(HttpClient client, string url)
+        static async Task<bool> WaitForPingSuccess(string url)
         {
             bool success = false;
             int retryCount = 20;
@@ -66,14 +64,20 @@ namespace Driver.Test.Client.Query
             {
                 try
                 {
-                    HttpResponseMessage response = await client.GetAsync(url);
-                    if (response.IsSuccessStatusCode)
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                    request.Method = "GET";
+                    request.Timeout = 1000; // 设置超时（毫秒）
+
+                    using (HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync())
                     {
-                        success = true;
-                        break;
+                        if (response.StatusCode == HttpStatusCode.OK)
+                        {
+                            success = true;
+                            break;
+                        }
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // ignored
                 }

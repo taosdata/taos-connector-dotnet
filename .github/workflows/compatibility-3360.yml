@@ -96,9 +96,7 @@ jobs:
           - dotnet: '3.1.x'
             tfm: 'netcoreapp3.1'
           - dotnet: ''
-            tfm: 'net45'
-          - dotnet: ''
-            tfm: 'net451'
+            tfm: 'net46'
     name: test windows unit ${{ matrix.tfm }}
     steps:
       - name: checkout
@@ -186,3 +184,9 @@ jobs:
         run: |
           dotnet test -f ${{ matrix.tfm }} --logger "console;verbosity=detailed" --collect:"XPlat Code Coverage" --results-directory:./testresults
         timeout-minutes: 15
+        
+      - name: test dotnet framework
+        if: matrix.tfm == 'net46'
+        run: |
+          dotnet build -f ${{ matrix.tfm }}
+          

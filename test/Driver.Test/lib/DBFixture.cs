@@ -83,15 +83,15 @@ namespace Test.Fixture
         private string GetConfigPath()
         {
             string configDir = "";
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
                 configDir = "C:/TDengine/cfg";
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (Environment.OSVersion.Platform == PlatformID.Unix)
             {
                 configDir = "/etc/taos";
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
             {
                 configDir = "/usr/local/etc/taos";
             }
