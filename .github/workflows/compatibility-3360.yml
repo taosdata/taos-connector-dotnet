@@ -95,7 +95,11 @@ jobs:
             tfm: 'net5'
           - dotnet: '3.1.x'
             tfm: 'netcoreapp3.1'
-    name: test windows unit ${{ matrix.dotnet }}
+          - dotnet: ''
+            tfm: 'net45'
+          - dotnet: ''
+            tfm: 'net451'
+    name: test windows unit ${{ matrix.tfm }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -165,6 +169,7 @@ jobs:
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
+        if: matrix.dotnet != ''
         with:
           dotnet-version: ${{ matrix.dotnet }}
 
