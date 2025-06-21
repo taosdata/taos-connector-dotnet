@@ -214,7 +214,8 @@ namespace Driver.Test.Client.TMQ
                         using (var result = consumer.Consume(500))
                         {
                             _output.WriteLine($"{result}");
-                            if (messageCount == 3)
+                            // cloud may insert data by other process
+                            if (messageCount >= 3)
                             {
                                 break;
                             }
@@ -249,7 +250,8 @@ namespace Driver.Test.Client.TMQ
                         }
                     }
 
-                    Assert.Equal(3, messageCount);
+                    // cloud may insert data by other process
+                    Assert.True(messageCount >= 3);
                     consumer.Unsubscribe();
                     consumer.Close();
                 }
