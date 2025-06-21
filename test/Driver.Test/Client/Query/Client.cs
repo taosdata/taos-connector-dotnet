@@ -795,6 +795,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             var inCloud = IsCloudTest(builder);
             var client = DbDriver.Open(builder);
             var count = 30;
+            var tableName = $"test_concurrency_{DateTime.Now.Ticks}";
             try
             {
                 if (!inCloud)
@@ -804,7 +805,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 }
 
                 client.Exec($"use {db}");
-                client.Exec("create table if not exists t1 (ts timestamp, a int, b float, c binary(10))");
+                client.Exec($"create table if not exists {tableName} (ts timestamp, a int, b float, c binary(10))");
                 var ts = new long[count];
                 var dateTime = DateTime.Now;
                 var tsv = new DateTime[count];
@@ -821,12 +822,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     valuesStr += $"({ts[i]}, {i}, {i}, '中文')";
                 }
 
-                client.Exec($"insert into t1 values {valuesStr}");
+                client.Exec($"insert into {tableName} values {valuesStr}");
                 var tasks = new System.Collections.Generic.List<System.Threading.Tasks.Task>();
                 for (var i = 0; i < count; i++)
                 {
                     int localI = i;
-                    string query = "select * from t1 where ts = " + ts[localI];
+                    string query = $"select * from {tableName} where ts = " + ts[localI];
                     tasks.Add(System.Threading.Tasks.Task.Run(() =>
                     {
                         using (var rows = client.Query(query))
@@ -857,7 +858,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             }
             finally
             {
-                client.Exec($"drop table if exists t1");
+                client.Exec($"drop table if exists {tableName}");
                 if (!inCloud)
                 {
                     client.Exec($"drop database if exists {db}");
