@@ -29,5 +29,9 @@ namespace TDengine.Driver.Impl.WebSocketMethods.Protocol
         [JsonProperty("fields_lengths")] public long[] FieldsLengths { get; set; }
 
         [JsonProperty("precision")] public int Precision { get; set; }
+
+        [JsonProperty("fields_precisions")] public byte[] FieldsPrecisions { get; set; }
+
+        [JsonProperty("fields_scales")] public byte[] FieldsScales { get; set; }
     }
 }

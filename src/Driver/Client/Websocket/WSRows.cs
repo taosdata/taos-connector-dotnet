@@ -42,7 +42,8 @@ namespace TDengine.Driver.Client.Websocket
 
             _metas = ParseMetas(result);
             _encoding = Encoding.UTF8;
-            _blockReader = new BlockReader(55, FieldCount, result.Precision, result.FieldsTypes, tz);
+            _blockReader = new BlockReader(55, FieldCount, result.Precision, result.FieldsTypes, result.FieldsScales,
+                tz);
         }
 
         public WSRows(WSStmtUseResultResp result, Connection connection, TimeZoneInfo tz)
@@ -54,7 +55,8 @@ namespace TDengine.Driver.Client.Websocket
             FieldCount = result.FieldsCount;
             _metas = ParseMetas(result);
             _encoding = Encoding.UTF8;
-            _blockReader = new BlockReader(55, FieldCount, result.Precision, result.FieldsTypes, tz);
+            _blockReader = new BlockReader(55, FieldCount, result.Precision, result.FieldsTypes, result.FieldsScales,
+                tz);
         }
 
         private List<TDengineMeta> ParseMetas(WSQueryResp result)
@@ -154,6 +156,66 @@ namespace TDengine.Driver.Client.Websocket
             if (_currentRow != _blockSize) return true;
             FetchBlock();
             return !_completed;
+        }
+
+        public bool IsDBNull(int ordinal)
+        {
+            return _blockReader.IsDBNull(_currentRow, ordinal);
+        }
+
+        public byte GetByte(int ordinal)
+        {
+            return _blockReader.GetByte(_currentRow, ordinal);
+        }
+
+        public short GetInt16(int ordinal)
+        {
+            return _blockReader.GetInt16(_currentRow, ordinal);
+        }
+
+        public int GetInt32(int ordinal)
+        {
+            return _blockReader.GetInt32(_currentRow, ordinal);
+        }
+
+        public long GetInt64(int ordinal)
+        {
+            return _blockReader.GetInt64(_currentRow, ordinal);
+        }
+
+        public bool GetBoolean(int ordinal)
+        {
+            return _blockReader.GetBoolean(_currentRow, ordinal);
+        }
+
+        public DateTime GetDateTime(int ordinal)
+        {
+            return _blockReader.GetDateTime(_currentRow, ordinal);
+        }
+
+        public decimal GetDecimal(int ordinal)
+        {
+            return _blockReader.GetDecimal(_currentRow, ordinal);
+        }
+
+        public double GetDouble(int ordinal)
+        {
+            return _blockReader.GetDouble(_currentRow, ordinal);
+        }
+
+        public float GetFloat(int ordinal)
+        {
+            return _blockReader.GetFloat(_currentRow, ordinal);
+        }
+
+        public string GetString(int ordinal)
+        {
+            return _blockReader.GetString(_currentRow, ordinal);
+        }
+
+        public int GetValues(object[] values)
+        {
+            return _blockReader.GetValues(_currentRow, values);
         }
 
         private void FetchBlock()
