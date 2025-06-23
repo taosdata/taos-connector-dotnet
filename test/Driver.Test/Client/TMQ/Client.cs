@@ -271,10 +271,10 @@ namespace Driver.Test.Client.TMQ
                     }
                     else
                     {
-                        while (true)
+                        var groupId = cfg["group.id"];
+                        for (int i = 0; i < 20; i++)
                         {
                             Thread.Sleep(1000);
-                            var groupId = cfg["group.id"];
                             try
                             {
                                 DoRequest(client, $"DROP CONSUMER GROUP IF EXISTS {groupId} on {topic}");
@@ -282,10 +282,7 @@ namespace Driver.Test.Client.TMQ
                             }
                             catch (TDengineError e)
                             {
-                                if (e.Code != 0x3d3 && !e.Message.Contains("transaction not completed"))
-                                {
-                                    _output.WriteLine(e.ToString());
-                                }
+                                _output.WriteLine(e.ToString());
                             }
                         }
                     }
