@@ -184,9 +184,3 @@ jobs:
         run: |
           dotnet test -f ${{ matrix.tfm }} --logger "console;verbosity=detailed" --collect:"XPlat Code Coverage" --results-directory:./testresults
         timeout-minutes: 15
-        
-      - name: test dotnet framework
-        if: matrix.tfm == 'net46'
-        run: |
-          dotnet build -f ${{ matrix.tfm }}
-          
