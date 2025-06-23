@@ -271,9 +271,23 @@ namespace Driver.Test.Client.TMQ
                     }
                     else
                     {
-                        Thread.Sleep(3000);
-                        var groupId = cfg["group.id"];
-                        DoRequest(client, $"DROP CONSUMER GROUP IF EXISTS {groupId} on {topic}");
+                        while (true)
+                        {
+                            Thread.Sleep(1000);
+                            var groupId = cfg["group.id"];
+                            try
+                            {
+                                DoRequest(client, $"DROP CONSUMER GROUP IF EXISTS {groupId} on {topic}");
+                                break;
+                            }
+                            catch (TDengineError e)
+                            {
+                                if (e.Code != 0x3d3 && !e.Message.Contains("transaction not completed"))
+                                {
+                                    _output.WriteLine(e.ToString());
+                                }
+                            }
+                        }
                     }
                 }
             }
