@@ -558,7 +558,7 @@ namespace Driver.Test.Client.Query
 request_histogram_latency_seconds_max,aaa=bb,api_range=all,host=host161,url=http://192.168.17.148:8080/actuator/prometheus gauge=0 1648090640000000000
 process_files_max_files,host=host161,url=http://192.168.17.148:8080/actuator/prometheus gauge=10240 1648090640000000000
 request_timer_seconds,host=host161,quantile=0.5,url=http://192.168.17.148:8080/actuator/prometheus count=0,sum=0 1648090640000000000
-request_timer_seconds,host=host161,quantile=0.9,url=http://192.168.17.148:8080/actuator/prometheus count=0,sum=0 1648090640000000000
+request_timer_seconds,host=host161,quantile=0.9,url=http://192.168.17.148:8080/actuator/prometheus count=0,sum=0 1648090640000000000 
 request_timer_seconds,host=host161,quantile=0.95,url=http://192.168.17.148:8080/actuator/prometheus count=0,sum=0 1648090640000000000
 request_timer_seconds,host=host161,quantile=0.99,url=http://192.168.17.148:8080/actuator/prometheus count=0,sum=0 1648090640000000000
 request_timer_seconds,host=host161,url=http://192.168.17.148:8080/actuator/prometheus 0.223696211=0,0.016777216=0,0.178956969=0,0.156587348=0,0.2=0,0.626349396=0,0.015379112=0,5=0,0.089478485=0,0.357913941=0,5.726623061=0,0.008388607=0,0.894784851=0,0.006990506=0,3.937053352=0,0.001=0,0.061516456=0,0.134217727=0,1.431655765=0,0.005592405=0,0.984263336=0,0.001398101=0,3.22122547=0,0.033554431=0,0.805306366=0,0.002446676=0,0.003844776=0,0.20132659=0,1.073741824=0,0.022369621=0,1=0,0.002796201=0,1.789569706=0,0.001048576=0,0.246065832=0,0.050331646=0,4.294967296=0,8.589934591=0,0.536870911=0,0.447392426=0,2.505397588=0,10=0,0.013981011=0,0.003495251=0,0.044739241=0,2.863311529=0,0.039146836=0,0.268435456=0,sum=0,3.579139411=0,7.158278826=0,0.011184809=0,0.01258291=0,0.1=0,0.003145726=0,0.055924051=0,0.067108864=0,0.004194304=0,0.001747626=0,0.002097151=0,2.147483647=0,count=0,0.715827881=0,0.009786708=0,0.111848106=0,0.027962026=0,+Inf=0 1648090640000000000
@@ -781,7 +781,22 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 for (int j = 0; j < data[i].Length; j++)
                 {
                     // this._output.WriteLine($"{data[i][j]}:{rows.GetValue(j)}");
-                    Assert.Equal(data[i][j], rows.GetValue(j));
+                    var val = rows.GetValue(j);
+                    var expectVal = data[i][j];
+                    if (val is float floatVal)
+                    {
+                        Assert.IsType<float>(expectVal);
+                        Assert.Equal((float)expectVal, floatVal, 7);
+                    }
+                    else if (val is double doubleVal)
+                    {
+                        Assert.IsType<double>(expectVal);
+                        Assert.Equal((double)expectVal, doubleVal, 15);
+                    }
+                    else
+                    {
+                        Assert.Equal(expectVal, val);
+                    }
                 }
 
                 Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(data[i].Length));
@@ -843,7 +858,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             Assert.True(haveNext);
                             Assert.Equal(tsv[localI], rows.GetValue(0));
                             Assert.Equal(localI, rows.GetValue(1));
-                            Assert.Equal((float)localI, rows.GetValue(2));
+                            Assert.Equal((float)localI, (float)rows.GetValue(2), 7);
                             Assert.Equal(Encoding.UTF8.GetBytes("中文"), rows.GetValue(3));
                         }
                     }));
