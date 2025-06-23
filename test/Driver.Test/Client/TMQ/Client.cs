@@ -269,6 +269,12 @@ namespace Driver.Test.Client.TMQ
                         Thread.Sleep(3000);
                         DoRequest(client, $"drop database if exists {db}");
                     }
+                    else
+                    {
+                        Thread.Sleep(3000);
+                        var groupId = cfg["group.id"];
+                        DoRequest(client, $"DROP CONSUMER GROUP IF EXISTS {groupId} on {topic}");
+                    }
                 }
             }
         }
