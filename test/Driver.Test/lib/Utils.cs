@@ -374,7 +374,7 @@ namespace Test.Utils
                 columns.Add((uint)(i + 2));
                 columns.Add((ulong)(i + 3));
                 columns.Add((float)(3.1415F + i));
-                columns.Add((double)(3.1415926535897932D + i));
+                columns.Add((double)(3.14159265358979D + i));
                 columns.Add(Encoding.UTF8.GetBytes("binary_col_列_" + i));
                 columns.Add("nchar_col_列_" + i);
                 columns.Add((i & 1) == 1 ? true : false);
@@ -426,7 +426,7 @@ namespace Test.Utils
                 tags.Add((uint)(2 + seq));
                 tags.Add((ulong)(3 + seq));
                 tags.Add((float)(3.1415F + seq));
-                tags.Add((double)(3.1415926535897932D + seq));
+                tags.Add((double)(3.14159265358979D + seq));
                 tags.Add(Encoding.UTF8.GetBytes("binary_tag_标签_" + seq));
                 tags.Add("nchar_tag_标签_" + seq);
 
