@@ -276,91 +276,153 @@ namespace Driver.Test.Function.Test
             var decimal64Index = 17;
             Assert.Equal(expected.Length, cols);
             Assert.Equal(expected, values);
+            var rowIndex = 0;
             // get date time
-            var dt = parser.GetDateTime(0, dateTimeIndex);
-            Assert.Equal(expected[0], dt);
-            Assert.Throws<InvalidCastException>(() => parser.GetDateTime(0, boolIndex));
+            Assert.Equal(expected[0], parser.GetDateTime(rowIndex, dateTimeIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDateTime(rowIndex, boolIndex));
             // get boolean
-            Assert.Equal(expected[1], parser.GetBoolean(0, boolIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetBoolean(0, dateTimeIndex));
+            Assert.Equal(expected[1], parser.GetBoolean(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetBoolean(rowIndex, dateTimeIndex));
             // test convert to byte
-            Assert.Equal(expected[tinyIntUnsignedIndex], parser.GetByte(0, tinyIntUnsignedIndex));
-            Assert.Equal((byte)127, parser.GetByte(0, tinyIntIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetByte(0, boolIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetByte(0, dateTimeIndex));
-            Assert.Throws<OverflowException>(() => parser.GetByte(0, smallIntIndex));
-            Assert.Throws<OverflowException>(() => parser.GetByte(0, intIndex));
-            Assert.Throws<OverflowException>(() => parser.GetByte(0, bigIntIndex));
-            Assert.Throws<OverflowException>(() => parser.GetByte(0, smallIntUnsignedIndex));
-            Assert.Throws<OverflowException>(() => parser.GetByte(0, intUnsignedIndex));
-            Assert.Throws<OverflowException>(() => parser.GetByte(0, bigIntUnsignedIndex));
-            Assert.Throws<OverflowException>(() => parser.GetByte(0, floatIndex));
-            Assert.Throws<OverflowException>(() => parser.GetByte(0, doubleIndex));
-            Assert.Throws<OverflowException>(() => parser.GetByte(0, decimal128Index));
-            Assert.Throws<OverflowException>(() => parser.GetByte(0, decimal64Index));
-            Assert.Throws<InvalidCastException>(() => parser.GetByte(0, binaryIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetByte(0, ncharIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetByte(0, varbinaryIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetByte(0, geometryIndex));
+            Assert.Equal(expected[tinyIntUnsignedIndex], parser.GetByte(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal((byte)127, parser.GetByte(rowIndex, tinyIntIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, dateTimeIndex));
+            Assert.Throws<OverflowException>(() => parser.GetByte(rowIndex, smallIntIndex));
+            Assert.Throws<OverflowException>(() => parser.GetByte(rowIndex, intIndex));
+            Assert.Throws<OverflowException>(() => parser.GetByte(rowIndex, bigIntIndex));
+            Assert.Throws<OverflowException>(() => parser.GetByte(rowIndex, smallIntUnsignedIndex));
+            Assert.Throws<OverflowException>(() => parser.GetByte(rowIndex, intUnsignedIndex));
+            Assert.Throws<OverflowException>(() => parser.GetByte(rowIndex, bigIntUnsignedIndex));
+            Assert.Throws<OverflowException>(() => parser.GetByte(rowIndex, floatIndex));
+            Assert.Throws<OverflowException>(() => parser.GetByte(rowIndex, doubleIndex));
+            Assert.Throws<OverflowException>(() => parser.GetByte(rowIndex, decimal128Index));
+            Assert.Throws<OverflowException>(() => parser.GetByte(rowIndex, decimal64Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, geometryIndex));
 
             // test convert to int16
-            Assert.Equal((short)255, parser.GetInt16(0, tinyIntUnsignedIndex));
-            Assert.Equal((short)127, parser.GetInt16(0, tinyIntIndex));
-            Assert.Equal((short)32767, parser.GetInt16(0, smallIntIndex));
-            Assert.Equal((short)9999, parser.GetInt16(0, decimal64Index));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt16(0, boolIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt16(0, dateTimeIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt16(0, intIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt16(0, bigIntIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt16(0, smallIntUnsignedIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt16(0, intUnsignedIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt16(0, bigIntUnsignedIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt16(0, floatIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt16(0, doubleIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt16(0, decimal128Index));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt16(0, binaryIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt16(0, ncharIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt16(0, varbinaryIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt16(0, geometryIndex));
+            Assert.Equal((short)255, parser.GetInt16(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal((short)127, parser.GetInt16(rowIndex, tinyIntIndex));
+            Assert.Equal((short)32767, parser.GetInt16(rowIndex, smallIntIndex));
+            Assert.Equal((short)9999, parser.GetInt16(rowIndex, decimal64Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, dateTimeIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt16(rowIndex, intIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt16(rowIndex, bigIntIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt16(rowIndex, smallIntUnsignedIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt16(rowIndex, intUnsignedIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt16(rowIndex, bigIntUnsignedIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt16(rowIndex, floatIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt16(rowIndex, doubleIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt16(rowIndex, decimal128Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, geometryIndex));
             // test convert to int32
-            Assert.Equal(255, parser.GetInt32(0, tinyIntUnsignedIndex));
-            Assert.Equal(127, parser.GetInt32(0, tinyIntIndex));
-            Assert.Equal(32767, parser.GetInt32(0, smallIntIndex));
-            Assert.Equal(9999, parser.GetInt32(0, decimal64Index));
-            Assert.Equal(65535, parser.GetInt32(0, smallIntUnsignedIndex));
-            Assert.Equal(2147483647, parser.GetInt32(0, intIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt32(0, boolIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt32(0, dateTimeIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt32(0, bigIntIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt32(0, intUnsignedIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt32(0, bigIntUnsignedIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt32(0, floatIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt32(0, doubleIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt32(0, decimal128Index));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt32(0, binaryIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt32(0, ncharIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt32(0, varbinaryIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt32(0, geometryIndex));
+            Assert.Equal(255, parser.GetInt32(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal(127, parser.GetInt32(rowIndex, tinyIntIndex));
+            Assert.Equal(32767, parser.GetInt32(rowIndex, smallIntIndex));
+            Assert.Equal(9999, parser.GetInt32(rowIndex, decimal64Index));
+            Assert.Equal(65535, parser.GetInt32(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal(2147483647, parser.GetInt32(rowIndex, intIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, dateTimeIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt32(rowIndex, bigIntIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt32(rowIndex, intUnsignedIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt32(rowIndex, bigIntUnsignedIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt32(rowIndex, floatIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt32(rowIndex, doubleIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt32(rowIndex, decimal128Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, geometryIndex));
             // test convert to int64
-            Assert.Equal((long)255, parser.GetInt64(0, tinyIntUnsignedIndex));
-            Assert.Equal((long)127, parser.GetInt64(0, tinyIntIndex));
-            Assert.Equal((long)32767, parser.GetInt64(0, smallIntIndex));
-            Assert.Equal((long)9999, parser.GetInt64(0, decimal64Index));
-            Assert.Equal((long)65535, parser.GetInt64(0, smallIntUnsignedIndex));
-            Assert.Equal((long)2147483647, parser.GetInt64(0, intIndex));
-            Assert.Equal((long)4294967295, parser.GetInt64(0, intUnsignedIndex));
-            Assert.Equal((long)9223372036854775807, parser.GetInt64(0, bigIntIndex));
-            Assert.Equal((long)((float)2147483647), parser.GetInt64(0, floatIndex));
-            Assert.Equal((long)9999999999999999, parser.GetInt64(0, decimal128Index));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt64(0, boolIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt64(0, dateTimeIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt64(0, bigIntUnsignedIndex));
-            Assert.Throws<OverflowException>(() => parser.GetInt64(0, doubleIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt64(0, binaryIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt64(0, ncharIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt64(0, varbinaryIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt64(0, geometryIndex));
+            Assert.Equal((long)255, parser.GetInt64(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal((long)127, parser.GetInt64(rowIndex, tinyIntIndex));
+            Assert.Equal((long)32767, parser.GetInt64(rowIndex, smallIntIndex));
+            Assert.Equal((long)9999, parser.GetInt64(rowIndex, decimal64Index));
+            Assert.Equal((long)65535, parser.GetInt64(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal((long)2147483647, parser.GetInt64(rowIndex, intIndex));
+            Assert.Equal((long)4294967295, parser.GetInt64(rowIndex, intUnsignedIndex));
+            Assert.Equal((long)9223372036854775807, parser.GetInt64(rowIndex, bigIntIndex));
+            // lost precision for float
+            Assert.Equal((long)((float)2147483647), parser.GetInt64(rowIndex, floatIndex));
+            Assert.Equal((long)9999999999999999, parser.GetInt64(rowIndex, decimal128Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, dateTimeIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt64(rowIndex, bigIntUnsignedIndex));
+            Assert.Throws<OverflowException>(() => parser.GetInt64(rowIndex, doubleIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, geometryIndex));
 
+            // test convert to decimal
+            Assert.Equal(255, parser.GetDecimal(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal(127, parser.GetDecimal(rowIndex, tinyIntIndex));
+            Assert.Equal(32767, parser.GetDecimal(rowIndex, smallIntIndex));
+            Assert.Equal(65535, parser.GetDecimal(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal(2147483647, parser.GetDecimal(rowIndex, intIndex));
+            Assert.Equal(4294967295, parser.GetDecimal(rowIndex, intUnsignedIndex));
+            Assert.Equal(9223372036854775807, parser.GetDecimal(rowIndex, bigIntIndex));
+            // lost precision for float and double
+            Assert.Equal((decimal)(float)2147483647, parser.GetDecimal(rowIndex, floatIndex));
+            Assert.Equal((decimal)(double)18446744073709551615, parser.GetDecimal(rowIndex, doubleIndex));
+
+            Assert.Equal(decimal.Parse("9999.9999"), parser.GetDecimal(rowIndex, decimal64Index));
+            Assert.Equal(decimal.Parse("9999999999999999.9999"), parser.GetDecimal(rowIndex, decimal128Index));
+            Assert.Equal(18446744073709551615, parser.GetDecimal(rowIndex, bigIntUnsignedIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, dateTimeIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, geometryIndex));
+
+            // test convert to double
+            Assert.Equal(255, parser.GetDouble(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal(127, parser.GetDouble(rowIndex, tinyIntIndex));
+            Assert.Equal(32767, parser.GetDouble(rowIndex, smallIntIndex));
+            Assert.Equal(65535, parser.GetDouble(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal(2147483647, parser.GetDouble(rowIndex, intIndex));
+            Assert.Equal(4294967295, parser.GetDouble(rowIndex, intUnsignedIndex));
+            Assert.Equal(9223372036854775807, parser.GetDouble(rowIndex, bigIntIndex));
+            Assert.Equal((double)(float)2147483647, parser.GetDouble(rowIndex, floatIndex));
+            Assert.Equal((double)decimal.Parse("9999.9999"), parser.GetDouble(rowIndex, decimal64Index));
+            Assert.Equal((double)decimal.Parse("9999999999999999.9999"), parser.GetDouble(rowIndex, decimal128Index));
+            Assert.Equal(18446744073709551615, parser.GetDouble(rowIndex, bigIntUnsignedIndex));
+            Assert.Equal(18446744073709551615, parser.GetDouble(rowIndex, doubleIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, dateTimeIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, geometryIndex));
+
+            // test convert to string
+            Assert.Equal("binary", parser.GetString(rowIndex, binaryIndex));
+            Assert.Equal("nchar", parser.GetString(rowIndex, ncharIndex));
+            Assert.Equal("varbinary", parser.GetString(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, geometryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, tinyIntIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, smallIntIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, intIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, bigIntIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, tinyIntUnsignedIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, smallIntUnsignedIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, intUnsignedIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, bigIntUnsignedIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, floatIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, doubleIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, decimal64Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, decimal128Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, dateTimeIndex));
 
             cols = parser.GetValues(1, values);
             expected = new object[]
@@ -386,6 +448,29 @@ namespace Driver.Test.Function.Test
             };
             Assert.Equal(expected.Length, cols);
             Assert.Equal(expected, values);
+            rowIndex = 1;
+            // get boolean
+            Assert.Throws<InvalidCastException>(() => parser.GetBoolean(rowIndex, boolIndex));
+            // test convert to byte
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, tinyIntUnsignedIndex));
+            // test convert to Int16
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, smallIntIndex));
+            // test convert to Int32
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, intIndex));
+            // test convert to Int64
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, bigIntIndex));
+            // test convert to decimal
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, decimal64Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, decimal128Index));
+            // test convert to float
+            Assert.Throws<InvalidCastException>(() => parser.GetFloat(rowIndex, floatIndex));
+            // test convert to double
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, doubleIndex));
+            // test convert to string
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, varbinaryIndex));
+
             cols = parser.GetValues(2, values);
             expected = new object[]
             {
@@ -439,6 +524,153 @@ namespace Driver.Test.Function.Test
             };
             Assert.Equal(expected.Length, cols);
             Assert.Equal(expected, values);
+            rowIndex = 3;
+            // get date time
+            Assert.Equal(expected[0], parser.GetDateTime(rowIndex, dateTimeIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDateTime(rowIndex, boolIndex));
+            // get boolean
+            Assert.Equal(expected[1], parser.GetBoolean(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetBoolean(rowIndex, dateTimeIndex));
+            // test convert to byte
+            Assert.Equal(expected[tinyIntUnsignedIndex], parser.GetByte(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, tinyIntIndex));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, smallIntIndex));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, intIndex));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, bigIntIndex));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, intUnsignedIndex));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, bigIntUnsignedIndex));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, floatIndex));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, doubleIndex));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, decimal128Index));
+            Assert.Equal((byte)1, parser.GetByte(rowIndex, decimal64Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, dateTimeIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetByte(rowIndex, geometryIndex));
+
+            // test convert to int16
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, tinyIntIndex));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, smallIntIndex));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, decimal64Index));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, intIndex));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, bigIntIndex));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, intUnsignedIndex));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, bigIntUnsignedIndex));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, floatIndex));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, doubleIndex));
+            Assert.Equal((short)1, parser.GetInt16(rowIndex, decimal128Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, dateTimeIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt16(rowIndex, geometryIndex));
+            // test convert to int32
+            Assert.Equal(1, parser.GetInt32(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal(1, parser.GetInt32(rowIndex, tinyIntIndex));
+            Assert.Equal(1, parser.GetInt32(rowIndex, smallIntIndex));
+            Assert.Equal(1, parser.GetInt32(rowIndex, decimal64Index));
+            Assert.Equal(1, parser.GetInt32(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal(1, parser.GetInt32(rowIndex, intIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, dateTimeIndex));
+            Assert.Equal(1, parser.GetInt32(rowIndex, bigIntIndex));
+            Assert.Equal(1, parser.GetInt32(rowIndex, intUnsignedIndex));
+            Assert.Equal(1, parser.GetInt32(rowIndex, bigIntUnsignedIndex));
+            Assert.Equal(1, parser.GetInt32(rowIndex, floatIndex));
+            Assert.Equal(1, parser.GetInt32(rowIndex, doubleIndex));
+            Assert.Equal(1, parser.GetInt32(rowIndex, decimal128Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, geometryIndex));
+            // test convert to int64
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, tinyIntIndex));
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, smallIntIndex));
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, decimal64Index));
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, intIndex));
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, intUnsignedIndex));
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, bigIntIndex));
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, bigIntUnsignedIndex));
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, decimal128Index));
+            Assert.Equal((long)1, parser.GetInt64(rowIndex, doubleIndex));
+            // lost precision for float
+            Assert.Equal((long)((float)1), parser.GetInt64(rowIndex, floatIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, dateTimeIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, geometryIndex));
+
+            // test convert to decimal
+            Assert.Equal(1, parser.GetDecimal(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal(1, parser.GetDecimal(rowIndex, tinyIntIndex));
+            Assert.Equal(1, parser.GetDecimal(rowIndex, smallIntIndex));
+            Assert.Equal(1, parser.GetDecimal(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal(1, parser.GetDecimal(rowIndex, intIndex));
+            Assert.Equal(1, parser.GetDecimal(rowIndex, intUnsignedIndex));
+            Assert.Equal(1, parser.GetDecimal(rowIndex, bigIntIndex));
+            // lost precision for float and double
+            Assert.Equal((decimal)(float)1, parser.GetDecimal(rowIndex, floatIndex));
+            Assert.Equal((decimal)(double)1, parser.GetDecimal(rowIndex, doubleIndex));
+
+            Assert.Equal(decimal.Parse("1.0000"), parser.GetDecimal(rowIndex, decimal64Index));
+            Assert.Equal(decimal.Parse("1.0000"), parser.GetDecimal(rowIndex, decimal128Index));
+            Assert.Equal(1, parser.GetDecimal(rowIndex, bigIntUnsignedIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, dateTimeIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDecimal(rowIndex, geometryIndex));
+
+            // test convert to double
+            Assert.Equal(1, parser.GetDouble(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal(1, parser.GetDouble(rowIndex, tinyIntIndex));
+            Assert.Equal(1, parser.GetDouble(rowIndex, smallIntIndex));
+            Assert.Equal(1, parser.GetDouble(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal(1, parser.GetDouble(rowIndex, intIndex));
+            Assert.Equal(1, parser.GetDouble(rowIndex, intUnsignedIndex));
+            Assert.Equal(1, parser.GetDouble(rowIndex, bigIntIndex));
+            Assert.Equal((double)(float)1, parser.GetDouble(rowIndex, floatIndex));
+            Assert.Equal((double)decimal.Parse("1.0000"), parser.GetDouble(rowIndex, decimal64Index));
+            Assert.Equal((double)decimal.Parse("1.0000"), parser.GetDouble(rowIndex, decimal128Index));
+            Assert.Equal(1, parser.GetDouble(rowIndex, bigIntUnsignedIndex));
+            Assert.Equal(1, parser.GetDouble(rowIndex, doubleIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, dateTimeIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, binaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, ncharIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetDouble(rowIndex, geometryIndex));
+
+            // test convert to string
+            Assert.Equal("1", parser.GetString(rowIndex, binaryIndex));
+            Assert.Equal("1", parser.GetString(rowIndex, ncharIndex));
+            Assert.Equal("1", parser.GetString(rowIndex, varbinaryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, geometryIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, boolIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, tinyIntIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, smallIntIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, intIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, bigIntIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, tinyIntUnsignedIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, smallIntUnsignedIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, intUnsignedIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, bigIntUnsignedIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, floatIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, doubleIndex));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, decimal64Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, decimal128Index));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, dateTimeIndex));
         }
     }
 }

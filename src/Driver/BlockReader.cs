@@ -767,11 +767,6 @@ namespace TDengine.Driver
         public string GetString(int row, int col)
         {
             CheckNull(row, col);
-            if (VarDataTypeIsNull(row, col))
-            {
-                throw new SqlNullValueException();
-            }
-
             switch ((TDengineDataType)_colType[col])
             {
                 case TDengineDataType.TSDB_DATA_TYPE_BINARY:
