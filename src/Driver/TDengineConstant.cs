@@ -402,7 +402,7 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
                     return "DECIMAL";
                 default:
-                    return "unknown field type: " + type;
+                    return "undefine";
             }
         }
     }
