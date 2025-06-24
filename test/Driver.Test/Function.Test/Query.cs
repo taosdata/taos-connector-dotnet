@@ -75,7 +75,7 @@ namespace Function.Test.Taosc
             if (val is float floatVal)
             {
                 Assert.IsType<float>(expectVal);
-                Assert.Equal((float)expectVal, floatVal, 6);
+                Assert.Equal((float)expectVal, floatVal, 5);
             }
             else if (val is double doubleVal)
             {

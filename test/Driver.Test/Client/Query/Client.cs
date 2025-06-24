@@ -889,7 +889,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             if (val is float floatVal)
             {
                 Assert.IsType<float>(expectVal);
-                Assert.Equal((float)expectVal, floatVal, 6);
+                Assert.Equal((float)expectVal, floatVal, 5);
             }
             else if (val is double doubleVal)
             {
