@@ -307,9 +307,9 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
                     return typeof(byte[]);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
-                    return typeof(string);
+                    return typeof(decimal);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
-                    return typeof(string);
+                    return typeof(decimal);
                 default:
                     return typeof(DBNull);
             }

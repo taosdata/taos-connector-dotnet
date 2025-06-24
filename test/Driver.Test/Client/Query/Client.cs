@@ -36,7 +36,7 @@ namespace Driver.Test.Client.Query
                 $"protocol=WebSocket;host={host};port=443;useSSL=true;token={token};enableCompression=true";
         }
 
-        private static string GenerateDecimal(int precision, int scale)
+        private static Decimal GenerateDecimal(int precision, int scale)
         {
             var random = new Random();
             var sb = new StringBuilder();
@@ -59,7 +59,7 @@ namespace Driver.Test.Client.Query
                 }
             }
 
-            return sb.ToString();
+            return decimal.Parse(sb.ToString());
         }
 
         private object[][] GenerateValue(TDenginePrecision precision, bool withDecimal, out string sql)
@@ -76,8 +76,8 @@ namespace Driver.Test.Client.Query
             ulong v9 = (ulong)rand.Next();
             float v10 = (float)rand.NextDouble();
             double v11 = rand.NextDouble();
-            string v16 = GenerateDecimal(20, 4);
-            string v17 = GenerateDecimal(8, 4);
+            decimal v16 = GenerateDecimal(20, 4);
+            decimal v17 = GenerateDecimal(8, 4);
             var dateTime = DateTime.Now;
             long ts = 0;
             long nextSecond = 0;

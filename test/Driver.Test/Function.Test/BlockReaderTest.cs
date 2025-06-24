@@ -267,8 +267,8 @@ namespace Driver.Test.Function.Test
                     0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00, 0x00,
                     0x00, 0x00, 0x00, 0x59, 0x40
                 }, // geometry(100)
-                "9999999999999999.9999", // decimal(20,4)
-                "9999.9999", // decimal(8,4)
+                decimal.Parse("9999999999999999.9999"), // decimal(20,4)
+                decimal.Parse("9999.9999"), // decimal(8,4)
                 Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), // json
             };
             var dateTimeIndex = 0;
@@ -442,6 +442,8 @@ namespace Driver.Test.Function.Test
             Assert.Equal("nchar", parser.GetString(rowIndex, ncharIndex));
             Assert.Equal("varbinary", parser.GetString(rowIndex, varbinaryIndex));
             Assert.Equal("{\"a\":\"b\"}", parser.GetString(rowIndex, jsonIndex));
+            Assert.Equal("9999.9999", parser.GetString(rowIndex, decimal64Index));
+            Assert.Equal("9999999999999999.9999", parser.GetString(rowIndex, decimal128Index));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, geometryIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, boolIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, tinyIntIndex));
@@ -454,8 +456,6 @@ namespace Driver.Test.Function.Test
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, bigIntUnsignedIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, floatIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, doubleIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, decimal64Index));
-            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, decimal128Index));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, dateTimeIndex));
 
             cols = parser.GetValues(1, values);
@@ -530,8 +530,8 @@ namespace Driver.Test.Function.Test
                     0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00, 0x00,
                     0x00, 0x00, 0x00, 0x59, 0x40
                 }, // geometry(100)
-                "-9999999999999999.9999", // decimal(20,4)
-                "-9999.9999", // decimal(8,4)
+                decimal.Parse("-9999999999999999.9999"), // decimal(20,4)
+                decimal.Parse("-9999.9999"), // decimal(8,4)
                 Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), // json
             };
             Assert.Equal(expected.Length, cols);
@@ -672,6 +672,8 @@ namespace Driver.Test.Function.Test
             Assert.Equal("中a文", parser.GetString(rowIndex, ncharIndex));
             Assert.Equal("中a文", parser.GetString(rowIndex, varbinaryIndex));
             Assert.Equal("{\"a\":\"b\"}", parser.GetString(rowIndex, jsonIndex));
+            Assert.Equal("-9999.9999", parser.GetString(rowIndex, decimal64Index));
+            Assert.Equal("-9999999999999999.9999", parser.GetString(rowIndex, decimal128Index));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, geometryIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, boolIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, tinyIntIndex));
@@ -684,8 +686,6 @@ namespace Driver.Test.Function.Test
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, bigIntUnsignedIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, floatIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, doubleIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, decimal64Index));
-            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, decimal128Index));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, dateTimeIndex));
 
             cols = parser.GetValues(3, values);
@@ -707,8 +707,8 @@ namespace Driver.Test.Function.Test
                 "1", // nchar(20)
                 Encoding.UTF8.GetBytes("1"), // varbinary(20)
                 null, // geometry(100)
-                "1.0000", // decimal(20,4)
-                "1.0000", // decimal(8,4)
+                decimal.Parse("1.0000"), // decimal(20,4)
+                decimal.Parse("1.0000"), // decimal(8,4)
                 Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), // json
             };
             Assert.Equal(expected.Length, cols);
@@ -852,6 +852,8 @@ namespace Driver.Test.Function.Test
             Assert.Equal("1", parser.GetString(rowIndex, ncharIndex));
             Assert.Equal("1", parser.GetString(rowIndex, varbinaryIndex));
             Assert.Equal("{\"a\":\"b\"}", parser.GetString(rowIndex, jsonIndex));
+            Assert.Equal("1.0000", parser.GetString(rowIndex, decimal64Index));
+            Assert.Equal("1.0000", parser.GetString(rowIndex, decimal128Index));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, geometryIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, boolIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, tinyIntIndex));
@@ -864,8 +866,6 @@ namespace Driver.Test.Function.Test
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, bigIntUnsignedIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, floatIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, doubleIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, decimal64Index));
-            Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, decimal128Index));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, dateTimeIndex));
         }
     }

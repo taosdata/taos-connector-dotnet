@@ -23,26 +23,35 @@ namespace TDengine.Data.Client
             if (_fieldCount > 0)
             {
                 var columns = schemaTable.Columns;
+
                 var columnName = new DataColumn(SchemaTableColumn.ColumnName, typeof(string));
                 var columnOrdinal = new DataColumn(SchemaTableColumn.ColumnOrdinal, typeof(int));
                 var columnSize = new DataColumn(SchemaTableColumn.ColumnSize, typeof(int));
                 var dataType = new DataColumn(SchemaTableColumn.DataType, typeof(Type));
                 var dataTypeName = new DataColumn("DataTypeName", typeof(string));
+                var numericPrecision = new DataColumn(SchemaTableColumn.NumericPrecision, typeof(int));
+                var numericScale = new DataColumn(SchemaTableColumn.NumericScale, typeof(int));
+
 
                 columns.Add(columnName);
                 columns.Add(columnOrdinal);
                 columns.Add(columnSize);
                 columns.Add(dataType);
                 columns.Add(dataTypeName);
+                columns.Add(numericPrecision);
+                columns.Add(numericScale);
 
                 for (int i = 0; i < _fieldCount; i++)
                 {
                     var schemaRow = schemaTable.NewRow();
+
                     schemaRow[columnName] = GetName(i);
                     schemaRow[columnOrdinal] = i;
                     schemaRow[columnSize] = GetFieldSize(i);
                     schemaRow[dataType] = GetFieldType(i);
                     schemaRow[dataTypeName] = GetDataTypeName(i);
+                    schemaRow[numericPrecision] = _rows.GetFieldPrecision(i);
+                    schemaRow[numericScale] = _rows.GetFieldScale(i);
                     schemaTable.Rows.Add(schemaRow);
                 }
             }
@@ -52,19 +61,7 @@ namespace TDengine.Data.Client
 
         public override bool GetBoolean(int ordinal) => _rows.GetBoolean(ordinal);
 
-        public override byte GetByte(int ordinal)
-        {
-            var value = GetValue(ordinal);
-            switch (value)
-            {
-                case byte val:
-                    return val;
-                case sbyte val:
-                    return (byte)val;
-                default:
-                    throw new NotSupportedException($"can not change to byte: {value}");
-            }
-        }
+        public override byte GetByte(int ordinal) => _rows.GetByte(ordinal);
 
         public override long GetBytes(int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length) =>
             _rows.GetBytes(ordinal, dataOffset, buffer, bufferOffset, length);

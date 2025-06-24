@@ -88,6 +88,16 @@ namespace TDengine.Driver.Client.Native
 
         public string GetName(int ordinal) => _metas[ordinal].name;
 
+        public int GetFieldPrecision(int ordinal)
+        {
+            return _metas[ordinal].precision;
+        }
+
+        public int GetFieldScale(int ordinal)
+        {
+            return _metas[ordinal].scale;
+        }
+
         public int GetOrdinal(string name) => _metas.FindIndex(m => m.name == name);
 
         public bool Read()

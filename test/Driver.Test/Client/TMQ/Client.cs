@@ -182,8 +182,8 @@ namespace Driver.Test.Client.TMQ
                 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x59, 0x40
             }, value["c15"]);
-            Assert.Equal("6581493296132535.4860", value["c16"]);
-            Assert.Equal("6581.4932", value["c17"]);
+            Assert.Equal(decimal.Parse("6581493296132535.4860"), value["c16"]);
+            Assert.Equal(decimal.Parse("6581.4932"), value["c17"]);
         }
 
         private void NewConsumerTest(string connectString, string db, string topic, Dictionary<string, string> cfg)

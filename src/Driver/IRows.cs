@@ -15,6 +15,11 @@ namespace TDengine.Driver
         Type GetFieldType(int ordinal);
         int GetFieldSize(int ordinal);
         string GetName(int ordinal);
+
+        int GetFieldPrecision(int ordinal);
+
+        int GetFieldScale(int ordinal);
+
         int GetOrdinal(string name);
         bool Read();
 

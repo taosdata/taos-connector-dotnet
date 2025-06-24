@@ -196,9 +196,9 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
                     return ConvertBinary(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
-                    return ItemIsNull(_colHeadOffset[col], row) ? null : ConvertDecimal64(row, col);
+                    return ItemIsNull(_colHeadOffset[col], row) ? (object)null : ConvertDecimal64(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
-                    return ItemIsNull(_colHeadOffset[col], row) ? null : ConvertDecimal128(row, col);
+                    return ItemIsNull(_colHeadOffset[col], row) ? (object)null : ConvertDecimal128(row, col);
                 default:
                     throw new NotSupportedException($"Unsupported data type: {colType}");
             }
@@ -238,7 +238,7 @@ namespace TDengine.Driver
         private double ConvertDouble(int row, int col) =>
             BitConverter.ToDouble(_block, _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Float64Size);
 
-        private string ConvertDecimal64(int row, int col)
+        private string ConvertDecimal64Str(int row, int col)
         {
             var val = BitConverter.ToInt64(_block,
                 _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int64Size);
@@ -246,7 +246,13 @@ namespace TDengine.Driver
             return FormatDecimal(val.ToString(), scale);
         }
 
-        private string ConvertDecimal128(int row, int col)
+        private decimal ConvertDecimal64(int row, int col)
+        {
+            var str = ConvertDecimal64Str(row, col);
+            return decimal.Parse(str);
+        }
+
+        private string ConvertDecimal128Str(int row, int col)
         {
             var lo = BitConverter.ToUInt64(_block,
                 _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int64Size * 2);
@@ -256,6 +262,12 @@ namespace TDengine.Driver
             var scale = _scales[col];
             var str = FormatI128(hi, lo);
             return FormatDecimal(str, scale);
+        }
+
+        private decimal ConvertDecimal128(int row, int col)
+        {
+            var str = ConvertDecimal128Str(row, col);
+            return decimal.Parse(str);
         }
 
         private static string FormatI128(long hi, ulong lo)
@@ -499,11 +511,9 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_DOUBLE:
                     return checked((byte)ConvertDouble(row, col));
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
-                    var str = ConvertDecimal64(row, col);
-                    return (byte)decimal.Parse(str);
+                    return (byte)ConvertDecimal64(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
-                    str = ConvertDecimal128(row, col);
-                    return (byte)decimal.Parse(str);
+                    return (byte)ConvertDecimal128(row, col);
                 default:
                     throw new InvalidCastException("Cannot cast to byte from " +
                                                    TDengineConstant.GetFieldTypeName((sbyte)_colType[col]));
@@ -536,11 +546,9 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_DOUBLE:
                     return checked((short)ConvertDouble(row, col));
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
-                    var str = ConvertDecimal64(row, col);
-                    return (short)decimal.Parse(str);
+                    return (short)ConvertDecimal64(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
-                    str = ConvertDecimal128(row, col);
-                    return (short)decimal.Parse(str);
+                    return (short)ConvertDecimal128(row, col);
                 default:
                     throw new InvalidCastException("Cannot cast to short from " +
                                                    TDengineConstant.GetFieldTypeName((sbyte)_colType[col]));
@@ -573,11 +581,9 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_DOUBLE:
                     return checked((int)ConvertDouble(row, col));
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
-                    var str = ConvertDecimal64(row, col);
-                    return (int)decimal.Parse(str);
+                    return (int)ConvertDecimal64(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
-                    str = ConvertDecimal128(row, col);
-                    return (int)decimal.Parse(str);
+                    return (int)ConvertDecimal128(row, col);
                 default:
                     throw new InvalidCastException("Cannot cast to int from " +
                                                    TDengineConstant.GetFieldTypeName((sbyte)_colType[col]));
@@ -610,11 +616,9 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_DOUBLE:
                     return checked((long)ConvertDouble(row, col));
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
-                    var str = ConvertDecimal64(row, col);
-                    return (long)decimal.Parse(str);
+                    return (long)ConvertDecimal64(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
-                    str = ConvertDecimal128(row, col);
-                    return (long)decimal.Parse(str);
+                    return (long)ConvertDecimal128(row, col);
                 default:
                     throw new InvalidCastException("Cannot cast to long from " +
                                                    TDengineConstant.GetFieldTypeName((sbyte)_colType[col]));
@@ -653,11 +657,9 @@ namespace TDengine.Driver
             switch ((TDengineDataType)_colType[col])
             {
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
-                    var str = ConvertDecimal64(row, col);
-                    return decimal.Parse(str);
+                    return ConvertDecimal64(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
-                    str = ConvertDecimal128(row, col);
-                    return decimal.Parse(str);
+                    return ConvertDecimal128(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_TINYINT:
                     return Convert.ToDecimal(ConvertTinyint(row, col));
                 case TDengineDataType.TSDB_DATA_TYPE_UTINYINT:
@@ -694,11 +696,9 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_DOUBLE:
                     return ConvertDouble(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
-                    var str = ConvertDecimal64(row, col);
-                    return (double)decimal.Parse(str);
+                    return (double)ConvertDecimal64(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
-                    str = ConvertDecimal128(row, col);
-                    return (double)decimal.Parse(str);
+                    return (double)ConvertDecimal128(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_TINYINT:
                     return ConvertTinyint(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_UTINYINT:
@@ -737,11 +737,9 @@ namespace TDengine.Driver
 
                     throw new InvalidCastException("The double value cannot be safely cast to float.");
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
-                    var str = ConvertDecimal64(row, col);
-                    return (float)decimal.Parse(str);
+                    return (float)ConvertDecimal64(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
-                    str = ConvertDecimal128(row, col);
-                    return (float)decimal.Parse(str);
+                    return (float)ConvertDecimal128(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_TINYINT:
                     return ConvertTinyint(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_UTINYINT:
@@ -777,6 +775,10 @@ namespace TDengine.Driver
                     return Encoding.UTF8.GetString(ConvertJson(row, col));
                 case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
                     return Encoding.UTF8.GetString(ConvertBinary(row, col));
+                case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
+                    return ConvertDecimal64Str(row, col);
+                case TDengineDataType.TSDB_DATA_TYPE_DECIMAL:
+                    return ConvertDecimal128Str(row, col);
                 default:
                     throw new InvalidCastException("Cannot cast to string from " +
                                                    TDengineConstant.GetFieldTypeName((sbyte)_colType[col]));
