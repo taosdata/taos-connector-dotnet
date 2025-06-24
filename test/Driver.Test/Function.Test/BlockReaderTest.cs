@@ -215,11 +215,11 @@ namespace Driver.Test.Function.Test
             // t2 using stb tags (null) values (1750324503986,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
             // t3  using stb tags ('{"a":"b"}') values (1750324504986,false,-128,-32768,-2147483648,-9223372036854775808,0,0,0,0,0,0,'中a文','中a文','中a文','point(100 100)',-9999999999999999.9999,-9999.9999)
             // t4  using stb tags ('{"a":"b"}') values (1750324505986,true,1,1,1,1,1,1,1,1,1,1,'1','1','1',null,1,1);
-            var scales = new byte[19]
+            var scales = new byte[]
             {
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0
             };
-            var colTypes = new byte[19]
+            var colTypes = new byte[]
             {
                 0x09,
                 0x01,
@@ -372,17 +372,17 @@ namespace Driver.Test.Function.Test
             Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, geometryIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, jsonIndex));
             // test convert to int64
-            Assert.Equal((long)255, parser.GetInt64(rowIndex, tinyIntUnsignedIndex));
-            Assert.Equal((long)127, parser.GetInt64(rowIndex, tinyIntIndex));
-            Assert.Equal((long)32767, parser.GetInt64(rowIndex, smallIntIndex));
-            Assert.Equal((long)9999, parser.GetInt64(rowIndex, decimal64Index));
-            Assert.Equal((long)65535, parser.GetInt64(rowIndex, smallIntUnsignedIndex));
-            Assert.Equal((long)2147483647, parser.GetInt64(rowIndex, intIndex));
-            Assert.Equal((long)4294967295, parser.GetInt64(rowIndex, intUnsignedIndex));
-            Assert.Equal((long)9223372036854775807, parser.GetInt64(rowIndex, bigIntIndex));
+            Assert.Equal(255, parser.GetInt64(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal(127, parser.GetInt64(rowIndex, tinyIntIndex));
+            Assert.Equal(32767, parser.GetInt64(rowIndex, smallIntIndex));
+            Assert.Equal(9999, parser.GetInt64(rowIndex, decimal64Index));
+            Assert.Equal(65535, parser.GetInt64(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal(2147483647, parser.GetInt64(rowIndex, intIndex));
+            Assert.Equal(4294967295, parser.GetInt64(rowIndex, intUnsignedIndex));
+            Assert.Equal(9223372036854775807, parser.GetInt64(rowIndex, bigIntIndex));
             // lost precision for float
             Assert.Equal((long)((float)2147483647), parser.GetInt64(rowIndex, floatIndex));
-            Assert.Equal((long)9999999999999999, parser.GetInt64(rowIndex, decimal128Index));
+            Assert.Equal(9999999999999999, parser.GetInt64(rowIndex, decimal128Index));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, boolIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, dateTimeIndex));
             Assert.Throws<OverflowException>(() => parser.GetInt64(rowIndex, bigIntUnsignedIndex));
@@ -424,7 +424,7 @@ namespace Driver.Test.Function.Test
             Assert.Equal(2147483647, parser.GetDouble(rowIndex, intIndex));
             Assert.Equal(4294967295, parser.GetDouble(rowIndex, intUnsignedIndex));
             Assert.Equal(9223372036854775807, parser.GetDouble(rowIndex, bigIntIndex));
-            Assert.Equal((double)(float)2147483647, parser.GetDouble(rowIndex, floatIndex));
+            Assert.Equal((float)2147483647, parser.GetDouble(rowIndex, floatIndex));
             Assert.Equal((double)decimal.Parse("9999.9999"), parser.GetDouble(rowIndex, decimal64Index));
             Assert.Equal((double)decimal.Parse("9999999999999999.9999"), parser.GetDouble(rowIndex, decimal128Index));
             Assert.Equal(18446744073709551615, parser.GetDouble(rowIndex, bigIntUnsignedIndex));
@@ -606,11 +606,11 @@ namespace Driver.Test.Function.Test
             Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, geometryIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, jsonIndex));
             // test convert to int64
-            Assert.Equal((long)-128, parser.GetInt64(rowIndex, tinyIntIndex));
-            Assert.Equal((long)-32768, parser.GetInt64(rowIndex, smallIntIndex));
-            Assert.Equal((long)-9999, parser.GetInt64(rowIndex, decimal64Index));
-            Assert.Equal((long)-2147483648, parser.GetInt64(rowIndex, intIndex));
-            Assert.Equal((long)-9223372036854775808, parser.GetInt64(rowIndex, bigIntIndex));
+            Assert.Equal(-128, parser.GetInt64(rowIndex, tinyIntIndex));
+            Assert.Equal(-32768, parser.GetInt64(rowIndex, smallIntIndex));
+            Assert.Equal(-9999, parser.GetInt64(rowIndex, decimal64Index));
+            Assert.Equal(-2147483648, parser.GetInt64(rowIndex, intIndex));
+            Assert.Equal(-9223372036854775808, parser.GetInt64(rowIndex, bigIntIndex));
             Assert.Equal(0, parser.GetInt64(rowIndex, tinyIntUnsignedIndex));
             Assert.Equal(0, parser.GetInt64(rowIndex, smallIntUnsignedIndex));
             Assert.Equal(0, parser.GetInt64(rowIndex, intUnsignedIndex));
@@ -782,17 +782,17 @@ namespace Driver.Test.Function.Test
             Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, geometryIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt32(rowIndex, jsonIndex));
             // test convert to int64
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, tinyIntUnsignedIndex));
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, tinyIntIndex));
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, smallIntIndex));
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, decimal64Index));
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, smallIntUnsignedIndex));
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, intIndex));
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, intUnsignedIndex));
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, bigIntIndex));
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, bigIntUnsignedIndex));
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, decimal128Index));
-            Assert.Equal((long)1, parser.GetInt64(rowIndex, doubleIndex));
+            Assert.Equal(1, parser.GetInt64(rowIndex, tinyIntUnsignedIndex));
+            Assert.Equal(1, parser.GetInt64(rowIndex, tinyIntIndex));
+            Assert.Equal(1, parser.GetInt64(rowIndex, smallIntIndex));
+            Assert.Equal(1, parser.GetInt64(rowIndex, decimal64Index));
+            Assert.Equal(1, parser.GetInt64(rowIndex, smallIntUnsignedIndex));
+            Assert.Equal(1, parser.GetInt64(rowIndex, intIndex));
+            Assert.Equal(1, parser.GetInt64(rowIndex, intUnsignedIndex));
+            Assert.Equal(1, parser.GetInt64(rowIndex, bigIntIndex));
+            Assert.Equal(1, parser.GetInt64(rowIndex, bigIntUnsignedIndex));
+            Assert.Equal(1, parser.GetInt64(rowIndex, decimal128Index));
+            Assert.Equal(1, parser.GetInt64(rowIndex, doubleIndex));
             // lost precision for float
             Assert.Equal((long)((float)1), parser.GetInt64(rowIndex, floatIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, boolIndex));
@@ -834,7 +834,7 @@ namespace Driver.Test.Function.Test
             Assert.Equal(1, parser.GetDouble(rowIndex, intIndex));
             Assert.Equal(1, parser.GetDouble(rowIndex, intUnsignedIndex));
             Assert.Equal(1, parser.GetDouble(rowIndex, bigIntIndex));
-            Assert.Equal((double)(float)1, parser.GetDouble(rowIndex, floatIndex));
+            Assert.Equal((float)1, parser.GetDouble(rowIndex, floatIndex));
             Assert.Equal((double)decimal.Parse("1.0000"), parser.GetDouble(rowIndex, decimal64Index));
             Assert.Equal((double)decimal.Parse("1.0000"), parser.GetDouble(rowIndex, decimal128Index));
             Assert.Equal(1, parser.GetDouble(rowIndex, bigIntUnsignedIndex));

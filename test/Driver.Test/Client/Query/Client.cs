@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using TDengine.Driver;
 using TDengine.Driver.Client;
 using Xunit;
@@ -34,7 +36,33 @@ namespace Driver.Test.Client.Query
                 $"protocol=WebSocket;host={host};port=443;useSSL=true;token={token};enableCompression=true";
         }
 
-        private object[][] GenerateValue(TDenginePrecision precision, out string sql)
+        private static string GenerateDecimal(int precision, int scale)
+        {
+            var random = new Random();
+            var sb = new StringBuilder();
+
+            int integerDigits = precision - scale;
+
+            sb.Append(random.Next(1, 10));
+
+            for (int i = 1; i < integerDigits; i++)
+            {
+                sb.Append(random.Next(0, 10));
+            }
+
+            if (scale > 0)
+            {
+                sb.Append('.');
+                for (int i = 0; i < scale; i++)
+                {
+                    sb.Append(random.Next(0, 10));
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        private object[][] GenerateValue(TDenginePrecision precision, bool withDecimal, out string sql)
         {
             Random rand = new Random();
             bool v1 = true;
@@ -48,6 +76,8 @@ namespace Driver.Test.Client.Query
             ulong v9 = (ulong)rand.Next();
             float v10 = (float)rand.NextDouble();
             double v11 = rand.NextDouble();
+            string v16 = GenerateDecimal(20, 4);
+            string v17 = GenerateDecimal(8, 4);
             var dateTime = DateTime.Now;
             long ts = 0;
             long nextSecond = 0;
@@ -70,8 +100,39 @@ namespace Driver.Test.Client.Query
                     break;
             }
 
+            if (withDecimal)
+            {
+                sql = string.Format(
+                    "values({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},'test_binary','test_nchar','中文','POINT(100 100)',{12},{13})({14},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)",
+                    ts,
+                    v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v16, v17,
+                    nextSecond);
+                return new object[][]
+                {
+                    new object[]
+                    {
+                        TDengineConstant.ConvertTimeToDatetime(ts, precision), v1, v2, v3, v4, v5, v6, v7, v8, v9, v10,
+                        v11,
+                        Encoding.UTF8.GetBytes("test_binary"),
+                        "test_nchar", Encoding.UTF8.GetBytes("中文"),
+                        new byte[]
+                        {
+                            0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                            0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                        },
+                        v16, v17,
+                    },
+                    new object[]
+                    {
+                        TDengineConstant.ConvertTimeToDatetime(nextSecond, precision), null, null, null, null, null,
+                        null,
+                        null, null, null, null, null, null, null, null, null, null, null
+                    }
+                };
+            }
+
             sql = string.Format(
-                "values({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},'test_binary','test_nchar','中文','POINT(100 100)')({12},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)",
+                "values({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},'test_binary','test_nchar','中文','POINT(100 100)')({12},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)",
                 ts,
                 v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,
                 nextSecond);
@@ -96,27 +157,36 @@ namespace Driver.Test.Client.Query
             };
         }
 
-        private static string GenerateCreateTableSql(string tableName)
+        private static string GenerateCreateTableSql(string tableName, bool withDecimal)
         {
-            var createTableSql = $"create table if not exists {tableName} (ts timestamp," +
-                                 "c1 bool," +
-                                 "c2 tinyint," +
-                                 "c3 smallint," +
-                                 "c4 int," +
-                                 "c5 bigint," +
-                                 "c6 tinyint unsigned," +
-                                 "c7 smallint unsigned," +
-                                 "c8 int unsigned," +
-                                 "c9 bigint unsigned," +
-                                 "c10 float," +
-                                 "c11 double," +
-                                 "c12 binary(20)," +
-                                 "c13 nchar(20)," +
-                                 "c14 varbinary(20)," +
-                                 "c15 geometry(100)" +
-                                 ")" +
-                                 "tags(t json)";
-            return createTableSql;
+            var commonColumns = new StringBuilder()
+                .Append($"create table if not exists {tableName} (ts timestamp,")
+                .Append("c1 bool,")
+                .Append("c2 tinyint,")
+                .Append("c3 smallint,")
+                .Append("c4 int,")
+                .Append("c5 bigint,")
+                .Append("c6 tinyint unsigned,")
+                .Append("c7 smallint unsigned,")
+                .Append("c8 int unsigned,")
+                .Append("c9 bigint unsigned,")
+                .Append("c10 float,")
+                .Append("c11 double,")
+                .Append("c12 binary(20),")
+                .Append("c13 nchar(20),")
+                .Append("c14 varbinary(20),")
+                .Append("c15 geometry(100)");
+
+            if (withDecimal)
+            {
+                commonColumns
+                    .Append(",c16 decimal(20,4),")
+                    .Append("c17 decimal(8,4)");
+            }
+
+            commonColumns.Append(") tags(t json)");
+
+            return commonColumns.ToString();
         }
 
         private static Array[] TransposeToTypedArrays(object[][] data)
@@ -163,7 +233,8 @@ namespace Driver.Test.Client.Query
 
         private void QueryTest(string connectString, string db, TDenginePrecision precision)
         {
-            var data = this.GenerateValue(precision, out var insertSql);
+            var withDecimal = true;
+            var data = this.GenerateValue(precision, withDecimal, out var insertSql);
             var builder = new ConnectionStringBuilder(connectString);
             var inCloud = IsCloudTest(builder);
             using (var client = DbDriver.Open(builder))
@@ -180,7 +251,7 @@ namespace Driver.Test.Client.Query
                     }
 
                     client.Exec($"use {db}");
-                    var createTableSql = GenerateCreateTableSql(superTableName);
+                    var createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
                     client.Exec(createTableSql);
                     string insertQuery =
                         $"insert into {subTableName} using {superTableName} tags('{{\"a\":\"b\"}}') {insertSql}";
@@ -188,7 +259,7 @@ namespace Driver.Test.Client.Query
                     string query = $"select * from {superTableName} order by ts asc";
                     using (var rows = client.Query(query))
                     {
-                        this.AssertColumn(rows);
+                        this.AssertColumn(rows, withDecimal);
                         this.AssertValue(rows, data);
                     }
                 }
@@ -210,7 +281,8 @@ namespace Driver.Test.Client.Query
 
         private void QueryWithReqIDTest(string connectString, string db, TDenginePrecision precision)
         {
-            var data = this.GenerateValue(precision, out var insertSql);
+            var withDecimal = true;
+            var data = this.GenerateValue(precision, withDecimal, out var insertSql);
             var builder = new ConnectionStringBuilder(connectString);
             var inCloud = IsCloudTest(builder);
             using (var client = DbDriver.Open(builder))
@@ -227,7 +299,7 @@ namespace Driver.Test.Client.Query
                     }
 
                     client.Exec($"use {db}", ReqId.GetReqId());
-                    string createTableSql = GenerateCreateTableSql(superTableName);
+                    string createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
                     client.Exec(createTableSql, ReqId.GetReqId());
                     string insertQuery =
                         $"insert into {subTableName} using {superTableName} tags('{{\"a\":\"b\"}}') {insertSql}";
@@ -235,7 +307,7 @@ namespace Driver.Test.Client.Query
                     string query = $"select * from {superTableName} order by ts asc";
                     using (var rows = client.Query(query, ReqId.GetReqId()))
                     {
-                        this.AssertColumn(rows);
+                        this.AssertColumn(rows, withDecimal);
                         this.AssertValue(rows, data);
                     }
                 }
@@ -258,7 +330,8 @@ namespace Driver.Test.Client.Query
 
         private void StmtTest(string connectString, string db, TDenginePrecision precision)
         {
-            var data = this.GenerateValue(precision, out _);
+            var withDecimal = false;
+            var data = this.GenerateValue(precision, withDecimal, out _);
             var builder = new ConnectionStringBuilder(connectString);
             var inCloud = IsCloudTest(builder);
             using (var client = DbDriver.Open(builder))
@@ -275,7 +348,7 @@ namespace Driver.Test.Client.Query
                     }
 
                     client.Exec($"use {db}");
-                    var createTableSql = GenerateCreateTableSql(superTableName);
+                    var createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
                     client.Exec(createTableSql);
                     var stmt = client.StmtInit();
                     StringBuilder questionMarks = new StringBuilder();
@@ -309,7 +382,7 @@ namespace Driver.Test.Client.Query
                     stmt.Exec();
                     using (var rows = stmt.Result())
                     {
-                        this.AssertColumn(rows);
+                        this.AssertColumn(rows, withDecimal);
                         this.AssertValue(rows, data);
                     }
                 }
@@ -332,7 +405,8 @@ namespace Driver.Test.Client.Query
 
         private void StmtWithReqIDTest(string connectString, string db, TDenginePrecision precision)
         {
-            var data = this.GenerateValue(precision, out _);
+            var withDecimal = false;
+            var data = this.GenerateValue(precision, withDecimal, out _);
             var builder = new ConnectionStringBuilder(connectString);
             var inCloud = IsCloudTest(builder);
             using (var client = DbDriver.Open(builder))
@@ -349,7 +423,7 @@ namespace Driver.Test.Client.Query
                     }
 
                     client.Exec($"use {db}", ReqId.GetReqId());
-                    var createTableSql = GenerateCreateTableSql(superTableName);
+                    var createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
                     client.Exec(createTableSql, ReqId.GetReqId());
                     var stmt = client.StmtInit(ReqId.GetReqId());
                     StringBuilder questionMarks = new StringBuilder();
@@ -383,7 +457,7 @@ namespace Driver.Test.Client.Query
                     stmt.Exec();
                     using (var rows = stmt.Result())
                     {
-                        this.AssertColumn(rows);
+                        this.AssertColumn(rows, withDecimal);
                         this.AssertValue(rows, data);
                     }
                 }
@@ -406,7 +480,8 @@ namespace Driver.Test.Client.Query
 
         private void StmtBindColumnsTest(string connectString, string db, TDenginePrecision precision)
         {
-            var data = this.GenerateValue(precision, out _);
+            var withDecimal = false;
+            var data = this.GenerateValue(precision, withDecimal, out _);
             var transposedData = TransposeToTypedArrays(data);
 
             var builder =
@@ -426,7 +501,7 @@ namespace Driver.Test.Client.Query
                     }
 
                     client.Exec($"use {db}");
-                    var createTableSql = GenerateCreateTableSql(superTableName);
+                    var createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
                     client.Exec(createTableSql);
                     var stmt = client.StmtInit(ReqId.GetReqId());
                     stmt.Prepare(
@@ -449,7 +524,7 @@ namespace Driver.Test.Client.Query
                     stmt.Exec();
                     using (var result = stmt.Result())
                     {
-                        this.AssertColumn(result);
+                        this.AssertColumn(result, withDecimal);
                         this.AssertValue(result, data);
                     }
                 }
@@ -747,11 +822,19 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             }
         }
 
-        private void AssertColumn(IRows result)
+        private void AssertColumn(IRows result, bool withDecimal)
         {
             Assert.Equal(1, result.GetOrdinal("c1"));
             var fieldCount = result.FieldCount;
-            Assert.Equal(17, fieldCount);
+            if (withDecimal)
+            {
+                Assert.Equal(19, fieldCount);
+            }
+            else
+            {
+                Assert.Equal(17, fieldCount);
+            }
+
             Assert.Equal("ts", result.GetName(0));
             Assert.Equal("c1", result.GetName(1));
             Assert.Equal("c2", result.GetName(2));
@@ -768,7 +851,17 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             Assert.Equal("c13", result.GetName(13));
             Assert.Equal("c14", result.GetName(14));
             Assert.Equal("c15", result.GetName(15));
-            Assert.Equal("t", result.GetName(16));
+            if (withDecimal)
+            {
+                Assert.Equal("c16", result.GetName(16));
+                Assert.Equal("c17", result.GetName(17));
+                Assert.Equal("t", result.GetName(18));
+            }
+            else
+            {
+                Assert.Equal("t", result.GetName(16));
+            }
+
             Assert.Equal(-1, result.AffectRows);
         }
 
@@ -838,12 +931,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 }
 
                 client.Exec($"insert into {tableName} values {valuesStr}");
-                var tasks = new System.Collections.Generic.List<System.Threading.Tasks.Task>();
+                var tasks = new List<Task>();
                 for (var i = 0; i < count; i++)
                 {
                     int localI = i;
                     string query = $"select * from {tableName} where ts = " + ts[localI];
-                    tasks.Add(System.Threading.Tasks.Task.Run(() =>
+                    tasks.Add(Task.Run(() =>
                     {
                         using (var rows = client.Query(query))
                         {
@@ -864,7 +957,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     }));
                 }
 
-                System.Threading.Tasks.Task.WaitAll(tasks.ToArray());
+                Task.WaitAll(tasks.ToArray());
             }
             catch (Exception e)
             {
