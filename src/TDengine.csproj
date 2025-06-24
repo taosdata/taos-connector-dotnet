@@ -19,7 +19,7 @@
     <RepositoryUrl>https://github.com/taosdata/taos-connector-dotnet.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryBranch>"3.0"</RepositoryBranch>
-    <NoWarn>CS1591</NoWarn>
+    <NoWarn>CS1591;NETSDK1138</NoWarn>
 <!--    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
     <IsPackable>true</IsPackable>
     <!--<Nullable>enable</Nullable>-->
