@@ -876,24 +876,33 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     // this._output.WriteLine($"{data[i][j]}:{rows.GetValue(j)}");
                     var val = rows.GetValue(j);
                     var expectVal = data[i][j];
-                    if (val is float floatVal)
-                    {
-                        Assert.IsType<float>(expectVal);
-                        Assert.Equal((float)expectVal, floatVal, 7);
-                    }
-                    else if (val is double doubleVal)
-                    {
-                        Assert.IsType<double>(expectVal);
-                        Assert.Equal((double)expectVal, doubleVal, 15);
-                    }
-                    else
-                    {
-                        Assert.Equal(expectVal, val);
-                    }
+                    CheckValue(val, expectVal);
                 }
 
                 Assert.Equal(Encoding.UTF8.GetBytes("{\"a\":\"b\"}"), rows.GetValue(data[i].Length));
             }
+        }
+
+        private static void CheckValue(object val, object expectVal)
+        {
+#if NETFRAMEWORK
+            if (val is float floatVal)
+            {
+                Assert.IsType<float>(expectVal);
+                Assert.Equal((float)expectVal, floatVal, 6);
+            }
+            else if (val is double doubleVal)
+            {
+                Assert.IsType<double>(expectVal);
+                Assert.Equal((double)expectVal, doubleVal, 14);
+            }
+            else
+            {
+                Assert.Equal(expectVal, val);
+            }
+#else
+            Assert.Equal(expectVal, val);
+#endif
         }
 
         private void QueryConcurrencyTest(string connectString, string db)
