@@ -58,7 +58,7 @@ namespace Driver.Test.Client.TMQ
                 };
             }
 
-            this._createTableSql = "create table if not exists tmq_all_type(ts timestamp," +
+            this._createTableSql = "create table if not exists tmq_all_type_decimal(ts timestamp," +
                                    "c1 bool," +
                                    "c2 tinyint," +
                                    "c3 smallint," +
@@ -202,19 +202,19 @@ namespace Driver.Test.Client.TMQ
                         $"create database if not exists {db}  vgroups 2  WAL_RETENTION_PERIOD 86400",
                         $"use {db}",
                         this._createTableSql,
-                        "create table if not exists ct0 using tmq_all_type tags(1000)",
-                        "create table if not exists ct1 using tmq_all_type tags(2000)",
-                        "create table if not exists ct2 using tmq_all_type tags(3000)",
-                        $"create topic if not exists {topic} as stable tmq_all_type"
+                        "create table if not exists ct0_decimal using tmq_all_type_decimal tags(1000)",
+                        "create table if not exists ct1_decimal using tmq_all_type_decimal tags(2000)",
+                        "create table if not exists ct2_decimal using tmq_all_type_decimal tags(3000)",
+                        $"create topic if not exists {topic} as stable tmq_all_type_decimal"
                     };
                     if (isCloud)
                     {
                         sqlCommands = new string[]
                         {
                             $"use {db}",
-                            "create table if not exists ct0 using tmq_all_type tags(1000)",
-                            "create table if not exists ct1 using tmq_all_type tags(2000)",
-                            "create table if not exists ct2 using tmq_all_type tags(3000)",
+                            "create table if not exists ct0_decimal using tmq_all_type_decimal tags(1000)",
+                            "create table if not exists ct1_decimal using tmq_all_type_decimal tags(2000)",
+                            "create table if not exists ct2_decimal using tmq_all_type_decimal tags(3000)",
                         };
                     }
 
@@ -253,7 +253,7 @@ namespace Driver.Test.Client.TMQ
                                 for (int j = 0; j < 3; j++)
                                 {
                                     var sql =
-                                        $"insert into ct{j} values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932)";
+                                        $"insert into ct{j}_decimal values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932)";
                                     DoRequest(client, sql);
                                 }
 
@@ -338,10 +338,10 @@ namespace Driver.Test.Client.TMQ
                         $"create database if not exists {db}  vgroups 2  WAL_RETENTION_PERIOD 86400",
                         $"use {db}",
                         this._createTableSql,
-                        "create table if not exists ct0 using tmq_all_type tags(1000)",
-                        "create table if not exists ct1 using tmq_all_type tags(2000)",
-                        "create table if not exists ct2 using tmq_all_type tags(3000)",
-                        $"create topic if not exists {topic} as stable tmq_all_type"
+                        "create table if not exists ct0_decimal using tmq_all_type_decimal tags(1000)",
+                        "create table if not exists ct1_decimal using tmq_all_type_decimal tags(2000)",
+                        "create table if not exists ct2_decimal using tmq_all_type_decimal tags(3000)",
+                        $"create topic if not exists {topic} as stable tmq_all_type_decimal"
                     };
                     foreach (var sqlCommand in sqlCommands)
                     {
@@ -355,7 +355,7 @@ namespace Driver.Test.Client.TMQ
                     for (int i = 0; i < 3; i++)
                     {
                         var sql =
-                            $"insert into ct{i} values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932)";
+                            $"insert into ct{i}_decimal values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932)";
                         DoRequest(client, sql);
                     }
 
@@ -481,10 +481,10 @@ namespace Driver.Test.Client.TMQ
                         $"create database if not exists {db}  vgroups 2  WAL_RETENTION_PERIOD 86400",
                         $"use {db}",
                         this._createTableSql,
-                        "create table if not exists ct0 using tmq_all_type tags(1000)",
-                        "create table if not exists ct1 using tmq_all_type tags(2000)",
-                        "create table if not exists ct2 using tmq_all_type tags(3000)",
-                        $"create topic if not exists {topic} as stable tmq_all_type"
+                        "create table if not exists ct0_decimal using tmq_all_type_decimal tags(1000)",
+                        "create table if not exists ct1_decimal using tmq_all_type_decimal tags(2000)",
+                        "create table if not exists ct2_decimal using tmq_all_type_decimal tags(3000)",
+                        $"create topic if not exists {topic} as stable tmq_all_type_decimal"
                     };
                     foreach (var sqlCommand in sqlCommands)
                     {
@@ -498,7 +498,7 @@ namespace Driver.Test.Client.TMQ
                     for (int i = 0; i < 3; i++)
                     {
                         var sql =
-                            $"insert into ct{i} values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932)";
+                            $"insert into ct{i}_decimal values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932)";
                         DoRequest(client, sql);
                     }
 
@@ -589,10 +589,10 @@ namespace Driver.Test.Client.TMQ
                         $"create database if not exists {db}  vgroups 2  WAL_RETENTION_PERIOD 86400",
                         $"use {db}",
                         this._createTableSql,
-                        "create table if not exists ct0 using tmq_all_type tags(1000)",
-                        "create table if not exists ct1 using tmq_all_type tags(2000)",
-                        "create table if not exists ct2 using tmq_all_type tags(3000)",
-                        $"create topic if not exists {topic} as stable tmq_all_type"
+                        "create table if not exists ct0_decimal using tmq_all_type_decimal tags(1000)",
+                        "create table if not exists ct1_decimal using tmq_all_type_decimal tags(2000)",
+                        "create table if not exists ct2_decimal using tmq_all_type_decimal tags(3000)",
+                        $"create topic if not exists {topic} as stable tmq_all_type_decimal"
                     };
                     foreach (var sqlCommand in sqlCommands)
                     {
@@ -606,7 +606,7 @@ namespace Driver.Test.Client.TMQ
                     for (int i = 0; i < 3; i++)
                     {
                         var sql =
-                            $"insert into ct{i} values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932)";
+                            $"insert into ct{i}_decimal values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932)";
                         DoRequest(client, sql);
                     }
 
