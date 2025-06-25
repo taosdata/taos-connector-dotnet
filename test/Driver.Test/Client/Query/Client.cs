@@ -141,7 +141,7 @@ namespace Driver.Test.Client.Query
             if (withDecimal)
             {
                 sql = $"values" +
-                      $"({timeStampes[0]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'test_binary','test_nchar','中文','POINT(100 100)',{v16},{v17})" +
+                      $"({timeStampes[0]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10:G9},{v11:G17},'test_binary','test_nchar','中文','POINT(100 100)',{v16},{v17})" +
                       $"({timeStampes[1]},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)" +
                       $"({timeStampes[2]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'中文','中文','中文','POINT(100 100)',{v16},{v17})" +
                       $"({timeStampes[3]},{v1_3},{v2_3},{v3_3},{v4_3},{v5_3},{v6_3},{v7_3},{v8_3},{v9_3},{v10_3},{v11_3},'中文','中文','中文','POINT(100 100)',{v16_3},{v17_3})" +
@@ -1048,15 +1048,17 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
         private static void CheckValue(object val, object expectVal)
         {
 #if NETFRAMEWORK
+            const float floatTolerance = 0.00001f;
+            const double doubleTolerance = 0.0000000000001;
             if (val is float floatVal)
             {
                 Assert.IsType<float>(expectVal);
-                Assert.Equal((float)expectVal, floatVal, 5);
+                Assert.True(Math.Abs((float)expectVal - floatVal) < floatTolerance);
             }
             else if (val is double doubleVal)
             {
                 Assert.IsType<double>(expectVal);
-                Assert.Equal((double)expectVal, doubleVal, 14);
+                Assert.True(Math.Abs((double)expectVal - doubleVal) < doubleTolerance);
             }
             else
             {

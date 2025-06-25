@@ -72,15 +72,17 @@ namespace Function.Test.Taosc
         private static void CheckValue(object val, object expectVal)
         {
 #if NETFRAMEWORK
+            const float floatTolerance = 0.00001f;
+            const double doubleTolerance = 0.0000000000001;
             if (val is float floatVal)
             {
                 Assert.IsType<float>(expectVal);
-                Assert.Equal((float)expectVal, floatVal, 5);
+                Assert.True(Math.Abs((float)expectVal - floatVal) < floatTolerance);
             }
             else if (val is double doubleVal)
             {
                 Assert.IsType<double>(expectVal);
-                Assert.Equal((double)expectVal, doubleVal, 14);
+                Assert.True(Math.Abs((double)expectVal - doubleVal) < doubleTolerance);
             }
             else
             {
