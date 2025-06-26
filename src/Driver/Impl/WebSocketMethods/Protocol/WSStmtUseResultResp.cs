@@ -2,7 +2,7 @@
 
 namespace TDengine.Driver.Impl.WebSocketMethods.Protocol
 {
-    public class WSStmtUseResultResp : IWSBaseResp
+    public class WSStmtUseResultResp : IWSBaseResp, IWSMetaResp
     {
         [JsonProperty("code")] public int Code { get; set; }
 

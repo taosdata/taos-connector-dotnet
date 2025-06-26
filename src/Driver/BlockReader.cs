@@ -45,6 +45,7 @@ namespace TDengine.Driver
             _scales = scales;
         }
 
+        // Constructor for TMQ blocks
         public BlockReader(int offset, TimeZoneInfo tz = null)
         {
             _offset = offset;
@@ -56,10 +57,9 @@ namespace TDengine.Driver
             _tz = tz;
         }
 
-        public BlockReader(int offset, int cols, byte[] colType, byte[] scales) : this(offset, cols, 0, colType, scales)
-        {
-        }
-
+        // Set block for raw blocks (used in NativeRows)
+        // copies the data from the unmanaged memory pointed to by pBlock
+        // into a managed byte array and initializes the block reader with it
         public void SetBlockPtr(IntPtr pBlock, int rows)
         {
             var blockSize = GetBlockSize(pBlock);
@@ -73,6 +73,7 @@ namespace TDengine.Driver
             return Marshal.ReadInt32(pBlock + _offset + RawBlockLengthOffset);
         }
 
+        // Set block for raw blocks (used in WSRows)
         public void SetBlock(byte[] block)
         {
             _block = block;
@@ -96,6 +97,7 @@ namespace TDengine.Driver
             }
         }
 
+        // Set block for for TMQ blocks
         public void SetTMQBlock(byte[] block, int precision, int offset)
         {
             _block = block;
