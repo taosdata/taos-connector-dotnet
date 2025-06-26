@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlTypes;
+using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -245,7 +244,7 @@ namespace TDengine.Driver
             var val = BitConverter.ToInt64(_block,
                 _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int64Size);
             var scale = _scales[col];
-            return FormatDecimal(val.ToString(), scale);
+            return FormatDecimal(val.ToString(CultureInfo.InvariantCulture), scale);
         }
 
         private decimal ConvertDecimal64(int row, int col)
@@ -277,7 +276,7 @@ namespace TDengine.Driver
             BigInteger highPart = new BigInteger(hi) << 64;
             BigInteger lowPart = new BigInteger(lo);
             BigInteger result = highPart | lowPart;
-            return result.ToString();
+            return result.ToString(CultureInfo.InvariantCulture);
         }
 
         private static string FormatDecimal(string str, int scale)
