@@ -868,5 +868,162 @@ namespace Driver.Test.Function.Test
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, doubleIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetString(rowIndex, dateTimeIndex));
         }
+
+        [Fact]
+        public void TestDecimal()
+        {
+            // create table test_decimal (ts timestamp, d1 decimal(18,5), d2 decimal(18,0), d3 decimal(18,18), d4 decimal(38,5),d5 decimal(38,0), d6 decimal(38,38));
+            // insert into test_decimal values
+            // (1750324502986, 1234567890123.45678,123456789012345678,0.123456789012345678,123456789012345678901234567890123.45678,12345678901234567890123456789012345678,0.12345678901234567890123456789012345678)
+            // (1750324503986, -1234567890123.45678,-123456789012345678,-0.123456789012345678,-123456789012345678901234567890123.45678,-12345678901234567890123456789012345678,-0.12345678901234567890123456789012345678)
+            // (1750324504986, 1234567890123.45678,123456789012345678,0.123456789012345678,1234567890123.45678,123456789012345678,0.123456789012345678)
+            // (1750324505986, -1234567890123.45678,-123456789012345678,-0.123456789012345678,-1234567890123.45678,-123456789012345678,-0.123456789012345678);
+            var data = new byte[]
+            {
+                0x01, 0x00, 0x00, 0x00,
+                0xa3, 0x01, 0x00, 0x00,
+                0x04, 0x00, 0x00, 0x00,
+                0x07, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x80,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+                0x09, 0x08, 0x00, 0x00, 0x00,
+                0x15, 0x05, 0x12, 0x00, 0x08,
+                0x15, 0x00, 0x12, 0x00, 0x08,
+                0x15, 0x12, 0x12, 0x00, 0x08,
+                0x11, 0x05, 0x26, 0x00, 0x10,
+                0x11, 0x00, 0x26, 0x00, 0x10,
+                0x11, 0x26, 0x26, 0x00, 0x10,
+
+                0x20, 0x00, 0x00, 0x00,
+                0x20, 0x00, 0x00, 0x00,
+                0x20, 0x00, 0x00, 0x00,
+                0x20, 0x00, 0x00, 0x00,
+                0x40, 0x00, 0x00, 0x00,
+                0x40, 0x00, 0x00, 0x00,
+                0x40, 0x00, 0x00, 0x00,
+
+                0x00,
+                0xca, 0x61, 0x78, 0x87, 0x97, 0x01, 0x00, 0x00,
+                0xb2, 0x65, 0x78, 0x87, 0x97, 0x01, 0x00, 0x00,
+                0x9a, 0x69, 0x78, 0x87, 0x97, 0x01, 0x00, 0x00,
+                0x82, 0x6d, 0x78, 0x87, 0x97, 0x01, 0x00, 0x00,
+
+                0x00,
+                0x4e, 0xf3, 0x30, 0xa6, 0x4b, 0x9b, 0xb6, 0x01,
+                0xb2, 0x0c, 0xcf, 0x59, 0xb4, 0x64, 0x49, 0xfe,
+                0x4e, 0xf3, 0x30, 0xa6, 0x4b, 0x9b, 0xb6, 0x01,
+                0xb2, 0x0c, 0xcf, 0x59, 0xb4, 0x64, 0x49, 0xfe,
+
+                0x00,
+                0x4e, 0xf3, 0x30, 0xa6, 0x4b, 0x9b, 0xb6, 0x01,
+                0xb2, 0x0c, 0xcf, 0x59, 0xb4, 0x64, 0x49, 0xfe,
+                0x4e, 0xf3, 0x30, 0xa6, 0x4b, 0x9b, 0xb6, 0x01,
+                0xb2, 0x0c, 0xcf, 0x59, 0xb4, 0x64, 0x49, 0xfe,
+
+                0x00,
+                0x4e, 0xf3, 0x30, 0xa6, 0x4b, 0x9b, 0xb6, 0x01,
+                0xb2, 0x0c, 0xcf, 0x59, 0xb4, 0x64, 0x49, 0xfe,
+                0x4e, 0xf3, 0x30, 0xa6, 0x4b, 0x9b, 0xb6, 0x01,
+                0xb2, 0x0c, 0xcf, 0x59, 0xb4, 0x64, 0x49, 0xfe,
+
+                0x00,
+                0x4e, 0xf3, 0x38, 0xde, 0x50, 0x90, 0x49, 0xc4, 0x13, 0x33, 0x02, 0xf0, 0xf6, 0xb0, 0x49, 0x09,
+                0xb2, 0x0c, 0xc7, 0x21, 0xaf, 0x6f, 0xb6, 0x3b, 0xec, 0xcc, 0xfd, 0x0f, 0x09, 0x4f, 0xb6, 0xf6,
+                0x4e, 0xf3, 0x30, 0xa6, 0x4b, 0x9b, 0xb6, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0xb2, 0x0c, 0xcf, 0x59, 0xb4, 0x64, 0x49, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+                0x00,
+                0x4e, 0xf3, 0x38, 0xde, 0x50, 0x90, 0x49, 0xc4, 0x13, 0x33, 0x02, 0xf0, 0xf6, 0xb0, 0x49, 0x09,
+                0xb2, 0x0c, 0xc7, 0x21, 0xaf, 0x6f, 0xb6, 0x3b, 0xec, 0xcc, 0xfd, 0x0f, 0x09, 0x4f, 0xb6, 0xf6,
+                0x4e, 0xf3, 0x30, 0xa6, 0x4b, 0x9b, 0xb6, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0xb2, 0x0c, 0xcf, 0x59, 0xb4, 0x64, 0x49, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+                0x00,
+                0x4e, 0xf3, 0x38, 0xde, 0x50, 0x90, 0x49, 0xc4, 0x13, 0x33, 0x02, 0xf0, 0xf6, 0xb0, 0x49, 0x09,
+                0xb2, 0x0c, 0xc7, 0x21, 0xaf, 0x6f, 0xb6, 0x3b, 0xec, 0xcc, 0xfd, 0x0f, 0x09, 0x4f, 0xb6, 0xf6,
+                0x00, 0x00, 0xe0, 0x5e, 0xdc, 0xb9, 0x92, 0xe1, 0x0e, 0x33, 0x02, 0xf0, 0xf6, 0xb0, 0x49, 0x09,
+                0x00, 0x00, 0x20, 0xa1, 0x23, 0x46, 0x6d, 0x1e, 0xf1, 0xcc, 0xfd, 0x0f, 0x09, 0x4f, 0xb6, 0xf6,
+
+                0x00,
+            };
+            var scales = new byte[]
+            {
+                0, 5, 0, 18, 5, 0, 38
+            };
+            var colTypes = new byte[]
+            {
+                0x09,
+                0x15,
+                0x15,
+                0x15,
+                0x11,
+                0x11,
+                0x11,
+            };
+            var parser = new BlockReader(0, 7, (int)TDenginePrecision.TSDB_TIME_PRECISION_MILLI, colTypes, scales);
+            parser.SetBlock(data);
+            var values = new object[7];
+            Assert.Throws<OverflowException>(() => parser.GetValues(0, values));
+            Assert.Throws<OverflowException>(() => parser.GetValues(1, values));
+            Assert.Throws<OverflowException>(() => parser.GetValues(2, values));
+            Assert.Throws<OverflowException>(() => parser.GetValues(3, values));
+            int rowIndex = 0;
+            Assert.Equal(decimal.Parse("1234567890123.45678"), parser.GetDecimal(rowIndex, 1));
+            Assert.Equal(decimal.Parse("123456789012345678"), parser.GetDecimal(rowIndex, 2));
+            Assert.Equal(decimal.Parse("0.123456789012345678"), parser.GetDecimal(rowIndex, 3));
+            Assert.Throws<OverflowException>(() => parser.GetDecimal(rowIndex, 4));
+            Assert.Throws<OverflowException>(() => parser.GetDecimal(rowIndex, 5));
+            Assert.Throws<OverflowException>(() => parser.GetDecimal(rowIndex, 6));
+
+            Assert.Equal("1234567890123.45678", parser.GetString(rowIndex, 1));
+            Assert.Equal("123456789012345678", parser.GetString(rowIndex, 2));
+            Assert.Equal("0.123456789012345678", parser.GetString(rowIndex, 3));
+            Assert.Equal("123456789012345678901234567890123.45678", parser.GetString(rowIndex, 4));
+            Assert.Equal("12345678901234567890123456789012345678", parser.GetString(rowIndex, 5));
+            Assert.Equal("0.12345678901234567890123456789012345678", parser.GetString(rowIndex, 6));
+            rowIndex = 1;
+            Assert.Equal(decimal.Parse("-1234567890123.45678"), parser.GetDecimal(rowIndex, 1));
+            Assert.Equal(decimal.Parse("-123456789012345678"), parser.GetDecimal(rowIndex, 2));
+            Assert.Equal(decimal.Parse("-0.123456789012345678"), parser.GetDecimal(rowIndex, 3));
+            Assert.Throws<OverflowException>(() => parser.GetDecimal(rowIndex, 4));
+            Assert.Throws<OverflowException>(() => parser.GetDecimal(rowIndex, 5));
+            Assert.Throws<OverflowException>(() => parser.GetDecimal(rowIndex, 6));
+
+            Assert.Equal("-1234567890123.45678", parser.GetString(rowIndex, 1));
+            Assert.Equal("-123456789012345678", parser.GetString(rowIndex, 2));
+            Assert.Equal("-0.123456789012345678", parser.GetString(rowIndex, 3));
+            Assert.Equal("-123456789012345678901234567890123.45678", parser.GetString(rowIndex, 4));
+            Assert.Equal("-12345678901234567890123456789012345678", parser.GetString(rowIndex, 5));
+            Assert.Equal("-0.12345678901234567890123456789012345678", parser.GetString(rowIndex, 6));
+            rowIndex = 2;
+            Assert.Equal(decimal.Parse("1234567890123.45678"), parser.GetDecimal(rowIndex, 1));
+            Assert.Equal(decimal.Parse("123456789012345678"), parser.GetDecimal(rowIndex, 2));
+            Assert.Equal(decimal.Parse("0.123456789012345678"), parser.GetDecimal(rowIndex, 3));
+            Assert.Equal(decimal.Parse("1234567890123.45678"), parser.GetDecimal(rowIndex, 4));
+            Assert.Equal(decimal.Parse("123456789012345678"), parser.GetDecimal(rowIndex, 5));
+            Assert.Throws<OverflowException>(() => parser.GetDecimal(rowIndex, 6));
+
+            Assert.Equal("1234567890123.45678", parser.GetString(rowIndex, 1));
+            Assert.Equal("123456789012345678", parser.GetString(rowIndex, 2));
+            Assert.Equal("0.123456789012345678", parser.GetString(rowIndex, 3));
+            Assert.Equal("1234567890123.45678", parser.GetString(rowIndex, 4));
+            Assert.Equal("123456789012345678", parser.GetString(rowIndex, 5));
+            Assert.Equal("0.12345678901234567800000000000000000000", parser.GetString(rowIndex, 6));
+            rowIndex = 3;
+            Assert.Equal(decimal.Parse("-1234567890123.45678"), parser.GetDecimal(rowIndex, 1));
+            Assert.Equal(decimal.Parse("-123456789012345678"), parser.GetDecimal(rowIndex, 2));
+            Assert.Equal(decimal.Parse("-0.123456789012345678"), parser.GetDecimal(rowIndex, 3));
+            Assert.Equal(decimal.Parse("-1234567890123.45678"), parser.GetDecimal(rowIndex, 4));
+            Assert.Equal(decimal.Parse("-123456789012345678"), parser.GetDecimal(rowIndex, 5));
+            Assert.Throws<OverflowException>(() => parser.GetDecimal(rowIndex, 6));
+
+            Assert.Equal("-1234567890123.45678", parser.GetString(rowIndex, 1));
+            Assert.Equal("-123456789012345678", parser.GetString(rowIndex, 2));
+            Assert.Equal("-0.123456789012345678", parser.GetString(rowIndex, 3));
+            Assert.Equal("-1234567890123.45678", parser.GetString(rowIndex, 4));
+            Assert.Equal("-123456789012345678", parser.GetString(rowIndex, 5));
+            Assert.Equal("-0.12345678901234567800000000000000000000", parser.GetString(rowIndex, 6));
+        }
     }
 }

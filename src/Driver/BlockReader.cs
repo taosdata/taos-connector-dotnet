@@ -241,34 +241,66 @@ namespace TDengine.Driver
 
         private string ConvertDecimal64Str(int row, int col)
         {
-            var val = BitConverter.ToInt64(_block,
-                _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int64Size);
-            var scale = _scales[col];
-            return FormatDecimal(val.ToString(CultureInfo.InvariantCulture), scale);
+            return ConvertDecimal64(row, col).ToString(CultureInfo.InvariantCulture);
         }
 
         private decimal ConvertDecimal64(int row, int col)
         {
-            var str = ConvertDecimal64Str(row, col);
-            return decimal.Parse(str);
+            var int64Value = BitConverter.ToInt64(_block,
+                _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int64Size);
+            var scale = _scales[col];
+            bool isNegative = int64Value < 0;
+            var val = int64Value;
+            if (isNegative)
+            {
+                val = -int64Value;
+            }
+
+            int lo = (int)(val & 0xFFFFFFFF);
+            int mid = (int)((val >> 32) & 0xFFFFFFFF);
+            return new decimal(lo, mid, 0, isNegative, scale);
         }
 
         private string ConvertDecimal128Str(int row, int col)
         {
-            var lo = BitConverter.ToUInt64(_block,
-                _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int64Size * 2);
-            var hi = BitConverter.ToInt64(_block,
-                _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int64Size * 2 +
-                TDengineConstant.Int64Size);
-            var scale = _scales[col];
-            var str = FormatI128(hi, lo);
-            return FormatDecimal(str, scale);
+            try
+            {
+                return ConvertDecimal128(row, col).ToString(CultureInfo.InvariantCulture);
+            }
+            catch (OverflowException)
+            {
+                // Use BigInteger for large values
+                int startIndex = _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int64Size * 2;
+                var lo = BitConverter.ToUInt64(_block, startIndex);
+                var hi = BitConverter.ToInt64(_block, startIndex + TDengineConstant.UInt64Size);
+                var scale = _scales[col];
+                var str = FormatI128(hi, lo);
+                return FormatDecimal(str, scale);
+            }
         }
 
         private decimal ConvertDecimal128(int row, int col)
         {
-            var str = ConvertDecimal128Str(row, col);
-            return decimal.Parse(str);
+            int startIndex = _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int64Size * 2;
+            ulong lower = BitConverter.ToUInt64(_block, startIndex);
+            ulong upper = BitConverter.ToUInt64(_block, startIndex + TDengineConstant.UInt64Size);
+            bool isNegative = (long)(upper) < 0;
+            if (isNegative)
+            {
+                lower = 0UL - lower;
+                ulong borrow = (lower > 0UL) ? 1UL : 0UL;
+                upper = 0UL - upper - borrow;
+            }
+
+            ulong lo64 = lower;
+            if (upper > uint.MaxValue)
+            {
+                throw new OverflowException("Value was either too large or too small for a Decimal.");
+            }
+
+            uint hi32 = (uint)(upper);
+            var scale = _scales[col];
+            return new decimal((int)(lo64), (int)(lo64 >> 32), (int)(hi32), isNegative: isNegative, scale: scale);
         }
 
         private static string FormatI128(long hi, ulong lo)
