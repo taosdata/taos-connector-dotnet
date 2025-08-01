@@ -350,8 +350,7 @@ namespace TDengine.Driver
 
         private DateTime ConvertTime(int row, int col)
         {
-            var ts = BitConverter.ToInt64(_block,
-                _colHeadOffset[col] + _nullBitMapOffset + row * TDengineConstant.Int64Size);
+            var ts = ConvertBigInt(row, col);
             return TDengineConstant.ConvertTimeToDatetime(ts, (TDenginePrecision)_precision, _tz);
         }
 
@@ -628,6 +627,8 @@ namespace TDengine.Driver
             CheckNull(row, col);
             switch ((TDengineDataType)_colType[col])
             {
+                case TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP:
+                    return ConvertBigInt(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_TINYINT:
                     return ConvertTinyint(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_UTINYINT:

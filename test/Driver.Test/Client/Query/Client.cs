@@ -62,7 +62,8 @@ namespace Driver.Test.Client.Query
             return decimal.Parse(sb.ToString());
         }
 
-        private object[][] GenerateValue(TDenginePrecision precision, bool withDecimal, out string sql)
+        private object[][] GenerateValue(TDenginePrecision precision, bool withDecimal, out string sql,
+            TimeZoneInfo tz = null)
         {
             Random rand = new Random();
             bool v1 = true;
@@ -223,7 +224,8 @@ namespace Driver.Test.Client.Query
             {
                 new object[]
                 {
-                    TDengineConstant.ConvertTimeToDatetime(timeStampes[0], precision), v1, v2, v3, v4, v5, v6, v7, v8,
+                    TDengineConstant.ConvertTimeToDatetime(timeStampes[0], precision, tz), v1, v2, v3, v4, v5, v6, v7,
+                    v8,
                     v9, v10,
                     v11,
                     Encoding.UTF8.GetBytes("test_binary"),
@@ -236,13 +238,14 @@ namespace Driver.Test.Client.Query
                 },
                 new object[]
                 {
-                    TDengineConstant.ConvertTimeToDatetime(timeStampes[1], precision), null, null, null, null, null,
+                    TDengineConstant.ConvertTimeToDatetime(timeStampes[1], precision, tz), null, null, null, null, null,
                     null,
                     null, null, null, null, null, null, null, null, null
                 },
                 new object[]
                 {
-                    TDengineConstant.ConvertTimeToDatetime(timeStampes[2], precision), v1, v2, v3, v4, v5, v6, v7, v8,
+                    TDengineConstant.ConvertTimeToDatetime(timeStampes[2], precision, tz), v1, v2, v3, v4, v5, v6, v7,
+                    v8,
                     v9, v10,
                     v11,
                     Encoding.UTF8.GetBytes("中文"),
@@ -255,7 +258,7 @@ namespace Driver.Test.Client.Query
                 },
                 new object[]
                 {
-                    TDengineConstant.ConvertTimeToDatetime(timeStampes[3], precision), v1_3, v2_3, v3_3, v4_3, v5_3,
+                    TDengineConstant.ConvertTimeToDatetime(timeStampes[3], precision, tz), v1_3, v2_3, v3_3, v4_3, v5_3,
                     v6_3, v7_3, v8_3, v9_3, v10_3,
                     v11_3,
                     Encoding.UTF8.GetBytes("中文"),
@@ -268,7 +271,7 @@ namespace Driver.Test.Client.Query
                 },
                 new object[]
                 {
-                    TDengineConstant.ConvertTimeToDatetime(timeStampes[4], precision), v1_4, v2_4, v3_4, v4_4, v5_4,
+                    TDengineConstant.ConvertTimeToDatetime(timeStampes[4], precision, tz), v1_4, v2_4, v3_4, v4_4, v5_4,
                     v6_4, v7_4, v8_4, v9_4, v10_4,
                     v11_4,
                     Encoding.UTF8.GetBytes("中文"),
@@ -1145,6 +1148,102 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     client.Exec($"drop database if exists {db}");
                 }
 
+                client.Dispose();
+            }
+        }
+
+        private void QueryWithConnectionTimezoneTest(string connectString, string connectionTimezone, string db,
+            TDenginePrecision precision)
+        {
+            if (Environment.Version.Major < 6)
+            {
+                _output.WriteLine($"Dotnet Version is {Environment.Version}. Skipping QueryWithConnectionTimezoneTest.");
+                return;
+            }
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(connectionTimezone);
+            var builder = new ConnectionStringBuilder(connectString)
+            {
+                ConnectionTimezone = tz
+            };
+            var inCloud = IsCloudTest(builder);
+            var utcBuilder = new ConnectionStringBuilder(connectString)
+            {
+                ConnectionTimezone = TimeZoneInfo.Utc
+            };
+            var utcClient = DbDriver.Open(utcBuilder);
+            var client = DbDriver.Open(builder);
+            try
+            {
+                var now = DateTime.Now;
+                var superTableName = $"all_type_stb_{now.Ticks}";
+                var subTableName = $"all_type_ctb_{now.Ticks}";
+                try
+                {
+                    if (!inCloud)
+                    {
+                        client.Exec($"drop database if exists {db}", ReqId.GetReqId());
+                        client.Exec($"create database {db} precision '{PrecisionString(precision)}'", ReqId.GetReqId());
+                    }
+
+                    client.Exec($"use {db}", ReqId.GetReqId());
+                    utcClient.Exec($"use {db}", ReqId.GetReqId());
+                    var createTableSql =
+                        $"create table if not exists {superTableName} (ts timestamp,v int) tags (tg int)";
+                    client.Exec(createTableSql, ReqId.GetReqId());
+
+                    var ts = TDengineConstant.ConvertDatetimeToTick(now, precision);
+                    var targetTime = TDengineConstant.ConvertTimeToDatetime(ts, precision, tz);
+                    var utcTime = TDengineConstant.ConvertTimeToDatetime(ts, precision, TimeZoneInfo.Utc);
+                    string timeFormat;
+                    switch (precision)
+                    {
+                        case TDenginePrecision.TSDB_TIME_PRECISION_MILLI:
+                            timeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+                            break;
+                        case TDenginePrecision.TSDB_TIME_PRECISION_MICRO:
+                            timeFormat = "yyyy-MM-dd HH:mm:ss.ffffff";
+                            break;
+                        case TDenginePrecision.TSDB_TIME_PRECISION_NANO:
+                            timeFormat = "yyyy-MM-dd HH:mm:ss.fffffff";
+                            break;
+                        default:
+                            throw new NotSupportedException($"unknown precision {precision}");
+                    }
+
+                    var insertTime = utcTime.ToString(timeFormat);
+                    string insertQuery =
+                        $"insert into {subTableName} using {superTableName} tags('1') values('{insertTime}',1)";
+                    _output.WriteLine("SQL: " + insertQuery);
+                    utcClient.Exec(insertQuery, ReqId.GetReqId());
+                    string query = $"select * from {superTableName} order by ts asc";
+                    using (var rows = client.Query(query, ReqId.GetReqId()))
+                    {
+                        var haveNext = rows.Read();
+                        Assert.True(haveNext);
+                        this._output.WriteLine($"{((DateTime)rows.GetValue(0)).ToString(timeFormat)}");
+                        Assert.Equal(((DateTime)rows.GetValue(0)).ToString(timeFormat),
+                            targetTime.ToString(timeFormat));
+
+                        Assert.Equal((int)(1), rows.GetValue(2));
+                    }
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
+                finally
+                {
+                    client.Exec($"drop table if exists {superTableName}", ReqId.GetReqId());
+                    if (!inCloud)
+                    {
+                        client.Exec($"drop database if exists {db}", ReqId.GetReqId());
+                    }
+                }
+            }
+            finally
+            {
+                utcClient.Dispose();
                 client.Dispose();
             }
         }

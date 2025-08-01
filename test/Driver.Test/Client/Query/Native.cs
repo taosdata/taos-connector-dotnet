@@ -144,5 +144,26 @@ namespace Driver.Test.Client.Query
             var db = "query_concurrency_test";
             this.QueryConcurrencyTest(this._nativeConnectString, db);
         }
+        
+        [Fact]
+        public void NativeQueryWithConnectionTimezoneMSTest()
+        {
+            var db = "query_conn_tz_ms_test";
+            QueryWithConnectionTimezoneTest(this._nativeConnectString, "Europe/Paris", db, TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+        }
+        
+        [Fact]
+        public void NativeQueryWithConnectionTimezoneUSTest()
+        {
+            var db = "query_conn_tz_us_test";
+            QueryWithConnectionTimezoneTest(this._nativeConnectString, "Europe/Paris", db, TDenginePrecision.TSDB_TIME_PRECISION_MICRO);
+        }
+        
+        [Fact]
+        public void NativeQueryWithConnectionTimezoneNSTest()
+        {
+            var db = "query_conn_tz_ns_test";
+            QueryWithConnectionTimezoneTest(this._nativeConnectString, "Europe/Paris", db, TDenginePrecision.TSDB_TIME_PRECISION_NANO);
+        }
     }
 }

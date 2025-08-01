@@ -233,6 +233,27 @@ namespace Driver.Test.Client.Query
         }
 
         [Fact]
+        public void WebSocketQueryWithConnectionTimezoneMSTest()
+        {
+            var db = "ws_query_conn_tz_ms_test";
+            QueryWithConnectionTimezoneTest(this._wsConnectString, "Europe/Paris", db, TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+        }
+        
+        [Fact]
+        public void WebSocketQueryWithConnectionTimezoneUSTest()
+        {
+            var db = "ws_query_conn_tz_us_test";
+            QueryWithConnectionTimezoneTest(this._wsConnectString, "Europe/Paris", db, TDenginePrecision.TSDB_TIME_PRECISION_MICRO);
+        }
+        
+        [Fact]
+        public void WebSocketQueryWithConnectionTimezoneNSTest()
+        {
+            var db = "ws_query_conn_tz_ns_test";
+            QueryWithConnectionTimezoneTest(this._wsConnectString, "Europe/Paris", db, TDenginePrecision.TSDB_TIME_PRECISION_NANO);
+        }
+
+        [Fact]
         public void WebSocketTimeoutTest()
         {
             var builder = new ConnectionStringBuilder(_wsConnectString);

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace TDengine.Driver
 {
+
     public enum TDengineDataType
     {
         TSDB_DATA_TYPE_NULL = 0, // 1 bytes
@@ -169,6 +171,17 @@ namespace TDengine.Driver
 
     public static class TDengineConstant
     {
+        public static readonly string ProcessName = new Lazy<string>(() =>
+        {
+            try
+            {
+                return Process.GetCurrentProcess().ProcessName;
+            }
+            catch
+            {
+                return "dotnet_unknown";
+            }
+        }).Value;
         public static readonly DateTime TimeZero = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         public static readonly int Int8Size = sizeof(sbyte);
         public static readonly int Int16Size = sizeof(short);
@@ -185,6 +198,11 @@ namespace TDengine.Driver
 
         public static long ConvertDatetimeToTick(DateTime value, TDenginePrecision precision)
         {
+            // if kind is unspecified, the `ToUniversalTime` is assumed to be in local time, which may convert to an incorrect UTC time.
+            if (value.Kind == DateTimeKind.Unspecified)
+            {
+                throw new ArgumentException("Datetime value must be specified as UTC or Local.");
+            }
             switch (precision)
             {
                 case TDenginePrecision.TSDB_TIME_PRECISION_MILLI:
@@ -199,9 +217,9 @@ namespace TDengine.Driver
         }
 
         public static DateTime ConvertTimeToDatetime(long value, TDenginePrecision precision,
-            TimeZoneInfo tz = default)
+            TimeZoneInfo tz = null)
         {
-            if (tz == default)
+            if (tz == null)
             {
                 tz = TimeZoneInfo.Local;
             }
@@ -224,7 +242,7 @@ namespace TDengine.Driver
         public static int CharOffset(int n) => n >> 3;
         public static bool BitmapIsNull(byte c, int n) => (c & (1 << (7 - BitPos(n)))) == (1 << (7 - BitPos(n)));
 
-        public static Dictionary<TDengineDataType, int> TypeLengthMap = new Dictionary<TDengineDataType, int>
+        public static readonly Dictionary<TDengineDataType, int> TypeLengthMap = new Dictionary<TDengineDataType, int>
         {
             { TDengineDataType.TSDB_DATA_TYPE_NULL, 1 },
             { TDengineDataType.TSDB_DATA_TYPE_BOOL, 1 },
@@ -441,5 +459,15 @@ namespace TDengine.Driver
         public IntPtr raw;
         public uint rawLen;
         public ushort rawType;
+    }
+
+    public enum TSDB_OPTION_CONNECTION
+    {
+        TSDB_OPTION_CONNECTION_CLEAR = -1, // means clear all option in this connection
+        TSDB_OPTION_CONNECTION_CHARSET, // charset, Same as the scope supported by the system
+        TSDB_OPTION_CONNECTION_TIMEZONE, // timezone, Same as the scope supported by the system
+        TSDB_OPTION_CONNECTION_USER_IP, // user ip
+        TSDB_OPTION_CONNECTION_USER_APP, // user app, max lengthe is 23, truncated if longer than 23
+        TSDB_MAX_OPTIONS_CONNECTION
     }
 }

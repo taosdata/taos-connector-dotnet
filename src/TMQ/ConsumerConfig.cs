@@ -137,5 +137,11 @@ namespace TDengine.TMQ
             get => Get("max.poll.interval.ms");
             set => SetObject("max.poll.interval.ms", value);
         }
+        
+        public string Timezone
+        {
+            get => Get("timezone");
+            set => SetObject("timezone", value);
+        }
     }
 }
