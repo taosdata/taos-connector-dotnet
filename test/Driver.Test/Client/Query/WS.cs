@@ -171,7 +171,7 @@ namespace Driver.Test.Client.Query
                 {
                     ts[i] = (dateTime.Add(TimeSpan.FromSeconds(i)).ToUniversalTime().Ticks -
                              TDengineConstant.TimeZero.Ticks) / 10000;
-                    tsv[i] = TDengineConstant.ConvertTimeToDatetime(ts[i], precision);
+                    tsv[i] = TDengineConstant.ConvertTimestampToDateTime(ts[i], precision);
                 }
 
                 var valuesStr = "";

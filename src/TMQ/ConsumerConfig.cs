@@ -138,10 +138,10 @@ namespace TDengine.TMQ
             set => SetObject("max.poll.interval.ms", value);
         }
         
-        public string Timezone
+        public string ConnectionTimezone
         {
-            get => Get("timezone");
-            set => SetObject("timezone", value);
+            get => Get("connectionTimezone");
+            set => SetObject("connectionTimezone", value);
         }
     }
 }

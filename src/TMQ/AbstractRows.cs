@@ -18,10 +18,10 @@ namespace TDengine.TMQ
         
         protected abstract void FetchBlock();
 
-        protected AbstractRows(TimeZoneInfo tz)
+        protected AbstractRows(int blockReaderOffset ,int tmqBlockReaderOffset, TimeZoneInfo tz)
         {
-            BlockReader = new BlockReader(0, tz);
-            TmqBlockReader = new TMQBlockReader(0);
+            BlockReader = new BlockReader(blockReaderOffset, tz);
+            TmqBlockReader = new TMQBlockReader(tmqBlockReaderOffset);
         }
         
         public object GetValue(int ordinal)
@@ -97,7 +97,17 @@ namespace TDengine.TMQ
         public string GetString(int ordinal)
         {
             return BlockReader.GetString(CurrentRow, ordinal);
-        } 
+        }
+
+        public DateTimeOffset GetDateTimeOffset(int ordinal)
+        {
+            return BlockReader.GetDateTimeOffset(CurrentRow, ordinal);
+        }
+
+        public bool IsDBNull(int ordinal)
+        {
+            return BlockReader.IsDBNull(CurrentRow, ordinal);
+        }
         
     }
 }

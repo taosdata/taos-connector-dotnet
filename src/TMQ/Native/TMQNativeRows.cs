@@ -10,7 +10,7 @@ namespace TDengine.TMQ.Native
     {
         private readonly IntPtr _result;
 
-        public TMQNativeRows(IntPtr result, TimeZoneInfo tz) : base(tz)
+        public TMQNativeRows(IntPtr result, TimeZoneInfo tz) : base(0,0,tz)
         {
             _result = result;
         }

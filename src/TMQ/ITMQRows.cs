@@ -6,6 +6,8 @@ namespace TDengine.TMQ
     {
         object GetValue(int ordinal);
         bool Read();
+        bool IsDBNull(int ordinal);
+        
         int FieldCount { get; }
         string TableName { get; }
         string GetName(int ordinal);
@@ -25,6 +27,8 @@ namespace TDengine.TMQ
         float GetFloat(int ordinal);
 
         string GetString(int ordinal);
+        
+        DateTimeOffset GetDateTimeOffset(int ordinal);
         
     }
 }

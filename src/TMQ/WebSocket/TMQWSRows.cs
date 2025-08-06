@@ -11,7 +11,7 @@ namespace TDengine.TMQ.WebSocket
         private readonly TMQConnection _connection;
         private readonly ulong _resultId;
 
-        public TMQWSRows(WSTMQPollResp result, TMQConnection connection, TimeZoneInfo tz):base(tz)
+        public TMQWSRows(WSTMQPollResp result, TMQConnection connection, TimeZoneInfo tz):base(24,38,tz)
         {
             _connection = connection;
             _resultId = result.MessageId;

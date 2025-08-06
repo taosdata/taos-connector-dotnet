@@ -279,7 +279,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         public string MaxPollIntervalMs => Get("max.poll.interval.ms");
         
-        public string Timezone => Get("timezone");
+        public string ConnectionTimezone => Get("connectionTimezone");
 
         public TMQOptions(IEnumerable<KeyValuePair<string, string>> config)
         {
@@ -323,7 +323,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             { "ws.reconnect.interval.ms", true },
             { "session.timeout.ms", true },
             { "max.poll.interval.ms", true },
-            { "timezone", true },
+            { "connectionTimezone", true },
         };
 
         public Dictionary<string, string> GetOtherProperties()

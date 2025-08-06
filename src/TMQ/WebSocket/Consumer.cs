@@ -73,15 +73,15 @@ namespace TDengine.TMQ.WebSocket
                     throw new ArgumentException($"Invalid reconnect retry intervalMs {_options.TDReconnectIntervalMs}");
             }
 
-            if (!string.IsNullOrEmpty(_options.Timezone))
+            if (!string.IsNullOrEmpty(_options.ConnectionTimezone))
             {
                 try
                 {
-                    _tz = TimeZoneInfo.FindSystemTimeZoneById(_options.Timezone);
+                    _tz = TimeZoneInfo.FindSystemTimeZoneById(_options.ConnectionTimezone);
                 }
                 catch (Exception e)
                 {
-                    throw new ArgumentException($"Invalid timezone {_options.Timezone}", e);
+                    throw new ArgumentException($"Invalid connection timezone {_options.ConnectionTimezone}", e);
                 }
             }
             _connection = new TMQConnection(_options);

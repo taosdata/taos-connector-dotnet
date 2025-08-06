@@ -247,7 +247,7 @@ namespace Driver.Test.Function.Test
             var cols = parser.GetValues(0, values);
             var expected = new object[]
             {
-                TDengineConstant.ConvertTimeToDatetime(1750324502986, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
+                TDengineConstant.ConvertTimestampToDateTime(1750324502986, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
                 true, // bool
                 (sbyte)127, // tinyint
                 (short)32767, // smallint
@@ -461,7 +461,7 @@ namespace Driver.Test.Function.Test
             cols = parser.GetValues(1, values);
             expected = new object[]
             {
-                TDengineConstant.ConvertTimeToDatetime(1750324503986, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
+                TDengineConstant.ConvertTimestampToDateTime(1750324503986, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
                 null, // bool
                 null, // tinyint
                 null, // smallint
@@ -510,7 +510,7 @@ namespace Driver.Test.Function.Test
             cols = parser.GetValues(2, values);
             expected = new object[]
             {
-                TDengineConstant.ConvertTimeToDatetime(1750324504986, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
+                TDengineConstant.ConvertTimestampToDateTime(1750324504986, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
                 false, // bool
                 (sbyte)(-128), // tinyint
                 (short)(-32768), // smallint
@@ -691,7 +691,7 @@ namespace Driver.Test.Function.Test
             cols = parser.GetValues(3, values);
             expected = new object[]
             {
-                TDengineConstant.ConvertTimeToDatetime(1750324505986, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
+                TDengineConstant.ConvertTimestampToDateTime(1750324505986, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
                 true, // bool
                 (sbyte)(1), // tinyint
                 (short)(1), // smallint

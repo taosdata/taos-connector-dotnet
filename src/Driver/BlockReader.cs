@@ -351,7 +351,13 @@ namespace TDengine.Driver
         private DateTime ConvertTime(int row, int col)
         {
             var ts = ConvertBigInt(row, col);
-            return TDengineConstant.ConvertTimeToDatetime(ts, (TDenginePrecision)_precision, _tz);
+            return TDengineConstant.ConvertTimestampToDateTime(ts, (TDenginePrecision)_precision, _tz);
+        }
+        
+        private DateTimeOffset ConvertTimeOffset(int row, int col)
+        {
+            var ts = ConvertBigInt(row, col);
+            return TDengineConstant.ConvertTimestampToDateTimeOffset(ts, (TDenginePrecision)_precision, _tz);
         }
 
         private byte[] ConvertBinary(int row, int col)
@@ -680,7 +686,7 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP:
                     return ConvertTime(row, col);
                 default:
-                    throw new InvalidCastException("Cannot cast to bool from " +
+                    throw new InvalidCastException("Cannot cast to datetime from " +
                                                    TDengineConstant.GetFieldTypeName((sbyte)_colType[col]));
             }
         }
@@ -815,6 +821,19 @@ namespace TDengine.Driver
                     return ConvertDecimal128Str(row, col);
                 default:
                     throw new InvalidCastException("Cannot cast to string from " +
+                                                   TDengineConstant.GetFieldTypeName((sbyte)_colType[col]));
+            }
+        }
+
+        public DateTimeOffset GetDateTimeOffset(int row, int col)
+        {
+            CheckNull(row, col);
+            switch ((TDengineDataType)_colType[col])
+            {
+                case TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP:
+                    return ConvertTimeOffset(row, col);
+                default:
+                    throw new InvalidCastException("Cannot cast to DateTimeOffset from " +
                                                    TDengineConstant.GetFieldTypeName((sbyte)_colType[col]));
             }
         }

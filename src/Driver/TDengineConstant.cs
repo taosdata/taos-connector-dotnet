@@ -196,12 +196,18 @@ namespace TDengine.Driver
         public static readonly int ByteSize = sizeof(byte);
         public static readonly int BoolSize = sizeof(bool);
 
+        // Deprecated: Wrong function name, use ConvertDateTimeToTimestamp instead.
+        [Obsolete("Wrong function name, Use ConvertDateTimeToTimestamp instead.")]
         public static long ConvertDatetimeToTick(DateTime value, TDenginePrecision precision)
+        {
+            return ConvertDateTimeToTimestamp(value, precision);
+        }
+        public static long ConvertDateTimeToTimestamp(DateTime value, TDenginePrecision precision)
         {
             // if kind is unspecified, the `ToUniversalTime` is assumed to be in local time, which may convert to an incorrect UTC time.
             if (value.Kind == DateTimeKind.Unspecified)
             {
-                throw new ArgumentException("Datetime value must be specified as UTC or Local.");
+                throw new ArgumentException("Datetime Kind must be specified as UTC or Local.");
             }
             switch (precision)
             {
@@ -216,7 +222,22 @@ namespace TDengine.Driver
             }
         }
 
+        public static long ConvertDateTimeToTimestamp(DateTime value, TDenginePrecision precision,
+            TimeZoneInfo timezone)
+        {
+            var utcTime = TimeZoneInfo.ConvertTimeToUtc(value, timezone);
+            return ConvertDateTimeToTimestamp(utcTime,precision);
+        }
+        
+        // Deprecated: Wrong function name, use ConvertTimestampToDateTime instead.
+        [Obsolete("Wrong function name, Use ConvertTimestampToDateTime instead.")]
         public static DateTime ConvertTimeToDatetime(long value, TDenginePrecision precision,
+            TimeZoneInfo tz = null)
+        {
+            return ConvertTimestampToDateTime(value, precision, tz);
+        }
+
+        public static DateTime ConvertTimestampToDateTime(long value, TDenginePrecision precision,
             TimeZoneInfo tz = null)
         {
             if (tz == null)
@@ -237,6 +258,45 @@ namespace TDengine.Driver
             }
         }
 
+        public static DateTimeOffset ConvertTimestampToDateTimeOffset(long value, TDenginePrecision precision,
+            TimeZoneInfo tz)
+        {
+            if (tz == null)
+            {
+                throw new ArgumentNullException(nameof(tz), "TimeZoneInfo cannot be null.");
+            }
+            DateTimeOffset utcDateTimeOffset;
+            switch (precision)
+            {
+                case TDenginePrecision.TSDB_TIME_PRECISION_MILLI:
+                    utcDateTimeOffset = new DateTimeOffset(TimeZero.AddTicks(value * 10000));
+                    break;
+                case TDenginePrecision.TSDB_TIME_PRECISION_MICRO:
+                    utcDateTimeOffset = new DateTimeOffset(TimeZero.AddTicks(value * 10));
+                    break;
+                case TDenginePrecision.TSDB_TIME_PRECISION_NANO:
+                    utcDateTimeOffset = new DateTimeOffset(TimeZero.AddTicks(value / 100));
+                    break;
+                default:
+                    throw new NotSupportedException($"unknown precision {precision}");
+            }
+            return TimeZoneInfo.ConvertTime(utcDateTimeOffset, tz);
+        }
+        
+        public static long ConvertDateTimeOffsetToTimestamp(DateTimeOffset value, TDenginePrecision precision)
+        {
+            switch (precision)
+            {
+                case TDenginePrecision.TSDB_TIME_PRECISION_MILLI:
+                    return (value.UtcTicks - TimeZero.Ticks) / 10000;
+                case TDenginePrecision.TSDB_TIME_PRECISION_MICRO:
+                    return (value.UtcTicks - TimeZero.Ticks) / 10;
+                case TDenginePrecision.TSDB_TIME_PRECISION_NANO:
+                    return (value.UtcTicks - TimeZero.Ticks) * 100;
+                default:
+                    throw new NotSupportedException($"unknown precision {precision}");
+            }
+        }
         public static int BitmapLen(int n) => (n + ((1 << 3) - 1)) >> 3;
         public static int BitPos(int n) => n & ((1 << 3) - 1);
         public static int CharOffset(int n) => n >> 3;
