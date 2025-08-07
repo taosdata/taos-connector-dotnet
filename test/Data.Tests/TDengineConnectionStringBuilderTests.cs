@@ -133,10 +133,14 @@ namespace Data.Tests
             }
             else
             {
-                Assert.Throws<TimeZoneNotFoundException>(() =>
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
-                    var invalidBuilder = new TDengineConnectionStringBuilder("connectionTimezone=Europe/Paris");
-                });
+                    Assert.Throws<TimeZoneNotFoundException>(() =>
+                    {
+                        var invalidBuilder = new TDengineConnectionStringBuilder("connectionTimezone=Europe/Paris");
+                    });
+                }
+
                 Assert.Throws<ArgumentException>(() =>
                 {
                     var invalidBuilder = new TDengineConnectionStringBuilder("connectionTimezone=UTC");

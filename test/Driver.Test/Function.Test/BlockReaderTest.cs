@@ -383,8 +383,8 @@ namespace Driver.Test.Function.Test
             // lost precision for float
             Assert.Equal((long)((float)2147483647), parser.GetInt64(rowIndex, floatIndex));
             Assert.Equal(9999999999999999, parser.GetInt64(rowIndex, decimal128Index));
+            Assert.Equal(1750324502986, parser.GetInt64(rowIndex, dateTimeIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, boolIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, dateTimeIndex));
             Assert.Throws<OverflowException>(() => parser.GetInt64(rowIndex, bigIntUnsignedIndex));
             Assert.Throws<OverflowException>(() => parser.GetInt64(rowIndex, doubleIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, binaryIndex));
@@ -617,8 +617,8 @@ namespace Driver.Test.Function.Test
             Assert.Equal(0, parser.GetInt64(rowIndex, bigIntUnsignedIndex));
             Assert.Equal(0, parser.GetInt64(rowIndex, floatIndex));
             Assert.Equal(0, parser.GetInt64(rowIndex, doubleIndex));
+            Assert.Equal(1750324504986, parser.GetInt64(rowIndex, dateTimeIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, boolIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, dateTimeIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, binaryIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, ncharIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, varbinaryIndex));
@@ -795,8 +795,8 @@ namespace Driver.Test.Function.Test
             Assert.Equal(1, parser.GetInt64(rowIndex, doubleIndex));
             // lost precision for float
             Assert.Equal((long)((float)1), parser.GetInt64(rowIndex, floatIndex));
+            Assert.Equal(1750324505986, parser.GetInt64(rowIndex, dateTimeIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, boolIndex));
-            Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, dateTimeIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, binaryIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, ncharIndex));
             Assert.Throws<InvalidCastException>(() => parser.GetInt64(rowIndex, varbinaryIndex));
