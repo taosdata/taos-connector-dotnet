@@ -142,7 +142,20 @@ namespace TDengine.Driver.Client.Native
                             bind.buffer_length = (UIntPtr)TDengineConstant.Int32Size;
                             break;
                         case long val:
-                            bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BIGINT;
+                            if (isInsert)
+                            {
+                                if ((TDengineDataType)fields[i].type == TDengineDataType.TSDB_DATA_TYPE_BIGINT ||
+                                    (TDengineDataType)fields[i].type == TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP)
+                                    bind.buffer_type = fields[i].type;
+                                else
+                                    throw new NotSupportedException(
+                                        $"bind param type long to {fields[i].type} not supported");
+                            }
+                            else
+                            {
+                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BIGINT;
+                            }
+
                             p = Marshal.AllocHGlobal(TDengineConstant.Int64Size);
                             bs = BitConverter.GetBytes(val);
                             Marshal.Copy(bs, 0, p, bs.Length);
@@ -210,7 +223,8 @@ namespace TDengine.Driver.Client.Native
                                 p = Marshal.AllocHGlobal(TDengineConstant.Int64Size);
                                 needFreePointer.Add(p);
                                 byte precision = fields[i].precision;
-                                var value = TDengineConstant.ConvertDateTimeToTimestamp(val, (TDenginePrecision)precision);
+                                var value = TDengineConstant.ConvertDateTimeToTimestamp(val,
+                                    (TDenginePrecision)precision);
                                 bs = BitConverter.GetBytes(value);
                                 Marshal.Copy(bs, 0, p, bs.Length);
                                 bind.buffer = p;
@@ -240,7 +254,8 @@ namespace TDengine.Driver.Client.Native
                                 p = Marshal.AllocHGlobal(TDengineConstant.Int64Size);
                                 needFreePointer.Add(p);
                                 byte precision = fields[i].precision;
-                                var value = TDengineConstant.ConvertDateTimeOffsetToTimestamp(val, (TDenginePrecision)precision);
+                                var value = TDengineConstant.ConvertDateTimeOffsetToTimestamp(val,
+                                    (TDenginePrecision)precision);
                                 bs = BitConverter.GetBytes(value);
                                 Marshal.Copy(bs, 0, p, bs.Length);
                                 bind.buffer = p;
@@ -486,12 +501,12 @@ namespace TDengine.Driver.Client.Native
                     return MultiBind.MultiBindTimestamp((DateTime?[])array, (TDenginePrecision)field.precision);
                 case Type byteType when byteType == typeof(DateTime):
                     return MultiBind.MultiBindTimestamp((DateTime[])array, (TDenginePrecision)field.precision);
-                
+
                 case Type byteType when byteType == typeof(DateTimeOffset?):
                     return MultiBind.MultiBindTimestamp((DateTimeOffset?[])array, (TDenginePrecision)field.precision);
                 case Type byteType when byteType == typeof(DateTimeOffset):
                     return MultiBind.MultiBindTimestamp((DateTimeOffset[])array, (TDenginePrecision)field.precision);
-                
+
                 case Type byteType when byteType == typeof(byte[]):
                     return MultiBind.MultiBindBytesArray((byte[][])array, (TDengineDataType)field.type);
 

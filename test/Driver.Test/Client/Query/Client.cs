@@ -1332,6 +1332,8 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 var nextSecondTs = TDengineConstant.ConvertDateTimeToTimestamp(nextSecond, precision);
                 var next2Second = now.AddSeconds(2);
                 var next2SecondTs = TDengineConstant.ConvertDateTimeToTimestamp(next2Second, precision);
+                var next3Second = now.AddSeconds(3);
+                var next3SecondTs = TDengineConstant.ConvertDateTimeToTimestamp(next3Second, precision);
                 var superTableName = $"timestamp_stb_{now.Ticks}";
                 var subTableName = $"timestamp_ctb_{now.Ticks}";
                 try
@@ -1347,6 +1349,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         $"create table if not exists {superTableName} (ts timestamp, v int) tags (t_tag timestamp)";
                     client.Exec(createTableSql, ReqId.GetReqId());
                     var stmt = client.StmtInit(ReqId.GetReqId());
+                    // bind row
                     stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
                     var isInsert = stmt.IsInsert();
                     Assert.True(isInsert);
@@ -1378,6 +1381,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             precision), ts);
                         CheckValue(rows.GetInt64(0), ts);
                     }
+
 
                     // bind column
                     stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
@@ -1458,6 +1462,42 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         CheckValue(TDengineConstant.ConvertDateTimeOffsetToTimestamp(rows.GetDateTimeOffset(0),
                             precision), next2SecondTs);
                         CheckValue(rows.GetInt64(0), next2SecondTs);
+                    }
+                    
+                                        
+                    // bind row with long
+                    stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
+                    isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    stmt.SetTableName(subTableName);
+                    stmt.SetTags(new object[]
+                        { TDengineConstant.ConvertTimestampToDateTimeOffset(ts, precision, TimeZoneInfo.Utc) });
+                    stmt.BindRow(new object[]{next3SecondTs,1});
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    affected = stmt.Affected();
+                    Assert.Equal((long)1, affected);
+                    stmt.Prepare($"select * from {superTableName} where ts = ? order by ts asc");
+                    isInsert = stmt.IsInsert();
+                    Assert.False(isInsert);
+                    stmt.BindRow(new object[]
+                    {
+                        next3SecondTs
+                    });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var rows = stmt.Result())
+                    {
+                        var haveNext = rows.Read();
+                        Assert.True(haveNext);
+                        Assert.Equal("ts", rows.GetName(0));
+                        Assert.Equal("v", rows.GetName(1));
+                        Assert.Equal("t_tag", rows.GetName(2));
+                        CheckValue(TDengineConstant.ConvertDateTimeToTimestamp(rows.GetDateTime(0), precision),
+                            next3SecondTs);
+                        CheckValue(TDengineConstant.ConvertDateTimeOffsetToTimestamp(rows.GetDateTimeOffset(0),
+                            precision), next3SecondTs);
+                        CheckValue(rows.GetInt64(0), next3SecondTs);
                     }
                 }
                 catch (Exception e)
