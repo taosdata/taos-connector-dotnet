@@ -914,7 +914,6 @@ namespace Driver.Test.Client.TMQ
         {
             private readonly long _timestamp;
             private readonly TDenginePrecision _precision;
-            private readonly TimeZoneInfo _tz;
 
             public TestDeserializer(long timestamp, TDenginePrecision precision)
             {
