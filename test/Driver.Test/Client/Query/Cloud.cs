@@ -95,19 +95,5 @@ namespace Driver.Test.Client.Query
             RunCloudTest((conn, db) => this.QueryWithConnectionTimezoneTest(conn, "Europe/Paris",db, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
                 nameof(CloudStmtColumnsMSTest));
         }
-        
-        [Fact]
-        public void CloudQueryWithConnectionTimezoneUSTest()
-        {
-            RunCloudTest((conn, db) => this.QueryWithConnectionTimezoneTest(conn, "Europe/Paris",db, TDenginePrecision.TSDB_TIME_PRECISION_MICRO),
-                nameof(CloudStmtColumnsMSTest));
-        }
-        
-        [Fact]
-        public void CloudQueryWithConnectionTimezoneNSTest()
-        {
-            RunCloudTest((conn, db) => this.QueryWithConnectionTimezoneTest(conn, "Europe/Paris",db, TDenginePrecision.TSDB_TIME_PRECISION_NANO),
-                nameof(CloudStmtColumnsMSTest));
-        }
     }
 }

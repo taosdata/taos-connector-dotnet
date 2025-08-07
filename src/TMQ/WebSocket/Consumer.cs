@@ -19,7 +19,7 @@ namespace TDengine.TMQ.WebSocket
         private readonly int _reconnectRetryIntervalMs;
         private List<string> _topics;
         private ulong _lastMessageId = 0;
-        private TimeZoneInfo _tz;
+        private TimeZoneInfo _tz = TimeZoneInfo.Local;
 
         private IDeserializer<TValue> valueDeserializer;
 

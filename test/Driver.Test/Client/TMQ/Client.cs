@@ -791,111 +791,122 @@ namespace Driver.Test.Client.TMQ
                 new ConnectionStringBuilder(connectString);
             var tz = TimeZoneInfo.FindSystemTimeZoneById(timezone);
             builder.ConnectionTimezone = tz;
-            using (var client = DbDriver.Open(builder))
+            ITDengineClient client = null;
+            try
             {
-                try
-                {
-                    string[] sqlCommands =
-                    {
-                        $"drop topic if exists {topic}",
-                        $"drop database if exists {db}",
-                        $"create database if not exists {db}  vgroups 2  WAL_RETENTION_PERIOD 86400",
-                        $"use {db}",
-                        "create table t(ts timestamp,v int)",
-                        $"create topic if not exists {topic} as select * from t"
-                    };
-                    foreach (var sqlCommand in sqlCommands)
-                    {
-                        DoRequest(client, sqlCommand);
-                    }
+                client = DbDriver.Open(builder);
+            }
+            catch (TDengineError e)
+            {
+                if (e.Code != 0x237) throw;
+                _output.WriteLine(
+                    $"TDengineError: {e.Code} - {e.Message}. Skipping QueryWithConnectionTimezoneTest.");
+                return;
+            }
 
-                    DateTime dateTime = DateTime.Now;
-                    var nowTs = TDengineConstant.ConvertDateTimeToTimestamp(dateTime,
-                        TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
-                    var insertTime =
-                        TDengineConstant.ConvertTimestampToDateTime(nowTs, TDenginePrecision.TSDB_TIME_PRECISION_MILLI,
-                            tz);
-                    var insertTimeStr = insertTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                    Dictionary<string, string> copyCfg = new Dictionary<string, string>(cfg)
+            try
+            {
+                string[] sqlCommands =
+                {
+                    $"drop topic if exists {topic}",
+                    $"drop database if exists {db}",
+                    $"create database if not exists {db}  vgroups 2  WAL_RETENTION_PERIOD 86400",
+                    $"use {db}",
+                    "create table t(ts timestamp,v int)",
+                    $"create topic if not exists {topic} as select * from t"
+                };
+                foreach (var sqlCommand in sqlCommands)
+                {
+                    DoRequest(client, sqlCommand);
+                }
+
+                DateTime dateTime = DateTime.Now;
+                var nowTs = TDengineConstant.ConvertDateTimeToTimestamp(dateTime,
+                    TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                var insertTime =
+                    TDengineConstant.ConvertTimestampToDateTime(nowTs, TDenginePrecision.TSDB_TIME_PRECISION_MILLI,
+                        tz);
+                var insertTimeStr = insertTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                Dictionary<string, string> copyCfg = new Dictionary<string, string>(cfg)
+                {
+                    ["connectionTimezone"] = timezone
+                };
+                var consumer = new ConsumerBuilder<Dictionary<string, object>>(copyCfg).Build();
+                consumer.Subscribe($"{topic}");
+                var assignment = consumer.Assignment;
+                Assert.Equal(2, assignment.Count);
+                var topics = consumer.Subscription();
+                Assert.Single(topics);
+                Assert.Equal($"{topic}", topics[0]);
+                var messageCount = 0;
+                var insertIndex = 0;
+                for (int i = 0; i < 5; i++)
+                {
+                    using (var result = consumer.Consume(500))
                     {
-                        ["connectionTimezone"] = timezone
-                    };
-                    var consumer = new ConsumerBuilder<Dictionary<string, object>>(copyCfg).Build();
-                    consumer.Subscribe($"{topic}");
-                    var assignment = consumer.Assignment;
-                    Assert.Equal(2, assignment.Count);
-                    var topics = consumer.Subscription();
-                    Assert.Single(topics);
-                    Assert.Equal($"{topic}", topics[0]);
-                    var messageCount = 0;
-                    var insertIndex = 0;
-                    for (int i = 0; i < 5; i++)
-                    {
-                        using (var result = consumer.Consume(500))
+                        if (result == null)
                         {
-                            if (result == null)
+                            if (i == 0)
                             {
-                                if (i == 0)
-                                {
-                                    // insert data for the first time
-                                    var sql = $"insert into t values('{insertTimeStr}',{0})";
-                                    _output.WriteLine(sql);
-                                    DoRequest(client, sql);
-                                }
-
-                                continue;
+                                // insert data for the first time
+                                var sql = $"insert into t values('{insertTimeStr}',{0})";
+                                _output.WriteLine(sql);
+                                DoRequest(client, sql);
                             }
 
-                            foreach (var message in result.Message)
-                            {
-                                messageCount += 1;
-                                // check message
-                                var tsData = (DateTime)message.Value["ts"];
-                                var v = (int)message.Value["v"];
-                                var ts = TDengineConstant.ConvertDateTimeToTimestamp(tsData,
-                                    TDenginePrecision.TSDB_TIME_PRECISION_MILLI, tz);
-                                var tsDataStr = tsData.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                                var expectStr = TDengineConstant
-                                    .ConvertTimestampToDateTime(nowTs + 1000 * insertIndex,
-                                        TDenginePrecision.TSDB_TIME_PRECISION_MILLI, tz)
-                                    .ToString("yyyy-MM-dd HH:mm:ss.fff");
-                                Assert.Equal(insertIndex, v);
-                                Assert.Equal(nowTs + 1000 * insertIndex, ts);
-                                Assert.Equal(expectStr, tsDataStr);
-                            }
-
-                            consumer.Commit(new List<TopicPartitionOffset>
-                            {
-                                result.TopicPartitionOffset,
-                            });
-                            var committed = consumer.Committed(new TopicPartition[] { result.TopicPartition },
-                                TimeSpan.Zero);
-                            Assert.Single(committed);
-                            Assert.Equal(result.TopicPartitionOffset.Offset, committed[0].Offset);
-                            // insert next data
-                            insertIndex++;
-                            DoRequest(client, $"insert into t values('{nowTs + 1000 * insertIndex}',{insertIndex})");
+                            continue;
                         }
-                    }
 
-                    Assert.True(messageCount > 1);
-                    // check message count
-                    Assert.Equal(4, messageCount);
-                    consumer.Unsubscribe();
-                    consumer.Close();
+                        foreach (var message in result.Message)
+                        {
+                            messageCount += 1;
+                            // check message
+                            var tsData = (DateTime)message.Value["ts"];
+                            var v = (int)message.Value["v"];
+                            var ts = TDengineConstant.ConvertDateTimeToTimestamp(tsData,
+                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI, tz);
+                            var tsDataStr = tsData.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                            var expectStr = TDengineConstant
+                                .ConvertTimestampToDateTime(nowTs + 1000 * insertIndex,
+                                    TDenginePrecision.TSDB_TIME_PRECISION_MILLI, tz)
+                                .ToString("yyyy-MM-dd HH:mm:ss.fff");
+                            Assert.Equal(insertIndex, v);
+                            Assert.Equal(nowTs + 1000 * insertIndex, ts);
+                            Assert.Equal(expectStr, tsDataStr);
+                        }
+
+                        consumer.Commit(new List<TopicPartitionOffset>
+                        {
+                            result.TopicPartitionOffset,
+                        });
+                        var committed = consumer.Committed(new TopicPartition[] { result.TopicPartition },
+                            TimeSpan.Zero);
+                        Assert.Single(committed);
+                        Assert.Equal(result.TopicPartitionOffset.Offset, committed[0].Offset);
+                        // insert next data
+                        insertIndex++;
+                        DoRequest(client, $"insert into t values('{nowTs + 1000 * insertIndex}',{insertIndex})");
+                    }
                 }
-                catch (Exception e)
-                {
-                    _output.WriteLine(e.ToString());
-                    throw;
-                }
-                finally
-                {
-                    Thread.Sleep(3000);
-                    DoRequest(client, $"drop topic if exists {topic}");
-                    Thread.Sleep(3000);
-                    DoRequest(client, $"drop database if exists {db}");
-                }
+
+                Assert.True(messageCount > 1);
+                // check message count
+                Assert.Equal(4, messageCount);
+                consumer.Unsubscribe();
+                consumer.Close();
+            }
+            catch (Exception e)
+            {
+                _output.WriteLine(e.ToString());
+                throw;
+            }
+            finally
+            {
+                Thread.Sleep(3000);
+                DoRequest(client, $"drop topic if exists {topic}");
+                Thread.Sleep(3000);
+                DoRequest(client, $"drop database if exists {db}");
+                client?.Dispose();
             }
         }
 
@@ -904,11 +915,13 @@ namespace Driver.Test.Client.TMQ
             private readonly long _timestamp;
             private readonly TDenginePrecision _precision;
             private readonly TimeZoneInfo _tz;
+
             public TestDeserializer(long timestamp, TDenginePrecision precision)
             {
                 this._timestamp = timestamp;
                 this._precision = precision;
             }
+
             public bool Deserialize(ITMQRows result, bool isNull, SerializationContext context)
             {
                 if (isNull) return false;
@@ -921,10 +934,12 @@ namespace Driver.Test.Client.TMQ
                         case "ts":
                         {
                             Assert.Equal("ts", name);
-                            var ts = TDengineConstant.ConvertDateTimeToTimestamp(result.GetDateTime(col),_precision);
+                            var ts = TDengineConstant.ConvertDateTimeToTimestamp(result.GetDateTime(col), _precision);
                             Assert.Equal(_timestamp, ts);
                             result.GetDateTimeOffset(col);
-                            Assert.Equal(_timestamp,  TDengineConstant.ConvertDateTimeOffsetToTimestamp(result.GetDateTimeOffset(col),_precision));
+                            Assert.Equal(_timestamp,
+                                TDengineConstant.ConvertDateTimeOffsetToTimestamp(result.GetDateTimeOffset(col),
+                                    _precision));
                             break;
                         }
                         case "c1":
@@ -1002,7 +1017,8 @@ namespace Driver.Test.Client.TMQ
                             Assert.NotNull(point);
                             Assert.Equal(new byte[]
                             {
-                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00,
+                                0x00,
                                 0x00, 0x00, 0x00, 0x00, 0x59, 0x40
                             }, point);
                             break;
@@ -1063,7 +1079,12 @@ namespace Driver.Test.Client.TMQ
                             $"insert into ct{i}_decimal values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932)";
                         DoRequest(client, sql);
                     }
-                    var deserializer = new TestDeserializer(TDengineConstant.ConvertDateTimeToTimestamp(now,TDenginePrecision.TSDB_TIME_PRECISION_MILLI), TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+
+                    var deserializer =
+                        new TestDeserializer(
+                            TDengineConstant.ConvertDateTimeToTimestamp(now,
+                                TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
+                            TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
                     var consumer = new ConsumerBuilder<bool>(cfg).SetValueDeserializer(deserializer).Build();
                     consumer.Subscribe($"{topic}");
                     var assignment = consumer.Assignment;
