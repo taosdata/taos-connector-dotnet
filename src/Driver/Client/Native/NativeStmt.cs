@@ -219,7 +219,37 @@ namespace TDengine.Driver.Client.Native
                             else
                             {
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BINARY;
-                                var time = val.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK");
+                                var time = val.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK");
+                                bs = Encoding.UTF8.GetBytes(time);
+                                p = Marshal.AllocHGlobal(bs.Length);
+                                needFreePointer.Add(p);
+                                Marshal.Copy(bs, 0, p, bs.Length);
+                                bind.buffer = p;
+                                bind.buffer_length = (UIntPtr)bs.Length;
+                                lPtr = Marshal.AllocHGlobal(sizeof(Int32));
+                                needFreePointer.Add(lPtr);
+                                Marshal.WriteInt32(lPtr, bs.Length);
+                                bind.length = lPtr;
+                            }
+
+                            break;
+                        case DateTimeOffset val:
+                            if (isInsert)
+                            {
+                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP;
+                                p = Marshal.AllocHGlobal(TDengineConstant.Int64Size);
+                                needFreePointer.Add(p);
+                                byte precision = fields[i].precision;
+                                var value = TDengineConstant.ConvertDateTimeOffsetToTimestamp(val, (TDenginePrecision)precision);
+                                bs = BitConverter.GetBytes(value);
+                                Marshal.Copy(bs, 0, p, bs.Length);
+                                bind.buffer = p;
+                                bind.buffer_length = (UIntPtr)TDengineConstant.Int64Size;
+                            }
+                            else
+                            {
+                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BINARY;
+                                var time = val.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK");
                                 bs = Encoding.UTF8.GetBytes(time);
                                 p = Marshal.AllocHGlobal(bs.Length);
                                 needFreePointer.Add(p);

@@ -1234,12 +1234,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             }
             catch (TDengineError e)
             {
-                if (e.Code == 0x237)
-                {
-                    _output.WriteLine(
-                        $"TDengineError: {e.Code} - {e.Message}. Skipping QueryWithConnectionTimezoneTest.");
-                    return;
-                }
+                if (e.Code != 0x237) throw;
+                _output.WriteLine(
+                    $"TDengineError: {e.Code} - {e.Message}. Skipping QueryWithConnectionTimezoneTest.");
+                return;
             }
 
             try
@@ -1316,8 +1314,165 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             }
             finally
             {
-                utcClient.Dispose();
-                client.Dispose();
+                utcClient?.Dispose();
+
+                client?.Dispose();
+            }
+        }
+
+        private void StmtBindTimestampTest(string connectString, string db, TDenginePrecision precision)
+        {
+            var builder = new ConnectionStringBuilder(connectString);
+            var inCloud = IsCloudTest(builder);
+            using (var client = DbDriver.Open(builder))
+            {
+                var now = DateTime.Now;
+                var ts = TDengineConstant.ConvertDateTimeToTimestamp(now, precision);
+                var nextSecond = now.AddSeconds(1);
+                var nextSecondTs = TDengineConstant.ConvertDateTimeToTimestamp(nextSecond, precision);
+                var next2Second = now.AddSeconds(2);
+                var next2SecondTs = TDengineConstant.ConvertDateTimeToTimestamp(next2Second, precision);
+                var superTableName = $"timestamp_stb_{now.Ticks}";
+                var subTableName = $"timestamp_ctb_{now.Ticks}";
+                try
+                {
+                    if (!inCloud)
+                    {
+                        client.Exec($"drop database if exists {db}", ReqId.GetReqId());
+                        client.Exec($"create database {db} precision '{PrecisionString(precision)}'", ReqId.GetReqId());
+                    }
+
+                    client.Exec($"use {db}", ReqId.GetReqId());
+                    var createTableSql =
+                        $"create table if not exists {superTableName} (ts timestamp, v int) tags (t_tag timestamp)";
+                    client.Exec(createTableSql, ReqId.GetReqId());
+                    var stmt = client.StmtInit(ReqId.GetReqId());
+                    stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
+                    var isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    stmt.SetTableName(subTableName);
+                    stmt.SetTags(new object[]
+                        { TDengineConstant.ConvertTimestampToDateTimeOffset(ts, precision, TimeZoneInfo.Utc) });
+                    stmt.BindRow(new object[]
+                        { TDengineConstant.ConvertTimestampToDateTimeOffset(ts, precision, TimeZoneInfo.Utc), 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    var affected = stmt.Affected();
+                    Assert.Equal((long)1, affected);
+                    stmt.Prepare($"select * from {superTableName} where ts = ? order by ts asc");
+                    isInsert = stmt.IsInsert();
+                    Assert.False(isInsert);
+                    stmt.BindRow(new object[]
+                        { TDengineConstant.ConvertTimestampToDateTimeOffset(ts, precision, TimeZoneInfo.Utc) });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var rows = stmt.Result())
+                    {
+                        var haveNext = rows.Read();
+                        Assert.True(haveNext);
+                        Assert.Equal("ts", rows.GetName(0));
+                        Assert.Equal("v", rows.GetName(1));
+                        Assert.Equal("t_tag", rows.GetName(2));
+                        CheckValue(TDengineConstant.ConvertDateTimeToTimestamp(rows.GetDateTime(0), precision), ts);
+                        CheckValue(TDengineConstant.ConvertDateTimeOffsetToTimestamp(rows.GetDateTimeOffset(0),
+                            precision), ts);
+                        CheckValue(rows.GetInt64(0), ts);
+                    }
+
+                    // bind column
+                    stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
+                    isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    stmt.SetTableName(subTableName);
+                    stmt.SetTags(new object[]
+                        { TDengineConstant.ConvertTimestampToDateTimeOffset(ts, precision, TimeZoneInfo.Utc) });
+                    stmt.BindColumn(stmt.GetColFields(),
+                        new DateTimeOffset[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTimeOffset(nextSecondTs, precision, TimeZoneInfo.Utc)
+                        },
+                        new int[] { 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    affected = stmt.Affected();
+                    Assert.Equal((long)1, affected);
+                    stmt.Prepare($"select * from {superTableName} where ts = ? order by ts asc");
+                    isInsert = stmt.IsInsert();
+                    Assert.False(isInsert);
+                    stmt.BindRow(new object[]
+                    {
+                        TDengineConstant.ConvertTimestampToDateTimeOffset(nextSecondTs, precision, TimeZoneInfo.Utc)
+                    });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var rows = stmt.Result())
+                    {
+                        var haveNext = rows.Read();
+                        Assert.True(haveNext);
+                        Assert.Equal("ts", rows.GetName(0));
+                        Assert.Equal("v", rows.GetName(1));
+                        Assert.Equal("t_tag", rows.GetName(2));
+                        CheckValue(TDengineConstant.ConvertDateTimeToTimestamp(rows.GetDateTime(0), precision),
+                            nextSecondTs);
+                        CheckValue(TDengineConstant.ConvertDateTimeOffsetToTimestamp(rows.GetDateTimeOffset(0),
+                            precision), nextSecondTs);
+                        CheckValue(rows.GetInt64(0), nextSecondTs);
+                    }
+
+                    // bind column with DateTimeOffset?[]
+                    stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
+                    isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    stmt.SetTableName(subTableName);
+                    stmt.SetTags(new object[]
+                        { TDengineConstant.ConvertTimestampToDateTimeOffset(ts, precision, TimeZoneInfo.Utc) });
+                    stmt.BindColumn(stmt.GetColFields(),
+                        new DateTimeOffset?[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTimeOffset(next2SecondTs, precision,
+                                TimeZoneInfo.Utc)
+                        },
+                        new int?[] { 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    affected = stmt.Affected();
+                    Assert.Equal((long)1, affected);
+                    stmt.Prepare($"select * from {superTableName} where ts = ? order by ts asc");
+                    isInsert = stmt.IsInsert();
+                    Assert.False(isInsert);
+                    stmt.BindRow(new object[]
+                    {
+                        TDengineConstant.ConvertTimestampToDateTimeOffset(next2SecondTs, precision, TimeZoneInfo.Utc)
+                    });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var rows = stmt.Result())
+                    {
+                        var haveNext = rows.Read();
+                        Assert.True(haveNext);
+                        Assert.Equal("ts", rows.GetName(0));
+                        Assert.Equal("v", rows.GetName(1));
+                        Assert.Equal("t_tag", rows.GetName(2));
+                        CheckValue(TDengineConstant.ConvertDateTimeToTimestamp(rows.GetDateTime(0), precision),
+                            next2SecondTs);
+                        CheckValue(TDengineConstant.ConvertDateTimeOffsetToTimestamp(rows.GetDateTimeOffset(0),
+                            precision), next2SecondTs);
+                        CheckValue(rows.GetInt64(0), next2SecondTs);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
+                finally
+                {
+                    client.Exec($"drop table if exists {superTableName}", ReqId.GetReqId());
+                    if (!inCloud)
+                    {
+                        client.Exec($"drop database if exists {db}");
+                    }
+                }
             }
         }
     }

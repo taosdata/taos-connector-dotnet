@@ -277,6 +277,28 @@ namespace Driver.Test.Client.Query
                 Assert.True(timeout);
             }
         }
+        
+                
+        [Fact]
+        public void WebSocketStmtMSBindTimestampTest()
+        {
+            var db = "ws_stmt_bind_stmt_test_ms";
+            this.StmtBindTimestampTest(this._wsConnectString, db, TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+        }
+
+        [Fact]
+        public void WebSocketStmtUSBindTimestampTest()
+        {
+            var db = "ws_stmt_bind_stmt_test_us";
+            this.StmtBindTimestampTest(this._wsConnectString, db, TDenginePrecision.TSDB_TIME_PRECISION_MICRO);
+        }
+
+        [Fact]
+        public void WebSocketStmtNSBindTimestampTest()
+        {
+            var db = "ws_stmt_bind_stmt_test_ns";
+            this.StmtBindTimestampTest(this._wsConnectString, db, TDenginePrecision.TSDB_TIME_PRECISION_NANO);
+        }
 
         [Theory]
         // Test SSL and non-SSL cases
