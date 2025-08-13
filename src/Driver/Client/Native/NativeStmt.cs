@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
 using TDengine.Driver.Impl.NativeMethods;
+using TDengine.Driver.Impl.StmtBuilder;
 
 namespace TDengine.Driver.Client.Native
 {
@@ -10,6 +9,24 @@ namespace TDengine.Driver.Client.Native
     {
         private IntPtr _stmt;
         private readonly TimeZoneInfo _tz;
+        private string _sql = string.Empty;
+        private bool _isInsert;
+        private int _fieldsCount;
+        private TaosFieldAll[] _fields;
+        private TaosFieldE[] _tagFields;
+        private TaosFieldE[] _colFields;
+        
+        private IFieldBuilder[] _colBuilders;
+        private IFieldBuilder[] _tagBuilders;
+        private bool _needTableName;
+        private Dictionary<string, Stmt2BindTableInfo> _tableInfos = new Dictionary<string, Stmt2BindTableInfo>();
+        private Stmt2BindTableInfo? _currentTableInfo;
+        private List<string> _tableNames = new List<string>();
+        private bool _isTableNameSet;
+        private bool _isTagsSet;
+        private bool _addBatched;
+        private int _currentRowIndex;
+        private bool _duplicatedTableName;
 
         public NativeStmt(IntPtr stmt, TimeZoneInfo tz)
         {
@@ -17,43 +34,139 @@ namespace TDengine.Driver.Client.Native
             _tz = tz;
         }
 
+        private void CleanCache()
+        {
+            _sql = string.Empty;
+            _isInsert = false;
+            _fieldsCount = 0;
+            _fields = null;
+            _tagFields = null;
+            _colFields = null;
+            _colBuilders = null;
+            _tagBuilders = null;
+            _needTableName = false;
+            _tableInfos = new Dictionary<string, Stmt2BindTableInfo>();
+            _currentTableInfo = null;
+            _tableNames = new List<string>();
+            _isTableNameSet = false;
+            _isTagsSet = false;
+            _addBatched = false;
+            _currentRowIndex = 0;
+            _duplicatedTableName = false;
+        }
+
         public void Prepare(string query)
         {
-            var code = NativeMethods.StmtPrepare(_stmt, query);
+            CleanCache();
+            var code = NativeMethods.TaosStmt2Prepare(_stmt, query);
             StmtCheckError(code);
+            try
+            {
+                code = NativeMethods.TaosStmt2IsInsert(_stmt, out bool isInsert);
+                StmtCheckError(code);
+                _isInsert = isInsert;
+                code = NativeMethods.TaosStmt2GetFields(_stmt, out int count, out var fields);
+                StmtCheckError(code);
+                _fieldsCount = count;
+                _fields = fields;
+                _sql = query;
+                if (_isInsert)
+                {
+                    var tagCount = 0;
+                    var colCount = 0;
+                    for (var i = 0; i < _fieldsCount; i++)
+                    {
+                        switch ((TaosFieldType)_fields[i].field_type)
+                        {
+                            case TaosFieldType.TAOS_FIELD_TAG:
+                                tagCount++;
+                                break;
+                            case TaosFieldType.TAOS_FIELD_COL:
+                                colCount++;
+                                break;
+                        }
+                    }
+
+                    _colBuilders = new IFieldBuilder[colCount];
+                    _colFields = new TaosFieldE[colCount];
+                    _tagBuilders = new IFieldBuilder[tagCount];
+                    _tagFields = new TaosFieldE[tagCount];
+                    var tagIndex = 0;
+                    var colIndex = 0;
+                    for (var i = 0; i < _fields.Length; i++)
+                    {
+                        switch ((TaosFieldType)_fields[i].field_type)
+                        {
+                            case TaosFieldType.TAOS_FIELD_TAG:
+                                _tagBuilders[tagIndex] = Builder.CreateBuilder((TDengineDataType)_fields[i].type);
+                                _tagFields[tagIndex] = TDengineConstant.ConvertToTaosFieldE(fields[i]);
+                                tagIndex++;
+                                break;
+                            case TaosFieldType.TAOS_FIELD_COL:
+                                _colBuilders[colIndex] = Builder.CreateBuilder((TDengineDataType)_fields[i].type);
+                                _colFields[colIndex] = TDengineConstant.ConvertToTaosFieldE(fields[i]);
+                                colIndex++;
+                                break;
+                            case TaosFieldType.TAOS_FIELD_TBNAME:
+                                _needTableName = true;
+                                break;
+                            default:
+                                throw new NotSupportedException(
+                                    $"stmt field type not support: {(TaosFieldType)_fields[i].field_type}");
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                CleanCache();
+                throw;
+            }
         }
 
         private void StmtCheckError(int code)
         {
-            if (code != 0)
-            {
-                var errorStr = NativeMethods.StmtErrorStr(_stmt);
-                throw new TDengineError(code, errorStr);
-            }
+            if (code == 0) return;
+            var errorStr = NativeMethods.StmtErrorStr(_stmt);
+            throw new TDengineError(code, errorStr);
         }
 
         public bool IsInsert()
         {
-            bool isInsert;
-            IntPtr ptr = Marshal.AllocHGlobal(sizeof(int));
-            try
-            {
-                var code = NativeMethods.StmtIsInsert(_stmt, ptr);
-                StmtCheckError(code);
-                isInsert = Marshal.ReadInt32(ptr) == 1;
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(ptr);
-            }
-
-            return isInsert;
+            return _isInsert;
         }
 
         public void SetTableName(string tableName)
         {
-            var code = NativeMethods.StmtSetTbname(_stmt, tableName);
-            StmtCheckError(code);
+            if (_needTableName)
+            {
+                if (_isTableNameSet)
+                {
+                    throw new InvalidOperationException(
+                        "Table name has already been set for current batch");
+                }
+                if (_tableInfos.TryGetValue(tableName, out var info))
+                {
+                    _duplicatedTableName = true;
+                }
+                else
+                {
+                    info = new Stmt2BindTableInfo
+                    {
+                        TagOffset = 0,
+                        ColOffsets = null,
+                        ColCounts = null
+                    };
+                }
+                _currentTableInfo = info;
+                _tableInfos[tableName] = info;
+                _isTableNameSet = true;
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "Table name is not required for this statement or not supported in this context.");
+            }
         }
 
         public void SetTags(object[] tags)
@@ -63,434 +176,261 @@ namespace TDengine.Driver.Client.Native
                 return;
             }
 
-            var fields = GetTagFields();
-            if (tags.Length != fields.Length)
+            if (_tagBuilders == null || _tagBuilders.Length == 0 || !_isInsert)
+            {
+                throw new InvalidOperationException("This statement does not need tags.");
+            }
+
+            if (_isTagsSet)
+            {
+                throw new InvalidOperationException("Tags have already been set for current batch");
+            }
+
+            if (tags.Length != _tagBuilders.Length)
             {
                 throw new ArgumentException(
-                    $"The number of tags ({tags.Length}) does not match the number of tag fields ({fields.Length}).");
+                    $"Expected {_tagBuilders.Length} tags, but got {tags.Length}");
             }
 
-            var param = GenerateBindList(tags, fields, out var needFreePtr, true);
-            try
-            {
-                var code = NativeMethods.StmtSetTags(_stmt, param);
-                StmtCheckError(code);
-            }
-            finally
-            {
-                foreach (var p in needFreePtr)
-                {
-                    if (p != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(p);
-                    }
-                }
-            }
+            CacheRowValue(tags, _tagBuilders, _tagFields);
+            _isTagsSet = true;
         }
 
-        private TAOS_MULTI_BIND[] GenerateBindList(object[] data, TaosFieldE[] fields, out IntPtr[] needFree,
-            bool isInsert)
+        private void CacheRowValue(object[] obj, IFieldBuilder[] builders, TaosFieldE[] fields)
         {
-            needFree = new IntPtr[]{};
-            TAOS_MULTI_BIND[] binds = new TAOS_MULTI_BIND[data.Length];
-            var needFreePointer = new List<IntPtr>();
-            try
+            for (var i = 0; i < builders.Length; i++)
             {
-                for (int i = 0; i < data.Length; i++)
+                if (builders[i] == null || Convert.IsDBNull(builders[i]))
                 {
-                    TAOS_MULTI_BIND bind = new TAOS_MULTI_BIND
-                    {
-                        num = 1
-                    };
-                    if (data[i] == null || Convert.IsDBNull(data[i]))
-                    {
-                        bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BOOL;
-                        IntPtr p = Marshal.AllocHGlobal(TDengineConstant.ByteSize);
-                        needFreePointer.Add(p);
-                        Marshal.WriteByte(p, 1);
-                        bind.is_null = p;
-                    }
-                    else
-                    {
-                        IntPtr p;
-                        byte[] bs;
-                        IntPtr lPtr;
-                        switch (data[i])
-                        {
-                            case bool val:
-                                if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_BOOL)
-                                {
-                                    throw new ArgumentException(
-                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type bool to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-
-                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BOOL;
-                                p = Marshal.AllocHGlobal(TDengineConstant.BoolSize);
-                                needFreePointer.Add(p);
-                                bs = BitConverter.GetBytes(val);
-                                Marshal.Copy(bs, 0, p, bs.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.BoolSize;
-                                break;
-                            case sbyte val:
-                                if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_TINYINT)
-                                {
-                                    throw new ArgumentException(
-                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type sbyte to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-
-                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_TINYINT;
-                                p = Marshal.AllocHGlobal(TDengineConstant.Int8Size);
-                                needFreePointer.Add(p);
-                                Marshal.WriteByte(p, (byte)val);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.Int8Size;
-                                break;
-                            case short val:
-                                if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_SMALLINT)
-                                {
-                                    throw new ArgumentException(
-                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type short to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-
-                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_SMALLINT;
-                                p = Marshal.AllocHGlobal(TDengineConstant.Int16Size);
-                                needFreePointer.Add(p);
-                                bs = BitConverter.GetBytes(val);
-                                Marshal.Copy(bs, 0, p, bs.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.Int16Size;
-                                break;
-                            case int val:
-                                if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_INT)
-                                {
-                                    throw new ArgumentException(
-                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type short to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-
-                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_INT;
-                                p = Marshal.AllocHGlobal(TDengineConstant.Int32Size);
-                                needFreePointer.Add(p);
-                                bs = BitConverter.GetBytes(val);
-                                Marshal.Copy(bs, 0, p, bs.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.Int32Size;
-                                break;
-                            case long val:
-                                if (isInsert)
-                                {
-                                    if ((TDengineDataType)fields[i].type == TDengineDataType.TSDB_DATA_TYPE_BIGINT ||
-                                        (TDengineDataType)fields[i].type == TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP)
-                                        bind.buffer_type = fields[i].type;
-                                    else
-                                        throw new ArgumentException(
-                                            $"BindIndex: {i}, field name: {fields[i].name}, bind param type long to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-                                else
-                                {
-                                    bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BIGINT;
-                                }
-
-                                p = Marshal.AllocHGlobal(TDengineConstant.Int64Size);
-                                needFreePointer.Add(p);
-                                bs = BitConverter.GetBytes(val);
-                                Marshal.Copy(bs, 0, p, bs.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.Int64Size;
-                                break;
-                            case byte val:
-                                if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_UTINYINT)
-                                {
-                                    throw new ArgumentException(
-                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type byte to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-
-                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_UTINYINT;
-                                p = Marshal.AllocHGlobal(TDengineConstant.UInt8Size);
-                                needFreePointer.Add(p);
-                                Marshal.WriteByte(p, (byte)val);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.UInt8Size;
-                                break;
-                            case ushort val:
-                                if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_USMALLINT)
-                                {
-                                    throw new ArgumentException(
-                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type ushort to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-
-                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_USMALLINT;
-                                p = Marshal.AllocHGlobal(TDengineConstant.UInt16Size);
-                                needFreePointer.Add(p);
-                                bs = BitConverter.GetBytes(val);
-                                Marshal.Copy(bs, 0, p, bs.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.UInt16Size;
-                                break;
-                            case uint val:
-                                if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_UINT)
-                                {
-                                    throw new ArgumentException(
-                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type uint to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-
-                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_UINT;
-                                p = Marshal.AllocHGlobal(TDengineConstant.UInt32Size);
-                                needFreePointer.Add(p);
-                                bs = BitConverter.GetBytes(val);
-                                Marshal.Copy(bs, 0, p, bs.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.UInt32Size;
-                                break;
-                            case ulong val:
-                                if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_UBIGINT)
-                                {
-                                    throw new ArgumentException(
-                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type ulong to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-
-                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_UBIGINT;
-                                p = Marshal.AllocHGlobal(TDengineConstant.UInt64Size);
-                                needFreePointer.Add(p);
-                                bs = BitConverter.GetBytes(val);
-                                Marshal.Copy(bs, 0, p, bs.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.UInt64Size;
-                                break;
-                            case float val:
-                                if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_FLOAT)
-                                {
-                                    throw new ArgumentException(
-                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type float to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-
-                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_FLOAT;
-                                p = Marshal.AllocHGlobal(TDengineConstant.Float32Size);
-                                needFreePointer.Add(p);
-                                bs = BitConverter.GetBytes(val);
-                                Marshal.Copy(bs, 0, p, bs.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.Float32Size;
-                                break;
-                            case double val:
-                                if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_DOUBLE)
-                                {
-                                    throw new ArgumentException(
-                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type double to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                }
-
-                                bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_DOUBLE;
-                                p = Marshal.AllocHGlobal(TDengineConstant.Float64Size);
-                                needFreePointer.Add(p);
-                                bs = BitConverter.GetBytes(val);
-                                Marshal.Copy(bs, 0, p, bs.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)TDengineConstant.Float64Size;
-                                break;
-                            case DateTime val:
-                                if (isInsert)
-                                {
-                                    if (fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP)
-                                    {
-                                        throw new ArgumentException(
-                                            $"BindIndex: {i}, field name: {fields[i].name}, bind param type DateTime to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                    }
-
-                                    bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP;
-                                    p = Marshal.AllocHGlobal(TDengineConstant.Int64Size);
-                                    needFreePointer.Add(p);
-                                    byte precision = fields[i].precision;
-                                    var value = TDengineConstant.ConvertDateTimeToTimestamp(val,
-                                        (TDenginePrecision)precision);
-                                    bs = BitConverter.GetBytes(value);
-                                    Marshal.Copy(bs, 0, p, bs.Length);
-                                    bind.buffer = p;
-                                    bind.buffer_length = (UIntPtr)TDengineConstant.Int64Size;
-                                }
-                                else
-                                {
-                                    bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BINARY;
-                                    var time = val.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK");
-                                    bs = Encoding.UTF8.GetBytes(time);
-                                    p = Marshal.AllocHGlobal(bs.Length);
-                                    needFreePointer.Add(p);
-                                    Marshal.Copy(bs, 0, p, bs.Length);
-                                    bind.buffer = p;
-                                    bind.buffer_length = (UIntPtr)bs.Length;
-                                    lPtr = Marshal.AllocHGlobal(sizeof(Int32));
-                                    needFreePointer.Add(lPtr);
-                                    Marshal.WriteInt32(lPtr, bs.Length);
-                                    bind.length = lPtr;
-                                }
-
-                                break;
-                            case DateTimeOffset val:
-                                if (isInsert)
-                                {
-                                    if (fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP)
-                                    {
-                                        throw new ArgumentException(
-                                            $"BindIndex: {i}, field name: {fields[i].name}, bind param type DateTimeOffset to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                    }
-
-                                    bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP;
-                                    p = Marshal.AllocHGlobal(TDengineConstant.Int64Size);
-                                    needFreePointer.Add(p);
-                                    byte precision = fields[i].precision;
-                                    var value = TDengineConstant.ConvertDateTimeOffsetToTimestamp(val,
-                                        (TDenginePrecision)precision);
-                                    bs = BitConverter.GetBytes(value);
-                                    Marshal.Copy(bs, 0, p, bs.Length);
-                                    bind.buffer = p;
-                                    bind.buffer_length = (UIntPtr)TDengineConstant.Int64Size;
-                                }
-                                else
-                                {
-                                    bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BINARY;
-                                    var time = val.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK");
-                                    bs = Encoding.UTF8.GetBytes(time);
-                                    p = Marshal.AllocHGlobal(bs.Length);
-                                    needFreePointer.Add(p);
-                                    Marshal.Copy(bs, 0, p, bs.Length);
-                                    bind.buffer = p;
-                                    bind.buffer_length = (UIntPtr)bs.Length;
-                                    lPtr = Marshal.AllocHGlobal(sizeof(Int32));
-                                    needFreePointer.Add(lPtr);
-                                    Marshal.WriteInt32(lPtr, bs.Length);
-                                    bind.length = lPtr;
-                                }
-
-                                break;
-                            case byte[] val:
-                                if (isInsert)
-                                {
-                                    if (fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_BINARY &&
-                                        fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_JSONTAG &&
-                                        fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_VARBINARY &&
-                                        fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_GEOMETRY
-                                       )
-                                    {
-                                        throw new ArgumentException(
-                                            $"BindIndex: {i}, field name: {fields[i].name}, bind param type byte[] to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                    }
-
-                                    bind.buffer_type = fields[i].type;
-                                }
-                                else
-                                {
-                                    bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BINARY;
-                                }
-
-                                p = Marshal.AllocHGlobal(val.Length);
-                                needFreePointer.Add(p);
-                                Marshal.Copy(val, 0, p, val.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)val.Length;
-                                lPtr = Marshal.AllocHGlobal(sizeof(Int32));
-                                needFreePointer.Add(lPtr);
-                                Marshal.WriteInt32(lPtr, val.Length);
-                                bind.length = lPtr;
-                                break;
-                            case string val:
-                                if (isInsert)
-                                {
-                                    if (fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_BINARY &&
-                                        fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_JSONTAG &&
-                                        fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_VARBINARY &&
-                                        fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_NCHAR
-                                       )
-                                    {
-                                        throw new ArgumentException(
-                                            $"BindIndex: {i}, field name: {fields[i].name}, bind param type string to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
-                                    }
-
-                                    bind.buffer_type = fields[i].type;
-                                }
-                                else
-                                {
-                                    bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BINARY;
-                                }
-
-                                bs = Encoding.UTF8.GetBytes(val);
-                                p = Marshal.AllocHGlobal(bs.Length);
-                                needFreePointer.Add(p);
-                                Marshal.Copy(bs, 0, p, bs.Length);
-                                bind.buffer = p;
-                                bind.buffer_length = (UIntPtr)bs.Length;
-                                lPtr = Marshal.AllocHGlobal(sizeof(Int32));
-                                needFreePointer.Add(lPtr);
-                                Marshal.WriteInt32(lPtr, bs.Length);
-                                bind.length = lPtr;
-                                break;
-                            default:
-                                var fieldsPart = string.Empty;
-                                if (isInsert)
-                                {
-                                    fieldsPart = $" field name: {fields[i].name},";
-                                }
-
-                                throw new ArgumentException(
-                                    $"BindIndex: {i},{fieldsPart} stmt bind param type not supported: {data[i].GetType()}");
-                        }
-                    }
-
-                    binds[i] = bind;
+                    _tagBuilders[i].AppendNull();
                 }
-
-                needFree = needFreePointer.ToArray();
-                return binds;
-            }
-            catch
-            {
-                // if there is an error, free all allocated pointers
-                foreach (var p in needFreePointer)
+                else
                 {
-                    if (p != IntPtr.Zero)
+                    switch (obj[i])
                     {
-                        Marshal.FreeHGlobal(p);
+                        case bool val:
+                            if (_tagBuilders[i] is I8Builder i8)
+                            {
+                                i8.Append(val ? (sbyte)1 : (sbyte)0);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type bool not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case sbyte val:
+                            if (_tagBuilders[i] is I8Builder i8Builder)
+                            {
+                                i8Builder.Append(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type sbyte not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case short val:
+                            if (_tagBuilders[i] is I16Builder i16)
+                            {
+                                i16.Append(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type short not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case int val:
+                            if (_tagBuilders[i] is I32Builder i32)
+                            {
+                                i32.Append(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type int not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case long val:
+                            if (_tagBuilders[i] is I64Builder i64)
+                            {
+                                if (_tagBuilders[i].DataType == TDengineDataType.TSDB_DATA_TYPE_BIGINT ||
+                                    _tagBuilders[i].DataType == TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP)
+                                {
+                                    i64.Append(val);
+                                }
+                                else
+                                {
+                                    throw new NotSupportedException(
+                                        $"Bind type long not supported for field {fields[i].name}");
+                                }
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type long not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case byte val:
+                            if (_tagBuilders[i] is U8Builder u8)
+                            {
+                                u8.Append(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type byte not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case ushort val:
+                            if (_tagBuilders[i] is U16Builder u16)
+                            {
+                                u16.Append(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type ushort not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case uint val:
+                            if (_tagBuilders[i] is U32Builder u32)
+                            {
+                                u32.Append(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type uint not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case ulong val:
+                            if (_tagBuilders[i] is U64Builder u64)
+                            {
+                                u64.Append(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type ulong not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case float val:
+                            if (_tagBuilders[i] is F32Builder f32)
+                            {
+                                f32.Append(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type float not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case double val:
+                            if (_tagBuilders[i] is F64Builder f64)
+                            {
+                                f64.Append(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type double not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case DateTime val:
+                            if (_tagBuilders[i] is I64Builder i64Builder)
+                            {
+                                if (_tagBuilders[i].DataType == TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP)
+                                {
+                                    i64Builder.Append(TDengineConstant.ConvertDateTimeToTimestamp(val,
+                                        (TDenginePrecision)fields[i].precision));
+                                }
+                                else
+                                {
+                                    throw new NotSupportedException(
+                                        $"Bind type DateTime not supported for field {fields[i].name}");
+                                }
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type DateTime not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case DateTimeOffset val:
+                            if (_tagBuilders[i] is I64Builder i64OffsetBuilder)
+                            {
+                                if (_tagBuilders[i].DataType == TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP)
+                                {
+                                    i64OffsetBuilder.Append(TDengineConstant.ConvertDateTimeOffsetToTimestamp(val,
+                                        (TDenginePrecision)fields[i].precision));
+                                }
+                                else
+                                {
+                                    throw new NotSupportedException(
+                                        $"Bind type DateTimeOffset not supported for field {fields[i].name}");
+                                }
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type DateTimeOffset not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case byte[] val:
+                            if (_tagBuilders[i] is VariableLengthBuilder variableLengthBuilder)
+                            {
+                                variableLengthBuilder.AppendBytes(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type byte[] not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        case string val:
+                            if (_tagBuilders[i] is VariableLengthBuilder variableLengthStringBuilder)
+                            {
+                                variableLengthStringBuilder.AppendString(val);
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"Bind type string not supported for field {fields[i].name}");
+                            }
+
+                            break;
+                        default:
+                            throw new NotSupportedException(
+                                $"Bind type {builders[i].GetType()} not supported for field {fields[i].name}");
                     }
                 }
-
-                throw;
             }
         }
 
         public TaosFieldE[] GetTagFields()
         {
-            var code = NativeMethods.StmtGetTagFields(_stmt, out var fieldNum, out var fieldsPtr);
-            if (code != 0)
-            {
-                throw new TDengineError(code, NativeMethods.StmtErrorStr(_stmt));
-            }
-
-            TaosFieldE[] fields = new TaosFieldE[fieldNum];
-            for (int i = 0; i < fieldNum; i++)
-            {
-                IntPtr fieldPtr = IntPtr.Add(fieldsPtr, i * Marshal.SizeOf(typeof(TaosFieldE)));
-                fields[i] = (TaosFieldE)Marshal.PtrToStructure(fieldPtr, typeof(TaosFieldE));
-            }
-
-            NativeMethods.StmtReclaimFields(_stmt, fieldsPtr);
-            return fields;
+            return _tagFields;
         }
 
         public TaosFieldE[] GetColFields()
         {
-            var code = NativeMethods.StmtGetColFields(_stmt, out var fieldNum, out var fieldsPtr);
-            if (code != 0)
-            {
-                throw new TDengineError(code, NativeMethods.StmtErrorStr(_stmt));
-            }
-
-            TaosFieldE[] fields = new TaosFieldE[fieldNum];
-            for (int i = 0; i < fieldNum; i++)
-            {
-                IntPtr fieldPtr = IntPtr.Add(fieldsPtr, i * Marshal.SizeOf(typeof(TaosFieldE)));
-                fields[i] = (TaosFieldE)Marshal.PtrToStructure(fieldPtr, typeof(TaosFieldE));
-            }
-
-            NativeMethods.StmtReclaimFields(_stmt, fieldsPtr);
-            return fields;
+            return _colFields;
         }
 
         public void BindRow(object[] row)
@@ -500,37 +440,139 @@ namespace TDengine.Driver.Client.Native
                 return;
             }
 
-            var isInsert = IsInsert();
-            TAOS_MULTI_BIND[] param;
-            IntPtr[] needFreePtr;
-            var fields = new TaosFieldE[] { };
-            if (isInsert)
+            if (string.IsNullOrEmpty(_sql))
             {
-                fields = GetColFields();
-                if (row.Length != fields.Length)
+                throw new InvalidOperationException("This statement does not prepared.");
+            }
+
+            if (_isInsert)
+            {
+                if (row.Length != _colBuilders.Length)
                 {
                     throw new ArgumentException(
-                        $"The number of col ({row.Length}) does not match the number of col fields ({fields.Length})");
+                        $"Expected {_colBuilders.Length} columns, but got {row.Length}");
                 }
+                CacheRowValue(row,_colBuilders, _colFields);
             }
+            else
+            {
+                if (row.Length != _fieldsCount)
+                {
+                    throw new ArgumentException(
+                        $"Expected {_fieldsCount} fields, but got {row.Length}");
+                }
 
-            param = GenerateBindList(row, fields, out needFreePtr, isInsert);
+                CacheQueryRow(row);
+            }
+        }
 
+        private void CacheQueryRow(object[] row)
+        {
+            if (_colBuilders != null)
+            {
+                throw new InvalidOperationException(
+                    "Query parameters have already been set.");
+            }
+            _colBuilders = new IFieldBuilder[row.Length];
             try
             {
-                var code = NativeMethods.StmtBindParam(_stmt, param);
-                StmtCheckError(code);
-            }
-            finally
-            {
-                foreach (var p in needFreePtr)
+                for (int i = 0; i < row.Length; i++)
                 {
-                    if (p != IntPtr.Zero)
+                    if (row[i] == null || Convert.IsDBNull(row[i]))
                     {
-                        Marshal.FreeHGlobal(p);
+                        throw new ArgumentException("query parameter cannot be null or DBNull");
+                    }
+
+                    switch (row[i])
+                    {
+                        case bool val:
+                            var i8Builder = new I8Builder(TDengineDataType.TSDB_DATA_TYPE_BLOB);
+                            i8Builder.Append(val ? (sbyte)1 : (sbyte)0);
+                            _colBuilders[i] = i8Builder;
+                            break;
+                        case sbyte val:
+                            var i8 = new I8Builder(TDengineDataType.TSDB_DATA_TYPE_TINYINT);
+                            i8.Append(val);
+                            _colBuilders[i] = i8;
+                            break;
+                        case short val:
+                            var i16 = new I16Builder(TDengineDataType.TSDB_DATA_TYPE_SMALLINT);
+                            i16.Append(val);
+                            _colBuilders[i] = i16;
+                            break;
+                        case int val:
+                            var i32 = new I32Builder(TDengineDataType.TSDB_DATA_TYPE_INT);
+                            i32.Append(val);
+                            _colBuilders[i] = i32;
+                            break;
+                        case long val:
+                            var i64 = new I64Builder(TDengineDataType.TSDB_DATA_TYPE_BIGINT);
+                            i64.Append(val);
+                            _colBuilders[i] = i64;
+                            break;
+                        case byte val:
+                            var u8 = new U8Builder(TDengineDataType.TSDB_DATA_TYPE_UTINYINT);
+                            u8.Append(val);
+                            _colBuilders[i] = u8;
+                            break;
+                        case ushort val:
+                            var u16 = new U16Builder(TDengineDataType.TSDB_DATA_TYPE_USMALLINT);
+                            u16.Append(val);
+                            _colBuilders[i] = u16;
+                            break;
+                        case uint val:
+                            var u32 = new U32Builder(TDengineDataType.TSDB_DATA_TYPE_UINT);
+                            u32.Append(val);
+                            _colBuilders[i] = u32;
+                            break;
+                        case ulong val:
+                            var u64 = new U64Builder(TDengineDataType.TSDB_DATA_TYPE_UBIGINT);
+                            u64.Append(val);
+                            _colBuilders[i] = u64;
+                            break;
+                        case float val:
+                            var f32 = new F32Builder(TDengineDataType.TSDB_DATA_TYPE_FLOAT);
+                            f32.Append(val);
+                            _colBuilders[i] = f32;
+                            break;
+                        case double val:
+                            var f64 = new F64Builder(TDengineDataType.TSDB_DATA_TYPE_DOUBLE);
+                            f64.Append(val);
+                            _colBuilders[i] = f64;
+                            break;
+                        case DateTime val:
+                            var dateTimeBuilder = new VariableLengthBuilder(TDengineDataType.TSDB_DATA_TYPE_BINARY);
+                            dateTimeBuilder.AppendString(val.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK"));
+                            _colBuilders[i] = dateTimeBuilder;
+                            break;
+                        case DateTimeOffset val:
+                            var dateTimeOffsetBuilder =
+                                new VariableLengthBuilder(TDengineDataType.TSDB_DATA_TYPE_BINARY);
+                            dateTimeOffsetBuilder.AppendString(val.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK"));
+                            _colBuilders[i] = dateTimeOffsetBuilder;
+                            break;
+                        case byte[] val:
+                            var bytesBuilder = new VariableLengthBuilder(TDengineDataType.TSDB_DATA_TYPE_BINARY);
+                            bytesBuilder.AppendBytes(val);
+                            _colBuilders[i] = bytesBuilder;
+                            break;
+                        case string val:
+                            var stringBuilder = new VariableLengthBuilder(TDengineDataType.TSDB_DATA_TYPE_BINARY);
+                            stringBuilder.AppendString(val);
+                            _colBuilders[i] = stringBuilder;
+                            break;
+                        default:
+                            throw new NotSupportedException(
+                                $"Bind type {row[i].GetType()} not supported for query parameter");
                     }
                 }
             }
+            catch
+            {
+                _colBuilders = null;
+                throw;
+            }
+            
         }
 
         public void BindColumn(TaosFieldE[] field, params Array[] arrays)

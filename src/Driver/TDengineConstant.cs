@@ -87,6 +87,42 @@ namespace TDengine.Driver
             return TDengineConstant.ScanType((sbyte)type);
         }
     }
+    
+    
+    // typedef struct TAOS_STMT2_BIND {
+    //     int      buffer_type;
+    //     void    *buffer;
+    //     int32_t *length;
+    //     char    *is_null;
+    //     int      num;
+    // } TAOS_STMT2_BIND;
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TAOS_STMT2_BIND
+    {
+        // column type
+        public int buffer_type;
+
+        // array, one or more lines column value
+        public IntPtr buffer;
+
+        //array, actual data length for each value
+        public IntPtr length;
+
+        //array, indicates each column value is null or not
+        public IntPtr is_null;
+
+        // line number, or the values number in buffer 
+        public int num;
+    }
+    
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TAOS_STMT2_BINDV
+    {
+        int count; // Number of tables in the statement
+        public IntPtr tbnames; // Pointer to an array of strings (char**)
+        public IntPtr tags; // Pointer to an array of TAOS_STMT2_BIND pointers
+        public IntPtr bind_cols; // Pointer to an array of TAOS_STMT2_BIND pointers
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct TAOS_MULTI_BIND
@@ -160,6 +196,24 @@ namespace TDengine.Driver
         public byte precision;
         public byte scale;
         public int bytes;
+    }
+    public enum TaosFieldType
+    {
+        TAOS_FIELD_COL = 1,
+        TAOS_FIELD_TAG,
+        TAOS_FIELD_QUERY,
+        TAOS_FIELD_TBNAME,
+    }
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct TaosFieldAll
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 65)]
+        public string name;
+        public sbyte type;
+        public byte precision;
+        public byte scale;
+        public int bytes;
+        public byte field_type;
     }
 
     public enum TDenginePrecision : int
@@ -483,6 +537,18 @@ namespace TDengine.Driver
                     return "undefine";
             }
         }
+        
+        public static TaosFieldE ConvertToTaosFieldE(TaosFieldAll source)
+        {
+            return new TaosFieldE
+            {
+                name = source.name,
+                type = source.type,
+                precision = source.precision,
+                scale = source.scale,
+                bytes = source.bytes
+            };
+        }
     }
 
     public enum TMQ_CONF_RES
@@ -529,5 +595,12 @@ namespace TDengine.Driver
         TSDB_OPTION_CONNECTION_USER_IP, // user ip
         TSDB_OPTION_CONNECTION_USER_APP, // user app, max lengthe is 23, truncated if longer than 23
         TSDB_MAX_OPTIONS_CONNECTION
+    }
+
+    public struct Stmt2BindTableInfo
+    {
+        public int TagOffset; // offset of tag data
+        public List<int> ColOffsets; // offset of column data
+        public List<int> ColCounts; // number of columns in each table
     }
 }

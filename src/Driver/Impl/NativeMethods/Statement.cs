@@ -34,9 +34,9 @@ namespace TDengine.Driver.Impl.NativeMethods
 
         public static int StmtPrepare(IntPtr stmt, string sql)
         {
-            UTF8PtrStruct _ = new UTF8PtrStruct(sql);
-            int code = _StmtPrepare(stmt, _.utf8Ptr, (ulong)_.utf8StrLength);
-            _.UTF8FreePtr();
+            UTF8PtrStruct sqlP = new UTF8PtrStruct(sql);
+            int code = _StmtPrepare(stmt, sqlP.utf8Ptr, (ulong)sqlP.utf8StrLength);
+            sqlP.UTF8FreePtr();
             return code;
         }
         // int taos_stmt_prepare(TAOS_STMT* stmt, const char* sql, unsigned long length);
