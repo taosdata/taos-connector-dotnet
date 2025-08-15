@@ -64,7 +64,11 @@ namespace TDengine.Driver.Client.Native
             }
 
             var fields = GetTagFields();
-
+            if (tags.Length != fields.Length)
+            {
+                throw new ArgumentException(
+                    $"The number of tags ({tags.Length}) does not match the number of tag fields ({fields.Length}).");
+            }
             var param = GenerateBindList(tags, fields, out var needFreePtr, true);
             try
             {
@@ -112,7 +116,7 @@ namespace TDengine.Driver.Client.Native
                                 if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_BOOL)
                                 {
                                     throw new ArgumentException(
-                                        $"bind param type bool to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type bool to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BOOL;
@@ -127,7 +131,7 @@ namespace TDengine.Driver.Client.Native
                                 if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_TINYINT)
                                 {
                                     throw new ArgumentException(
-                                        $"bind param type sbyte to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type sbyte to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_TINYINT;
@@ -141,7 +145,7 @@ namespace TDengine.Driver.Client.Native
                                 if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_SMALLINT)
                                 {
                                     throw new ArgumentException(
-                                        $"bind param type short to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type short to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_SMALLINT;
@@ -156,7 +160,7 @@ namespace TDengine.Driver.Client.Native
                                 if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_INT)
                                 {
                                     throw new ArgumentException(
-                                        $"bind param type short to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type short to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_INT;
@@ -175,7 +179,7 @@ namespace TDengine.Driver.Client.Native
                                         bind.buffer_type = fields[i].type;
                                     else
                                         throw new ArgumentException(
-                                            $"bind param type long to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                            $"BindIndex: {i}, field name: {fields[i].name}, bind param type long to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
                                 else
                                 {
@@ -193,7 +197,7 @@ namespace TDengine.Driver.Client.Native
                                 if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_UTINYINT)
                                 {
                                     throw new ArgumentException(
-                                        $"bind param type byte to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type byte to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_UTINYINT;
@@ -207,7 +211,7 @@ namespace TDengine.Driver.Client.Native
                                 if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_USMALLINT)
                                 {
                                     throw new ArgumentException(
-                                        $"bind param type ushort to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type ushort to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_USMALLINT;
@@ -222,7 +226,7 @@ namespace TDengine.Driver.Client.Native
                                 if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_UINT)
                                 {
                                     throw new ArgumentException(
-                                        $"bind param type uint to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type uint to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_UINT;
@@ -237,7 +241,7 @@ namespace TDengine.Driver.Client.Native
                                 if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_UBIGINT)
                                 {
                                     throw new ArgumentException(
-                                        $"bind param type ulong to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type ulong to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_UBIGINT;
@@ -252,7 +256,7 @@ namespace TDengine.Driver.Client.Native
                                 if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_FLOAT)
                                 {
                                     throw new ArgumentException(
-                                        $"bind param type float to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type float to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_FLOAT;
@@ -267,7 +271,7 @@ namespace TDengine.Driver.Client.Native
                                 if (isInsert && fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_DOUBLE)
                                 {
                                     throw new ArgumentException(
-                                        $"bind param type double to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                        $"BindIndex: {i}, field name: {fields[i].name}, bind param type double to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                 }
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_DOUBLE;
@@ -284,7 +288,7 @@ namespace TDengine.Driver.Client.Native
                                     if (fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP)
                                     {
                                         throw new ArgumentException(
-                                            $"bind param type DateTime to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                            $"BindIndex: {i}, field name: {fields[i].name}, bind param type DateTime to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                     }
 
                                     bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP;
@@ -321,7 +325,7 @@ namespace TDengine.Driver.Client.Native
                                     if (fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP)
                                     {
                                         throw new ArgumentException(
-                                            $"bind param type DateTimeOffset to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                            $"BindIndex: {i}, field name: {fields[i].name}, bind param type DateTimeOffset to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                     }
 
                                     bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP;
@@ -362,7 +366,7 @@ namespace TDengine.Driver.Client.Native
                                        )
                                     {
                                         throw new ArgumentException(
-                                            $"bind param type byte[] to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                            $"BindIndex: {i}, field name: {fields[i].name}, bind param type byte[] to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                     }
 
                                     bind.buffer_type = fields[i].type;
@@ -392,7 +396,7 @@ namespace TDengine.Driver.Client.Native
                                        )
                                     {
                                         throw new ArgumentException(
-                                            $"bind param type string to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                                            $"BindIndex: {i}, field name: {fields[i].name}, bind param type string to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                                     }
 
                                     bind.buffer_type = fields[i].type;
@@ -414,7 +418,12 @@ namespace TDengine.Driver.Client.Native
                                 bind.length = lPtr;
                                 break;
                             default:
-                                throw new NotSupportedException($"stmt param not support type: {data[i].GetType()}");
+                                var fieldsPart = string.Empty;
+                                if (isInsert)
+                                {
+                                    fieldsPart = $" field name: {fields[i].name},";
+                                }
+                                throw new ArgumentException($"BindIndex: {i},{fieldsPart} stmt bind param type not supported: {data[i].GetType()}");
                         }
                     }
 
@@ -491,6 +500,11 @@ namespace TDengine.Driver.Client.Native
             if (isInsert)
             {
                 fields = GetColFields();
+                if (row.Length != fields.Length)
+                {
+                    throw new ArgumentException(
+                        $"The number of col ({row.Length}) does not match the number of col fields ({fields.Length})");
+                }
             }
 
             param = GenerateBindList(row, fields, out needFreePtr, isInsert);
@@ -784,7 +798,7 @@ namespace TDengine.Driver.Client.Native
 
                 default:
                     throw new ArgumentException(
-                        $"{TDengineConstant.GetFieldTypeName(field.type)} database type not supported");
+                        $"BindIndex: {bindIndex}, field name: {field.name}, {TDengineConstant.GetFieldTypeName(field.type)} database type not supported");
             }
         }
 

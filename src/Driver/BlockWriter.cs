@@ -522,22 +522,6 @@ namespace TDengine.Driver
             bytes.AddRange(dataTmp);
         }
 
-        private static void WriteData<T>(List<byte> bytes, List<byte> colInfoData, List<byte> lengthData, int rows,
-            int bitMapLen, T?[] value)
-            where T : struct
-        {
-            var type = GetDataType<T>();
-            WriteData(bytes, colInfoData, lengthData, rows, bitMapLen, value, type);
-        }
-
-        private static void WriteData<T>(List<byte> bytes, List<byte> colInfoData, List<byte> lengthData, int rows,
-            int bitMapLen, T[] value)
-            where T : struct
-        {
-            var type = GetDataType<T>();
-            WriteData(bytes, colInfoData, lengthData, rows, bitMapLen, value, type);
-        }
-
         private static void WriteUTF8(List<byte> bytes, List<byte> colInfoData, List<byte> lengthData, int rows,
             string[] value, TDengineDataType type)
         {
@@ -590,22 +574,6 @@ namespace TDengine.Driver
 
             AppendUint32(lengthData, (uint)(length));
             bytes.AddRange(dataTmp);
-        }
-
-        private static TDengineDataType GetDataType<T>()
-        {
-            if (typeof(T) == typeof(bool)) return TDengineDataType.TSDB_DATA_TYPE_BOOL;
-            if (typeof(T) == typeof(sbyte)) return TDengineDataType.TSDB_DATA_TYPE_TINYINT;
-            if (typeof(T) == typeof(short)) return TDengineDataType.TSDB_DATA_TYPE_SMALLINT;
-            if (typeof(T) == typeof(int)) return TDengineDataType.TSDB_DATA_TYPE_INT;
-            if (typeof(T) == typeof(long)) return TDengineDataType.TSDB_DATA_TYPE_BIGINT;
-            if (typeof(T) == typeof(byte)) return TDengineDataType.TSDB_DATA_TYPE_UTINYINT;
-            if (typeof(T) == typeof(ushort)) return TDengineDataType.TSDB_DATA_TYPE_USMALLINT;
-            if (typeof(T) == typeof(uint)) return TDengineDataType.TSDB_DATA_TYPE_UINT;
-            if (typeof(T) == typeof(ulong)) return TDengineDataType.TSDB_DATA_TYPE_UBIGINT;
-            if (typeof(T) == typeof(float)) return TDengineDataType.TSDB_DATA_TYPE_FLOAT;
-            if (typeof(T) == typeof(double)) return TDengineDataType.TSDB_DATA_TYPE_DOUBLE;
-            throw new ArgumentException($"Unsupported data type: {typeof(T)}");
         }
 
         private static byte[] ConvertToBytes<T>(T value, int size)
