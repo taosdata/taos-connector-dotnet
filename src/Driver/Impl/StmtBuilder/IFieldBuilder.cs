@@ -14,6 +14,9 @@ namespace TDengine.Driver.Impl.StmtBuilder
         int ValueLength();
         int NullLength();
         void Clear();
+        Stmt2BindColInfo ToStmt2BindColInfo();
+        void AddToStmt2BindColInfo(Stmt2BindColInfo bindColInfo);
+
     }
     
     public sealed class I8Builder : FixedLengthBuilder<sbyte>
@@ -76,6 +79,25 @@ namespace TDengine.Driver.Impl.StmtBuilder
         {
         }
     }
+    
+    public struct Stmt2BindTableInfo
+    {
+        public string TableName; // table name
+        public Stmt2BindColInfo[] Cols; // col info
+        public Stmt2BindColInfo?[] Tags; // tag info
+    }
+    public struct Stmt2BindColInfo
+    {
+        public uint TotalLength; // current Info total length, includes TotalLength field length
+        public int DataType; // data type, see TDengineDataType
+        public int Num; // how many rows of data, 1 for single row, >1 for multi rows
+        public byte[] IsNull; // Num * 1, each row data is null or not, Num elements
+        public byte HaveLength; // 1, whether it has length, 0 for no, 1 for yes, when data type is variable length (binary, nchar, json, varbinary, varchar) must have length
+        public int[] Length; // each row data length, Num elements, when HaveLength is 0, this field is not used
+        public uint BufferLength;  // Buffer length, the length of the data in Buffer
+        public byte[] Buffer; // bound data, the actual data buffer, the length is BufferLength
+    }
+
     
     
 }

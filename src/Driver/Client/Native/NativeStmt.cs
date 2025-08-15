@@ -20,14 +20,11 @@ namespace TDengine.Driver.Client.Native
         private IFieldBuilder[] _tagBuilders;
         private bool _needTableName;
         private Dictionary<string, Stmt2BindTableInfo> _tableInfos = new Dictionary<string, Stmt2BindTableInfo>();
-        private Stmt2BindTableInfo? _currentTableInfo;
-        private List<string> _tableNames = new List<string>();
+        private Stmt2BindTableInfo _currentTableInfo;
         private bool _isTableNameSet;
         private bool _isTagsSet;
+        private bool _isColSet;
         private bool _addBatched;
-        private int _currentRowIndex;
-        private bool _duplicatedTableName;
-
         public NativeStmt(IntPtr stmt, TimeZoneInfo tz)
         {
             _stmt = stmt;
@@ -46,13 +43,9 @@ namespace TDengine.Driver.Client.Native
             _tagBuilders = null;
             _needTableName = false;
             _tableInfos = new Dictionary<string, Stmt2BindTableInfo>();
-            _currentTableInfo = null;
-            _tableNames = new List<string>();
             _isTableNameSet = false;
             _isTagsSet = false;
             _addBatched = false;
-            _currentRowIndex = 0;
-            _duplicatedTableName = false;
         }
 
         public void Prepare(string query)
@@ -147,19 +140,15 @@ namespace TDengine.Driver.Client.Native
                 }
                 if (_tableInfos.TryGetValue(tableName, out var info))
                 {
-                    _duplicatedTableName = true;
                 }
                 else
                 {
                     info = new Stmt2BindTableInfo
                     {
-                        TagOffset = 0,
-                        ColOffsets = null,
-                        ColCounts = null
+                        TableName = tableName
                     };
                 }
                 _currentTableInfo = info;
-                _tableInfos[tableName] = info;
                 _isTableNameSet = true;
             }
             else

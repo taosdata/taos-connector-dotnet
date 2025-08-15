@@ -124,6 +124,7 @@ namespace TDengine.Driver
         public IntPtr bind_cols; // Pointer to an array of TAOS_STMT2_BIND pointers
     }
 
+
     [StructLayout(LayoutKind.Sequential)]
     public struct TAOS_MULTI_BIND
     {
@@ -597,10 +598,15 @@ namespace TDengine.Driver
         TSDB_MAX_OPTIONS_CONNECTION
     }
 
-    public struct Stmt2BindTableInfo
-    {
-        public int TagOffset; // offset of tag data
-        public List<int> ColOffsets; // offset of column data
-        public List<int> ColCounts; // number of columns in each table
-    }
+    // type BindData struct {
+    // TotalLength  uint32  // 4, 当前 TagData 的全部长度,包括 TotalLength 字段长度
+    // Type         int32   // 4, 数据类型
+    // Num          int32   // 4, 多少行数据
+    // IsNull       []byte  // Num * 1 每个 tag 是否为 null, Num 个元素
+    //     haveLength   byte    // 1, 是否有长度，0 为没有，1 为有，当数据类型为变长时必须有长度（binary, nchar, json, varbinary, varchar）
+    //     Length       []int32 // Num * 4 每个 tag 的长度, Num 个元素，当 hasLength 为 0 时，无该字段
+    //     BufferLength uint32  // 4, Buffer 的长度
+    //     Buffer       []byte  // 绑定数据
+    // }
+
 }
