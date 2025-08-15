@@ -69,6 +69,7 @@ namespace TDengine.Driver.Client.Native
                 throw new ArgumentException(
                     $"The number of tags ({tags.Length}) does not match the number of tag fields ({fields.Length}).");
             }
+
             var param = GenerateBindList(tags, fields, out var needFreePtr, true);
             try
             {
@@ -79,7 +80,10 @@ namespace TDengine.Driver.Client.Native
             {
                 foreach (var p in needFreePtr)
                 {
-                    Marshal.FreeHGlobal(p);
+                    if (p != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(p);
+                    }
                 }
             }
         }
@@ -87,6 +91,7 @@ namespace TDengine.Driver.Client.Native
         private TAOS_MULTI_BIND[] GenerateBindList(object[] data, TaosFieldE[] fields, out IntPtr[] needFree,
             bool isInsert)
         {
+            needFree = new IntPtr[]{};
             TAOS_MULTI_BIND[] binds = new TAOS_MULTI_BIND[data.Length];
             var needFreePointer = new List<IntPtr>();
             try
@@ -101,8 +106,8 @@ namespace TDengine.Driver.Client.Native
                     {
                         bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BOOL;
                         IntPtr p = Marshal.AllocHGlobal(TDengineConstant.ByteSize);
-                        Marshal.WriteByte(p, 1);
                         needFreePointer.Add(p);
+                        Marshal.WriteByte(p, 1);
                         bind.is_null = p;
                     }
                     else
@@ -121,9 +126,9 @@ namespace TDengine.Driver.Client.Native
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_BOOL;
                                 p = Marshal.AllocHGlobal(TDengineConstant.BoolSize);
+                                needFreePointer.Add(p);
                                 bs = BitConverter.GetBytes(val);
                                 Marshal.Copy(bs, 0, p, bs.Length);
-                                needFreePointer.Add(p);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.BoolSize;
                                 break;
@@ -136,8 +141,8 @@ namespace TDengine.Driver.Client.Native
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_TINYINT;
                                 p = Marshal.AllocHGlobal(TDengineConstant.Int8Size);
-                                Marshal.WriteByte(p, (byte)val);
                                 needFreePointer.Add(p);
+                                Marshal.WriteByte(p, (byte)val);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.Int8Size;
                                 break;
@@ -150,9 +155,9 @@ namespace TDengine.Driver.Client.Native
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_SMALLINT;
                                 p = Marshal.AllocHGlobal(TDengineConstant.Int16Size);
+                                needFreePointer.Add(p);
                                 bs = BitConverter.GetBytes(val);
                                 Marshal.Copy(bs, 0, p, bs.Length);
-                                needFreePointer.Add(p);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.Int16Size;
                                 break;
@@ -165,9 +170,9 @@ namespace TDengine.Driver.Client.Native
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_INT;
                                 p = Marshal.AllocHGlobal(TDengineConstant.Int32Size);
+                                needFreePointer.Add(p);
                                 bs = BitConverter.GetBytes(val);
                                 Marshal.Copy(bs, 0, p, bs.Length);
-                                needFreePointer.Add(p);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.Int32Size;
                                 break;
@@ -187,9 +192,9 @@ namespace TDengine.Driver.Client.Native
                                 }
 
                                 p = Marshal.AllocHGlobal(TDengineConstant.Int64Size);
+                                needFreePointer.Add(p);
                                 bs = BitConverter.GetBytes(val);
                                 Marshal.Copy(bs, 0, p, bs.Length);
-                                needFreePointer.Add(p);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.Int64Size;
                                 break;
@@ -202,8 +207,8 @@ namespace TDengine.Driver.Client.Native
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_UTINYINT;
                                 p = Marshal.AllocHGlobal(TDengineConstant.UInt8Size);
-                                Marshal.WriteByte(p, (byte)val);
                                 needFreePointer.Add(p);
+                                Marshal.WriteByte(p, (byte)val);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.UInt8Size;
                                 break;
@@ -216,9 +221,9 @@ namespace TDengine.Driver.Client.Native
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_USMALLINT;
                                 p = Marshal.AllocHGlobal(TDengineConstant.UInt16Size);
+                                needFreePointer.Add(p);
                                 bs = BitConverter.GetBytes(val);
                                 Marshal.Copy(bs, 0, p, bs.Length);
-                                needFreePointer.Add(p);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.UInt16Size;
                                 break;
@@ -231,9 +236,9 @@ namespace TDengine.Driver.Client.Native
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_UINT;
                                 p = Marshal.AllocHGlobal(TDengineConstant.UInt32Size);
+                                needFreePointer.Add(p);
                                 bs = BitConverter.GetBytes(val);
                                 Marshal.Copy(bs, 0, p, bs.Length);
-                                needFreePointer.Add(p);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.UInt32Size;
                                 break;
@@ -246,9 +251,9 @@ namespace TDengine.Driver.Client.Native
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_UBIGINT;
                                 p = Marshal.AllocHGlobal(TDengineConstant.UInt64Size);
+                                needFreePointer.Add(p);
                                 bs = BitConverter.GetBytes(val);
                                 Marshal.Copy(bs, 0, p, bs.Length);
-                                needFreePointer.Add(p);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.UInt64Size;
                                 break;
@@ -261,9 +266,9 @@ namespace TDengine.Driver.Client.Native
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_FLOAT;
                                 p = Marshal.AllocHGlobal(TDengineConstant.Float32Size);
+                                needFreePointer.Add(p);
                                 bs = BitConverter.GetBytes(val);
                                 Marshal.Copy(bs, 0, p, bs.Length);
-                                needFreePointer.Add(p);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.Float32Size;
                                 break;
@@ -276,9 +281,9 @@ namespace TDengine.Driver.Client.Native
 
                                 bind.buffer_type = (int)TDengineDataType.TSDB_DATA_TYPE_DOUBLE;
                                 p = Marshal.AllocHGlobal(TDengineConstant.Float64Size);
+                                needFreePointer.Add(p);
                                 bs = BitConverter.GetBytes(val);
                                 Marshal.Copy(bs, 0, p, bs.Length);
-                                needFreePointer.Add(p);
                                 bind.buffer = p;
                                 bind.buffer_length = (UIntPtr)TDengineConstant.Float64Size;
                                 break;
@@ -423,7 +428,9 @@ namespace TDengine.Driver.Client.Native
                                 {
                                     fieldsPart = $" field name: {fields[i].name},";
                                 }
-                                throw new ArgumentException($"BindIndex: {i},{fieldsPart} stmt bind param type not supported: {data[i].GetType()}");
+
+                                throw new ArgumentException(
+                                    $"BindIndex: {i},{fieldsPart} stmt bind param type not supported: {data[i].GetType()}");
                         }
                     }
 
@@ -518,7 +525,10 @@ namespace TDengine.Driver.Client.Native
             {
                 foreach (var p in needFreePtr)
                 {
-                    Marshal.FreeHGlobal(p);
+                    if (p != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(p);
+                    }
                 }
             }
         }
