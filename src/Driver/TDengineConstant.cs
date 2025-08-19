@@ -89,13 +89,6 @@ namespace TDengine.Driver
     }
     
     
-    // typedef struct TAOS_STMT2_BIND {
-    //     int      buffer_type;
-    //     void    *buffer;
-    //     int32_t *length;
-    //     char    *is_null;
-    //     int      num;
-    // } TAOS_STMT2_BIND;
     [StructLayout(LayoutKind.Sequential)]
     public struct TAOS_STMT2_BIND
     {
@@ -118,7 +111,7 @@ namespace TDengine.Driver
     [StructLayout(LayoutKind.Sequential)]
     public struct TAOS_STMT2_BINDV
     {
-        int count; // Number of tables in the statement
+        public int count; // Number of tables in the statement
         public IntPtr tbnames; // Pointer to an array of strings (char**)
         public IntPtr tags; // Pointer to an array of TAOS_STMT2_BIND pointers
         public IntPtr bind_cols; // Pointer to an array of TAOS_STMT2_BIND pointers
@@ -250,6 +243,8 @@ namespace TDengine.Driver
         public static readonly int Float64Size = sizeof(double);
         public static readonly int ByteSize = sizeof(byte);
         public static readonly int BoolSize = sizeof(bool);
+
+        public static readonly int TaosStmt2BindSize = Marshal.SizeOf(typeof(TAOS_STMT2_BIND));
 
         // Deprecated: Wrong function name, use ConvertDateTimeToTimestamp instead.
         [Obsolete("Wrong function name, Use ConvertDateTimeToTimestamp instead.")]

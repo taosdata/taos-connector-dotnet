@@ -46,16 +46,6 @@ namespace TDengine.Driver.Impl.NativeMethods
             sqlP.UTF8FreePtr();
             return code;
         }
-        
-        // TAOS_STMT2_BINDV
-        [StructLayout(LayoutKind.Sequential)]
-        public struct TAOS_STMT2_BINDV
-        {
-            public int count;
-            public IntPtr tbnames;
-            public IntPtr tags;
-            public IntPtr bind_cols;
-        }
 
         // DLL_EXPORT int         taos_stmt2_bind_param(TAOS_STMT2 *stmt, TAOS_STMT2_BINDV *bindv, int32_t col_idx);
         [DllImport(DLLName, EntryPoint = "taos_stmt2_bind_param", CallingConvention = CallingConvention.Cdecl)]

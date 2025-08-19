@@ -17,7 +17,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
             DataType = dataType;
         }
 
-        private List<byte> values { get; set; } = new List<byte>(0);
+        private List<byte> Values { get; set; } = new List<byte>(0);
         private List<byte> NullMem { get; set; } = new List<byte>();
         public int NullCount { get; private set; }
 
@@ -44,7 +44,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
 
         public void AppendBytes(byte[] value)
         {
-            values.AddRange(value);
+            Values.AddRange(value);
             LengthList.Add(value.Length);
             _totalValueLength += value.Length;
             if (NullCount != 0)
@@ -78,7 +78,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
 
         public void Clear()
         {
-            values.Clear();
+            Values.Clear();
             LengthList.Clear();
             NullMem.Clear();
             NullCount = 0;
@@ -87,7 +87,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
         
         private byte[] ValueBuffer()
         {
-            return values.ToArray();
+            return Values.ToArray();
         }
 
         private int[] DataLength()
@@ -125,7 +125,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
             };
         }
         
-        public void AddToStmt2BindColInfo(Stmt2BindColInfo bindColInfo)
+        public Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo bindColInfo)
         {
             if (bindColInfo.DataType != (int)DataType)
             {
@@ -159,7 +159,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
             bindColInfo.TotalLength += (uint)Length // length of IsNull
                                        + (uint)valueBuffer.Length + // length of Buffer
                                        +(uint)(Length * 4); // length of Length
-
+            return bindColInfo;
         }
     }
 }

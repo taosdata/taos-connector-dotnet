@@ -15,8 +15,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
         int NullLength();
         void Clear();
         Stmt2BindColInfo ToStmt2BindColInfo();
-        void AddToStmt2BindColInfo(Stmt2BindColInfo bindColInfo);
-
+        Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo bindColInfo);
     }
     
     public sealed class I8Builder : FixedLengthBuilder<sbyte>
@@ -84,7 +83,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
     {
         public string TableName; // table name
         public Stmt2BindColInfo[] Cols; // col info
-        public Stmt2BindColInfo?[] Tags; // tag info
+        public Stmt2BindColInfo[] Tags; // tag info
     }
     public struct Stmt2BindColInfo
     {

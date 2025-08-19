@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace TDengine.Driver.Impl.StmtBuilder
 {
@@ -146,7 +142,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
             return byteArray;
         }
 
-        public void AddToStmt2BindColInfo(Stmt2BindColInfo bindColInfo)
+        public Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo bindColInfo)
         {
             if (bindColInfo.DataType != (int)DataType)
             {
@@ -173,7 +169,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
             // TotalLength
             bindColInfo.TotalLength += (uint)Length // length of IsNull
                                        + (uint)valueBuffer.Length; // length of Buffer
-
+            return bindColInfo;
         }
     }
 }
