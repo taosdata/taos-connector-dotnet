@@ -13,6 +13,8 @@ namespace TDengine.Driver
 
         void SchemalessInsert(string[] lines, TDengineSchemalessProtocol protocol,
             TDengineSchemalessPrecision precision, int ttl, long reqId);
+
+        bool ConnectionAvailable();
     }
 
     public interface IStmt : IDisposable

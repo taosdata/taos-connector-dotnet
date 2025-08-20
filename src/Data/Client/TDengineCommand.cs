@@ -146,7 +146,7 @@ namespace TDengine.Data.Client
 
         private IRows Query()
         {
-            return _connection.client.Query(_commandText);
+            return _connection.Client.Query(_commandText);
         }
 
         private IRows Statement()
@@ -158,7 +158,7 @@ namespace TDengine.Data.Client
 
             if (_stmt == null && _connection != null)
             {
-                _stmt = _connection.client.StmtInit();
+                _stmt = _connection.Client.StmtInit();
             }
 
             if (_stmt == null) throw new InvalidOperationException("Statement is null");

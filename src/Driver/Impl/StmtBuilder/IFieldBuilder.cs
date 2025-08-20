@@ -6,16 +6,11 @@ namespace TDengine.Driver.Impl.StmtBuilder
     {
         TDengineDataType DataType { get; }
         int Length { get; }
-        int NullCount { get; }
-        bool IsVariable { get; }
-        List<int> LengthList { get; }
-        void AppendObject(object value);
         void AppendNull();
-        int ValueLength();
-        int NullLength();
         void Clear();
         Stmt2BindColInfo ToStmt2BindColInfo();
         Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo bindColInfo);
+        void Remove(int count);
     }
     
     public sealed class I8Builder : FixedLengthBuilder<sbyte>

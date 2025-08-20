@@ -142,7 +142,7 @@ namespace TDengine.Driver.Client.Websocket
 
         private IStmt DoStmtInit(long reqId)
         {
-            var resp = _connection.StmtInit((ulong)reqId);
+            var resp = _connection.Stmt2Init((ulong)reqId);
             return new WSStmt(resp.StmtId, _tz, _connection);
         }
 
@@ -240,6 +240,12 @@ namespace TDengine.Driver.Client.Websocket
         {
             var line = string.Join("\n", lines);
             _connection.SchemalessInsert(line, protocol, precision, ttl, reqId);
+        }
+
+        public bool ConnectionAvailable()
+        {
+            var connection = _connection;
+            return connection != null && connection.IsAvailable();
         }
     }
 }

@@ -103,17 +103,17 @@ namespace TDengine.Driver.Impl.NativeMethods
             if (fieldsPtr == IntPtr.Zero)
             {
                 fields = null;
-                return code;
+                return 0;
             }
             
             fields = new TaosFieldAll[count];
             for (var i = 0; i < count; i++)
             {
-                var fieldPtr = Marshal.ReadIntPtr(fieldsPtr, i * Marshal.SizeOf(typeof(TaosFieldAll)));
+                var fieldPtr =IntPtr.Add(fieldsPtr, i * Marshal.SizeOf(typeof(TaosFieldAll)));
                 fields[i] = (TaosFieldAll)Marshal.PtrToStructure(fieldPtr, typeof(TaosFieldAll));
             }
             taos_stmt2_free_fields(stmt,fieldsPtr);
-            return code;
+            return 0;
         }
 
         // DLL_EXPORT void      taos_stmt2_free_fields(TAOS_STMT2 *stmt, TAOS_FIELD_ALL *fields);

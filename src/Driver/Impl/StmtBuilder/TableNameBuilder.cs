@@ -8,7 +8,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
         public int Length { get; private set; }
         public int TotalBufferLen => Values.Count;
         private List<short> LengthList { get; } = new List<short>();
-        public List<byte> Values { get; } = new List<byte>();
+        private List<byte> Values { get; } = new List<byte>();
         public List<string> TableNames { get; } = new List<string>();
 
         public byte[] GetBytes()
@@ -29,6 +29,13 @@ namespace TDengine.Driver.Impl.StmtBuilder
             Values.Add(0); // Null-terminator for the string
             Length += 1;
             TableNames.Add(tableName);
+        }
+        public void Clear()
+        {
+            LengthList.Clear();
+            Values.Clear();
+            TableNames.Clear();
+            Length = 0;
         }
     }
 }

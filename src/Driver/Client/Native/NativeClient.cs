@@ -97,5 +97,10 @@ namespace TDengine.Driver.Client.Native
             NativeMethods.FreeResult(result);
             throw error;
         }
+        
+        public bool ConnectionAvailable()
+        {
+            return _conn != IntPtr.Zero;
+        }
     }
 }

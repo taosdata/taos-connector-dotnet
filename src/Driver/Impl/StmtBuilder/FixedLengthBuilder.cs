@@ -9,8 +9,8 @@ namespace TDengine.Driver.Impl.StmtBuilder
         public TDengineDataType DataType { get; }
         private readonly int _size = Marshal.SizeOf(typeof(T));
         public int Length => Mem.Count;
-        public List<T> Mem { get; } = new List<T>(1);
-        public List<byte> NullMem { get; private set; } = new List<byte>();
+        private List<T> Mem { get; } = new List<T>(1);
+        private List<byte> NullMem { get; set; } = new List<byte>();
 
         public List<int> LengthList => null;
         public int NullCount { get; private set; }
@@ -20,18 +20,6 @@ namespace TDengine.Driver.Impl.StmtBuilder
         public FixedLengthBuilder(TDengineDataType dataType)
         {
             DataType = dataType;
-        }
-
-        public void AppendObject(object value)
-        {
-            if (value is T tValue)
-            {
-                Append(tValue);
-            }
-            else
-            {
-                throw new ArgumentException($"Unsupported type: {value.GetType()}, expected {typeof(T)}");
-            }
         }
 
         public void Append(T value)
@@ -55,14 +43,9 @@ namespace TDengine.Driver.Impl.StmtBuilder
             NullCount += 1;
         }
 
-        public int ValueLength()
+        private int ValueLength()
         {
             return Length * _size;
-        }
-
-        public int NullLength()
-        {
-            return Length;
         }
 
         public void Clear()
