@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Text;
 
 namespace TDengine.Driver.Impl.StmtBuilder
@@ -9,7 +10,6 @@ namespace TDengine.Driver.Impl.StmtBuilder
         public TDengineDataType DataType { get; }
         public int Length { get; private set; }
         private List<int> LengthList { get; } = new List<int>(1);
-        private int _totalValueLength = 0;
         private List<byte> Values { get; set; } = new List<byte>(0);
         private List<byte> NullMem { get; set; } = new List<byte>();
         private int NullCount { get; set; }
@@ -29,7 +29,6 @@ namespace TDengine.Driver.Impl.StmtBuilder
         {
             Values.AddRange(value);
             LengthList.Add(value.Length);
-            _totalValueLength += value.Length;
             if (NullCount != 0)
             {
                 NullMem.Add(0);
@@ -57,7 +56,6 @@ namespace TDengine.Driver.Impl.StmtBuilder
             LengthList.Clear();
             NullMem.Clear();
             NullCount = 0;
-            _totalValueLength = 0;
             Length = 0;
         }
 
@@ -101,41 +99,49 @@ namespace TDengine.Driver.Impl.StmtBuilder
             };
         }
 
-        public Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo bindColInfo)
+        public Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo source)
         {
-            if (bindColInfo.DataType != (int)DataType)
+            if (source.DataType != (int)DataType)
             {
-                throw new ArgumentException($"Data type mismatch: expected {DataType}, got {bindColInfo.DataType}");
+                throw new ArgumentException($"Data type mismatch: expected {DataType}, got {source.DataType}");
             }
+            var target  = new Stmt2BindColInfo()
+            {
+                DataType = source.DataType,
+                HaveLength = 1,
+            };
 
             // IsNull
-            if (bindColInfo.IsNull != null || NullMem.Count > 0)
+            if (source.IsNull != null || NullMem.Count > 0)
             {
-                Array.Resize(ref bindColInfo.IsNull, bindColInfo.Num + Length);
+                target.IsNull = new byte[source.Num + Length];
+                if (source.IsNull != null)
+                {
+                    Array.Copy(source.IsNull, 0, target.IsNull, 0, source.Num);
+                }
                 if (NullMem.Count > 0)
                 {
-                    Array.Copy(NullMem.ToArray(), 0, bindColInfo.IsNull, bindColInfo.Num, Length);
+                    Array.Copy(NullMem.ToArray(), 0, target.IsNull, source.Num, Length);
                 }
             }
 
-            bindColInfo.Num += Length;
-            // Buffer
+            target.Num = source.Num + Length;
             var valueBuffer = ValueBuffer();
-            var newBufferLength = bindColInfo.BufferLength + (uint)valueBuffer.Length;
-            Array.Resize(ref bindColInfo.Buffer, (int)newBufferLength);
-            Buffer.BlockCopy(valueBuffer, 0, bindColInfo.Buffer, bindColInfo.Buffer.Length, valueBuffer.Length);
-            bindColInfo.BufferLength += newBufferLength;
-
+            target.BufferLength = source.BufferLength + (uint)valueBuffer.Length;
+            target.Buffer = new byte[target.BufferLength];
+            Buffer.BlockCopy(source.Buffer,0, target.Buffer,0, (int)source.BufferLength);
+            Buffer.BlockCopy(valueBuffer, 0, target.Buffer, (int)source.BufferLength, valueBuffer.Length);
+            
             // Length
             var dataLength = DataLength();
-            Array.Resize(ref bindColInfo.Length, bindColInfo.Num);
-            Buffer.BlockCopy(dataLength, 0, bindColInfo.Length, bindColInfo.Num * 4, Length * 4);
-
+            target.Length = new int[source.Length.Length + dataLength.Length];
+            Buffer.BlockCopy(source.Length, 0, target.Length, 0, source.Length.Length * 4);
+            Buffer.BlockCopy(dataLength, 0, target.Length, source.Length.Length * 4, Length * 4);
             // TotalLength
-            bindColInfo.TotalLength += (uint)Length // length of IsNull
+            target.TotalLength += source.TotalLength + (uint)Length // length of IsNull
                                        + (uint)valueBuffer.Length + // length of Buffer
                                        +(uint)(Length * 4); // length of Length
-            return bindColInfo;
+            return target;
         }
 
         public void Remove(int count)
@@ -148,19 +154,18 @@ namespace TDengine.Driver.Impl.StmtBuilder
 
             var removeByteCount = 0;
             var removeIndex = Length - count;
-            for (int i = removeIndex; i < Length; i++)
+            for (var i = removeIndex; i < Length; i++)
             {
                 removeByteCount += LengthList[i];
             }
 
             if (removeByteCount > 0)
             {
-                Values.RemoveRange(Length - removeByteCount, removeByteCount);
-                _totalValueLength -= removeByteCount;
+                Values.RemoveRange(Values.Count - removeByteCount, removeByteCount);
             }
             if (NullCount > 0)
             {
-                for (int i = removeIndex; i < Length; i++)
+                for (var i = removeIndex; i < Length; i++)
                 {
                     if (NullMem[i] == 1)
                     {
@@ -177,8 +182,6 @@ namespace TDengine.Driver.Impl.StmtBuilder
                     NullMem.RemoveRange(removeIndex, count);
                 }
             }
-
-            NullCount -= count;
             Length -= count;
             LengthList.RemoveRange(removeIndex,count);
         }

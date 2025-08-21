@@ -1500,7 +1500,7 @@ namespace TDengine.Driver.Client
         private byte[] GenerateBindBinary()
         {
             var tableCount = _tableInfos.Count;
-            const uint fixedHeaderLen = (uint)28;
+            const uint fixedHeaderLen = 28;
             var tableNameLengthLen = (uint)0;
             var tableNameBufferLen = (uint)0;
             var tagsDataLengthLen = (uint)0;
@@ -1617,6 +1617,7 @@ namespace TDengine.Driver.Client
                     Buffer.BlockCopy(fields[i].IsNull, 0, buffer, offset, fields[i].Num); // IsNull
                 }
 
+                // If IsNull is null, it means no null values, fill with 0, the buffer is already initialized with 0
                 offset += fields[i].Num;
                 buffer[offset] = fields[i].HaveLength; // HaveLength
                 offset += 1;

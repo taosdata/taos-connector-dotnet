@@ -12,10 +12,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
         private List<T> Mem { get; } = new List<T>(1);
         private List<byte> NullMem { get; set; } = new List<byte>();
 
-        public List<int> LengthList => null;
-        public int NullCount { get; private set; }
-
-        public bool IsVariable => false;
+        private int _nullCount;
 
         public FixedLengthBuilder(TDengineDataType dataType)
         {
@@ -25,7 +22,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
         public void Append(T value)
         {
             Mem.Add(value);
-            if (NullCount != 0)
+            if (_nullCount != 0)
             {
                 NullMem.Add(0);
             }
@@ -33,14 +30,14 @@ namespace TDengine.Driver.Impl.StmtBuilder
 
         public void AppendNull()
         {
-            if (NullCount == 0)
+            if (_nullCount == 0)
             {
                 NullMem = new List<byte>(new byte[Length]);
             }
 
             Mem.Add(default);
             NullMem.Add(1);
-            NullCount += 1;
+            _nullCount += 1;
         }
 
         private int ValueLength()
@@ -52,7 +49,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
         {
             Mem.Clear();
             NullMem.Clear();
-            NullCount = 0;
+            _nullCount = 0;
         }
 
         public void Remove(int count)
@@ -64,17 +61,17 @@ namespace TDengine.Driver.Impl.StmtBuilder
             }
 
             Mem.RemoveRange(Mem.Count - count, count);
-            if (NullCount > 0)
+            if (_nullCount > 0)
             {
-                for (int i = Mem.Count - count; i < Mem.Count; i++)
+                for (var i = Mem.Count - count; i < Mem.Count; i++)
                 {
                     if (NullMem[i] == 1)
                     {
-                        NullCount--;
+                        _nullCount--;
                     }
                 }
 
-                if (NullCount == 0)
+                if (_nullCount == 0)
                 {
                     NullMem = null;
                 }
@@ -84,13 +81,13 @@ namespace TDengine.Driver.Impl.StmtBuilder
                 }
             }
 
-            NullCount -= count;
+            _nullCount -= count;
         }
 
         public Stmt2BindColInfo ToStmt2BindColInfo()
         {
             byte[] isNull = null;
-            if (NullCount > 0)
+            if (_nullCount > 0)
             {
                 isNull = NullMem.ToArray();
             }
@@ -125,34 +122,41 @@ namespace TDengine.Driver.Impl.StmtBuilder
             return byteArray;
         }
 
-        public Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo bindColInfo)
+        public Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo source)
         {
-            if (bindColInfo.DataType != (int)DataType)
+            if (source.DataType != (int)DataType)
             {
-                throw new ArgumentException($"Data type mismatch: expected {DataType}, got {bindColInfo.DataType}");
+                throw new ArgumentException($"Data type mismatch: expected {DataType}, got {source.DataType}");
             }
+            var target = new Stmt2BindColInfo
+            {
+                DataType = source.DataType,
+                HaveLength = 0, // Fixed length does not have length
+            };
 
             // IsNull
-            if (bindColInfo.IsNull != null || NullMem.Count > 0)
+            if (source.IsNull != null || NullMem.Count > 0)
             {
-                Array.Resize(ref bindColInfo.IsNull, bindColInfo.Num + Length);
+                target.IsNull = new byte[source.Num + Length];
+                if (source.IsNull != null)
+                {
+                    Array.Copy(source.IsNull, 0, target.IsNull, 0, source.Num);
+                }
                 if (NullMem.Count > 0)
                 {
-                    Array.Copy(NullMem.ToArray(), 0, bindColInfo.IsNull, bindColInfo.Num, Length);
+                    Array.Copy(NullMem.ToArray(), 0, target.IsNull, source.Num, Length);
                 }
             }
-
-            bindColInfo.Num += Length;
-            // Buffer
+            target.Num = source.Num + Length;
             var valueBuffer = ValueBuffer();
-            var newBufferLength = bindColInfo.BufferLength + (uint)valueBuffer.Length;
-            Array.Resize(ref bindColInfo.Buffer, (int)newBufferLength);
-            Buffer.BlockCopy(valueBuffer, 0, bindColInfo.Buffer, bindColInfo.Buffer.Length, valueBuffer.Length);
-            bindColInfo.BufferLength += newBufferLength;
+            target.BufferLength = source.BufferLength + (uint)valueBuffer.Length;
+            target.Buffer = new byte[target.BufferLength];
+            Buffer.BlockCopy(source.Buffer,0, target.Buffer,0, (int)source.BufferLength);
+            Buffer.BlockCopy(valueBuffer, 0, target.Buffer, (int)source.BufferLength, valueBuffer.Length);
             // TotalLength
-            bindColInfo.TotalLength += (uint)Length // length of IsNull
+            target.TotalLength += source.TotalLength + (uint)Length // length of IsNull
                                        + (uint)valueBuffer.Length; // length of Buffer
-            return bindColInfo;
+            return target;
         }
     }
 }
