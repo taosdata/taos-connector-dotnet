@@ -17,9 +17,12 @@ namespace Driver.Test.Client.Query
         private readonly string _nativeConnectString;
         private readonly string _wsConnectString;
         private readonly string _cloudConnectString;
+        private readonly bool _is3360Test;
 
         public Client(ITestOutputHelper output)
         {
+            this._is3360Test = Environment.GetEnvironmentVariable("TDENGINE_TEST_3360") == "true";
+            // _is3360Test = true;
             this._output = output;
             this._nativeConnectString = "host=localhost;port=6030;username=root;password=taosdata";
             this._wsConnectString =
@@ -415,16 +418,16 @@ namespace Driver.Test.Client.Query
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
-                        DoExec(client,$"create database {db} precision '{PrecisionString(precision)}'");
+                        DoExec(client, $"drop database if exists {db}");
+                        DoExec(client, $"create database {db} precision '{PrecisionString(precision)}'");
                     }
 
-                    DoExec(client,$"use {db}");
+                    DoExec(client, $"use {db}");
                     var createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
-                    DoExec(client,createTableSql);
+                    DoExec(client, createTableSql);
                     string insertQuery =
                         $"insert into {subTableName} using {superTableName} tags('{{\"a\":\"b\"}}') {insertSql}";
-                    DoExec(client,insertQuery);
+                    DoExec(client, insertQuery);
                     string query = $"select * from {superTableName} order by ts asc";
                     using (var rows = client.Query(query))
                     {
@@ -439,10 +442,10 @@ namespace Driver.Test.Client.Query
                 }
                 finally
                 {
-                    DoExec(client,$"drop table if exists {superTableName}");
+                    DoExec(client, $"drop table if exists {superTableName}");
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
+                        DoExec(client, $"drop database if exists {db}");
                     }
                 }
             }
@@ -463,16 +466,17 @@ namespace Driver.Test.Client.Query
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}", ReqId.GetReqId());
-                        DoExec(client,$"create database {db} precision '{PrecisionString(precision)}'", ReqId.GetReqId());
+                        DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
+                        DoExec(client, $"create database {db} precision '{PrecisionString(precision)}'",
+                            ReqId.GetReqId());
                     }
 
-                    DoExec(client,$"use {db}", ReqId.GetReqId());
+                    DoExec(client, $"use {db}", ReqId.GetReqId());
                     string createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
-                    DoExec(client,createTableSql, ReqId.GetReqId());
+                    DoExec(client, createTableSql, ReqId.GetReqId());
                     string insertQuery =
                         $"insert into {subTableName} using {superTableName} tags('{{\"a\":\"b\"}}') {insertSql}";
-                    DoExec(client,insertQuery, ReqId.GetReqId());
+                    DoExec(client, insertQuery, ReqId.GetReqId());
                     string query = $"select * from {superTableName} order by ts asc";
                     using (var rows = client.Query(query, ReqId.GetReqId()))
                     {
@@ -487,10 +491,10 @@ namespace Driver.Test.Client.Query
                 }
                 finally
                 {
-                    DoExec(client,$"drop table if exists {superTableName}", ReqId.GetReqId());
+                    DoExec(client, $"drop table if exists {superTableName}", ReqId.GetReqId());
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}", ReqId.GetReqId());
+                        DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
                     }
                 }
             }
@@ -512,13 +516,13 @@ namespace Driver.Test.Client.Query
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
-                        DoExec(client,$"create database {db} precision '{PrecisionString(precision)}'");
+                        DoExec(client, $"drop database if exists {db}");
+                        DoExec(client, $"create database {db} precision '{PrecisionString(precision)}'");
                     }
 
-                    DoExec(client,$"use {db}");
+                    DoExec(client, $"use {db}");
                     var createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
-                    DoExec(client,createTableSql);
+                    DoExec(client, createTableSql);
                     var stmt = client.StmtInit();
                     StringBuilder questionMarks = new StringBuilder();
                     var count = data[0].Length;
@@ -532,6 +536,12 @@ namespace Driver.Test.Client.Query
                     }
 
                     var values = questionMarks.ToString();
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
                     stmt.Prepare($"insert into ? using {superTableName} tags(?) values({values})");
                     var isInsert = stmt.IsInsert();
                     Assert.True(isInsert);
@@ -547,6 +557,12 @@ namespace Driver.Test.Client.Query
                     stmt.Exec();
                     var affected = stmt.Affected();
                     Assert.Equal((long)rowCount, affected);
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
                     stmt.Prepare($"select * from {superTableName} where ts >= ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
@@ -558,6 +574,8 @@ namespace Driver.Test.Client.Query
                         this.AssertColumn(rows, withDecimal);
                         this.AssertValue(rows, data, precision);
                     }
+
+                    stmt.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -566,10 +584,10 @@ namespace Driver.Test.Client.Query
                 }
                 finally
                 {
-                    DoExec(client,$"drop table if exists {superTableName}");
+                    DoExec(client, $"drop table if exists {superTableName}");
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
+                        DoExec(client, $"drop database if exists {db}");
                     }
                 }
             }
@@ -583,223 +601,238 @@ namespace Driver.Test.Client.Query
                 var now = DateTime.Now;
                 try
                 {
-                    DoExec(client,$"drop database if exists {db}");
-                    DoExec(client,$"create database {db} precision '{PrecisionString(precision)}'");
+                    DoExec(client, $"drop database if exists {db}");
+                    DoExec(client, $"create database {db} precision '{PrecisionString(precision)}'");
 
-                    DoExec(client,$"use {db}");
+                    DoExec(client, $"use {db}");
                     // timestamp
-                    DoExec(client,$"create table if not exists test_ts (ts timestamp, c1 timestamp)");
+                    DoExec(client, $"create table if not exists test_ts (ts timestamp, c1 timestamp)");
                     // bool
-                    DoExec(client,$"create table if not exists test_bool (ts timestamp, c1 bool)");
+                    DoExec(client, $"create table if not exists test_bool (ts timestamp, c1 bool)");
                     // tinyint
-                    DoExec(client,$"create table if not exists test_i8 (ts timestamp, ci tinyint)");
+                    DoExec(client, $"create table if not exists test_i8 (ts timestamp, ci tinyint)");
                     // smallint
-                    DoExec(client,$"create table if not exists test_i16 (ts timestamp, ci smallint)");
+                    DoExec(client, $"create table if not exists test_i16 (ts timestamp, ci smallint)");
                     // int
-                    DoExec(client,$"create table if not exists test_i32 (ts timestamp, ci int)");
+                    DoExec(client, $"create table if not exists test_i32 (ts timestamp, ci int)");
                     // bigint
-                    DoExec(client,$"create table if not exists test_i64 (ts timestamp, ci bigint)");
+                    DoExec(client, $"create table if not exists test_i64 (ts timestamp, ci bigint)");
                     // tinyint unsigned
-                    DoExec(client,$"create table if not exists test_u8 (ts timestamp, ci tinyint unsigned)");
+                    DoExec(client, $"create table if not exists test_u8 (ts timestamp, ci tinyint unsigned)");
                     // smallint unsigned
-                    DoExec(client,$"create table if not exists test_u16 (ts timestamp, ci smallint unsigned)");
+                    DoExec(client, $"create table if not exists test_u16 (ts timestamp, ci smallint unsigned)");
                     // int unsigned
-                    DoExec(client,$"create table if not exists test_u32 (ts timestamp, ci int unsigned)");
+                    DoExec(client, $"create table if not exists test_u32 (ts timestamp, ci int unsigned)");
                     // bigint unsigned
-                    DoExec(client,$"create table if not exists test_u64 (ts timestamp, ci bigint unsigned)");
+                    DoExec(client, $"create table if not exists test_u64 (ts timestamp, ci bigint unsigned)");
                     // float
-                    DoExec(client,$"create table if not exists test_f32 (ts timestamp, c1 float)");
+                    DoExec(client, $"create table if not exists test_f32 (ts timestamp, c1 float)");
                     // double
-                    DoExec(client,$"create table if not exists test_f64 (ts timestamp, c1 double)");
+                    DoExec(client, $"create table if not exists test_f64 (ts timestamp, c1 double)");
                     // binary
-                    DoExec(client,$"create table if not exists test_binary (ts timestamp, c1 binary(100))");
+                    DoExec(client, $"create table if not exists test_binary (ts timestamp, c1 binary(100))");
                     // nchar
-                    DoExec(client,$"create table if not exists test_nchar (ts timestamp, c1 nchar(100))");
+                    DoExec(client, $"create table if not exists test_nchar (ts timestamp, c1 nchar(100))");
                     // varbinary
-                    DoExec(client,$"create table if not exists test_varbinary (ts timestamp, c1 varbinary(100))");
+                    DoExec(client, $"create table if not exists test_varbinary (ts timestamp, c1 varbinary(100))");
                     // geometry
-                    DoExec(client,$"create table if not exists test_geometry (ts timestamp, c1 geometry(100))");
+                    DoExec(client, $"create table if not exists test_geometry (ts timestamp, c1 geometry(100))");
                     // json
-                    DoExec(client,$"create table if not exists test_json_stb (ts timestamp, c1 int) tags(t json)");
-                    using (var stmt = client.StmtInit())
+                    DoExec(client, $"create table if not exists test_json_stb (ts timestamp, c1 int) tags(t json)");
+                    var stmt = client.StmtInit();
+                    // json
+                    var sql = $"insert into ? using test_json_stb tags(?) values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    stmt.Prepare(sql);
+                    stmt.SetTableName("test_json");
+                    stmt.SetTags(new object[] { "{\"a\":\"b\"}" });
+                    stmt.BindRow(new object[] { DateTime.Now, 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    var affected = stmt.Affected();
+                    Assert.Equal(1, affected);
+                    using (var rows = client.Query("select count(*) from test_json_stb"))
                     {
-                        // json
-                        var sql = $"insert into ? using test_json_stb tags(?) values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        stmt.Prepare(sql);
-                        stmt.SetTableName("test_json");
-                        stmt.SetTags(new object[] { "{\"a\":\"b\"}" });
-                        stmt.BindRow(new object[] { DateTime.Now, 1 });
-                        stmt.AddBatch();
-                        stmt.Exec();
-                        var affected = stmt.Affected();
-                        Assert.Equal(1, affected);
-                        using (var rows = client.Query("select count(*) from test_json_stb"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(1, rows.GetInt32(0));
-                        }
-                        stmt.SetTableName("test_json_null");
-                        stmt.SetTags(new object[] { null });
-                        stmt.BindRow(new object[] { DateTime.Now, 1 });
-                        stmt.AddBatch();
-                        stmt.Exec();
-                        affected = stmt.Affected();
-                        Assert.Equal(1, affected);
-                        using (var rows = client.Query("select count(*) from test_json_stb"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(2, rows.GetInt32(0));
-                        }
-                        // ts
-                        sql = $"insert into test_ts values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP);
-                        using (var rows = client.Query("select count(*) from test_ts"))
-                        {
-                            Assert.True(rows.Read());
-                            // null + DateTime * 3 + long * 3 + DateTimeOffset * 3
-                            Assert.Equal(10, rows.GetInt32(0));
-                        }
-                        // bool
-                        sql = $"insert into test_bool values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BOOL);
-                        using (var rows = client.Query("select count(*) from test_bool"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // tinyint
-                        sql = $"insert into test_i8 values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_TINYINT);
-                        using (var rows = client.Query("select count(*) from test_i8"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // smallint
-                        sql = $"insert into test_i16 values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_SMALLINT);
-                        using (var rows = client.Query("select count(*) from test_i16"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // int
-                        sql = $"insert into test_i32 values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_INT);
-                        using (var rows = client.Query("select count(*) from test_i32"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // bigint
-                        sql = $"insert into test_i64 values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BIGINT);
-                        using (var rows = client.Query("select count(*) from test_i64"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // tinyint unsigned
-                        sql = $"insert into test_u8 values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UTINYINT);
-                        using (var rows = client.Query("select count(*) from test_u8"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // smallint unsigned
-                        sql = $"insert into test_u16 values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_USMALLINT);
-                        using (var rows = client.Query("select count(*) from test_u16"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // int unsigned
-                        sql = $"insert into test_u32 values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UINT);
-                        using (var rows = client.Query("select count(*) from test_u32"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // bigint unsigned
-                        sql = $"insert into test_u64 values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UBIGINT);
-                        using (var rows = client.Query("select count(*) from test_u64"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // float
-                        sql = $"insert into test_f32 values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_FLOAT);
-                        using (var rows = client.Query("select count(*) from test_f32"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // double
-                        sql = $"insert into test_f64 values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_DOUBLE);
-                        using (var rows = client.Query("select count(*) from test_f64"))
-                        {
-                            Assert.True(rows.Read());
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // binary
-                        sql = $"insert into test_binary values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BINARY);
-                        using (var rows = client.Query("select count(*) from test_binary"))
-                        {
-                            Assert.True(rows.Read());
-                            // null + byte[] * 3 + string * 3
-                            Assert.Equal(7, rows.GetInt32(0));
-                        }
-                        // nchar
-                        sql = $"insert into test_nchar values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_NCHAR);
-                        using (var rows = client.Query("select count(*) from test_nchar"))
-                        {
-                            Assert.True(rows.Read());
-                            // null + string * 3
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
-                        // varbinary
-                        sql = $"insert into test_varbinary values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_VARBINARY);
-                        using (var rows = client.Query("select count(*) from test_varbinary"))
-                        {
-                            Assert.True(rows.Read());
-                            // null + byte[] * 3 + string * 3
-                            Assert.Equal(7, rows.GetInt32(0));
-                        }
-                        // geometry
-                        sql = $"insert into test_geometry values(?,?)";
-                        _output.WriteLine($"{sql}");
-                        doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_GEOMETRY);
-                        using (var rows = client.Query("select count(*) from test_geometry"))
-                        {
-                            Assert.True(rows.Read());
-                            // null + byte[] * 3
-                            Assert.Equal(4, rows.GetInt32(0));
-                        }
+                        Assert.True(rows.Read());
+                        Assert.Equal(1, rows.GetInt32(0));
+                    }
+
+                    stmt.SetTableName("test_json_null");
+                    stmt.SetTags(new object[] { null });
+                    stmt.BindRow(new object[] { DateTime.Now, 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    affected = stmt.Affected();
+                    Assert.Equal(1, affected);
+                    using (var rows = client.Query("select count(*) from test_json_stb"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(2, rows.GetInt32(0));
+                    }
+
+                    // ts
+                    sql = $"insert into test_ts values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP);
+                    using (var rows = client.Query("select count(*) from test_ts"))
+                    {
+                        Assert.True(rows.Read());
+                        // null + DateTime * 3 + long * 3 + DateTimeOffset * 3
+                        Assert.Equal(10, rows.GetInt32(0));
+                    }
+
+                    // bool
+                    sql = $"insert into test_bool values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BOOL);
+                    using (var rows = client.Query("select count(*) from test_bool"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // tinyint
+                    sql = $"insert into test_i8 values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_TINYINT);
+                    using (var rows = client.Query("select count(*) from test_i8"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // smallint
+                    sql = $"insert into test_i16 values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_SMALLINT);
+                    using (var rows = client.Query("select count(*) from test_i16"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // int
+                    sql = $"insert into test_i32 values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_INT);
+                    using (var rows = client.Query("select count(*) from test_i32"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // bigint
+                    sql = $"insert into test_i64 values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BIGINT);
+                    using (var rows = client.Query("select count(*) from test_i64"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // tinyint unsigned
+                    sql = $"insert into test_u8 values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UTINYINT);
+                    using (var rows = client.Query("select count(*) from test_u8"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // smallint unsigned
+                    sql = $"insert into test_u16 values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_USMALLINT);
+                    using (var rows = client.Query("select count(*) from test_u16"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // int unsigned
+                    sql = $"insert into test_u32 values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UINT);
+                    using (var rows = client.Query("select count(*) from test_u32"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // bigint unsigned
+                    sql = $"insert into test_u64 values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UBIGINT);
+                    using (var rows = client.Query("select count(*) from test_u64"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // float
+                    sql = $"insert into test_f32 values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_FLOAT);
+                    using (var rows = client.Query("select count(*) from test_f32"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // double
+                    sql = $"insert into test_f64 values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_DOUBLE);
+                    using (var rows = client.Query("select count(*) from test_f64"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // binary
+                    sql = $"insert into test_binary values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BINARY);
+                    using (var rows = client.Query("select count(*) from test_binary"))
+                    {
+                        Assert.True(rows.Read());
+                        // null + byte[] * 3 + string * 3
+                        Assert.Equal(7, rows.GetInt32(0));
+                    }
+
+                    // nchar
+                    sql = $"insert into test_nchar values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_NCHAR);
+                    using (var rows = client.Query("select count(*) from test_nchar"))
+                    {
+                        Assert.True(rows.Read());
+                        // null + string * 3
+                        Assert.Equal(4, rows.GetInt32(0));
+                    }
+
+                    // varbinary
+                    sql = $"insert into test_varbinary values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_VARBINARY);
+                    using (var rows = client.Query("select count(*) from test_varbinary"))
+                    {
+                        Assert.True(rows.Read());
+                        // null + byte[] * 3 + string * 3
+                        Assert.Equal(7, rows.GetInt32(0));
+                    }
+
+                    // geometry
+                    sql = $"insert into test_geometry values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_GEOMETRY);
+                    using (var rows = client.Query("select count(*) from test_geometry"))
+                    {
+                        Assert.True(rows.Read());
+                        // null + byte[] * 3
+                        Assert.Equal(4, rows.GetInt32(0));
                     }
                 }
                 catch (Exception e)
@@ -809,7 +842,7 @@ namespace Driver.Test.Client.Query
                 }
                 finally
                 {
-                    DoExec(client,$"drop database if exists {db}");
+                    DoExec(client, $"drop database if exists {db}");
                 }
             }
         }
@@ -817,6 +850,10 @@ namespace Driver.Test.Client.Query
         private void doStmtTest(ITDengineClient client, IStmt stmt, string sql, TDengineDataType dataType)
         {
             var now = DateTime.UtcNow;
+            if (_is3360Test)
+            {
+                stmt = client.StmtInit();
+            }
             stmt.Prepare(sql);
             var isInsert = stmt.IsInsert();
             Assert.True(isInsert);
@@ -831,7 +868,7 @@ namespace Driver.Test.Client.Query
             stmt.AddBatch();
             stmt.Exec();
             Assert.Equal((long)1, stmt.Affected());
-            
+
             // DateTime
             now = now.AddSeconds(1);
             rowData = new List<object>
@@ -850,6 +887,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             var colData = new Array[2]
             {
@@ -867,6 +905,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -903,6 +942,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -920,6 +960,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -956,6 +997,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -973,6 +1015,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -990,6 +1033,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             // sbyte
             now = now.AddSeconds(1);
             rowData = new List<object>
@@ -1008,6 +1052,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1025,6 +1070,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1061,6 +1107,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1078,6 +1125,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1114,6 +1162,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1131,6 +1180,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1168,6 +1218,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1186,7 +1237,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
-            
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1224,6 +1275,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1241,7 +1293,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
-            
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1278,6 +1330,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1295,7 +1348,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
-            
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1332,6 +1385,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1349,6 +1403,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1385,6 +1440,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1402,6 +1458,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1439,6 +1496,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1493,6 +1551,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1510,6 +1569,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1548,6 +1608,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1567,6 +1628,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1611,6 +1673,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1637,6 +1700,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             now = now.AddSeconds(1);
             colData = new Array[2]
             {
@@ -1659,6 +1723,10 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+            if (_is3360Test)
+            {
+                stmt.Dispose();
+            }
         }
 
 
@@ -1677,13 +1745,14 @@ namespace Driver.Test.Client.Query
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}", ReqId.GetReqId());
-                        DoExec(client,$"create database {db} precision '{PrecisionString(precision)}'", ReqId.GetReqId());
+                        DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
+                        DoExec(client, $"create database {db} precision '{PrecisionString(precision)}'",
+                            ReqId.GetReqId());
                     }
 
-                    DoExec(client,$"use {db}", ReqId.GetReqId());
+                    DoExec(client, $"use {db}", ReqId.GetReqId());
                     var createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
-                    DoExec(client,createTableSql, ReqId.GetReqId());
+                    DoExec(client, createTableSql, ReqId.GetReqId());
                     var stmt = client.StmtInit(ReqId.GetReqId());
                     StringBuilder questionMarks = new StringBuilder();
                     var count = data[0].Length;
@@ -1731,17 +1800,17 @@ namespace Driver.Test.Client.Query
                 }
                 finally
                 {
-                    DoExec(client,$"drop table if exists {superTableName}", ReqId.GetReqId());
+                    DoExec(client, $"drop table if exists {superTableName}", ReqId.GetReqId());
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
+                        DoExec(client, $"drop database if exists {db}");
                     }
                 }
             }
         }
 
 
-        private void StmtBindColumnsTest(string connectString, string db, TDenginePrecision precision)
+        private void  StmtBindColumnsTest(string connectString, string db, TDenginePrecision precision)
         {
             var withDecimal = false;
             var data = this.GenerateValue(precision, withDecimal, out _);
@@ -1759,13 +1828,14 @@ namespace Driver.Test.Client.Query
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}", ReqId.GetReqId());
-                        DoExec(client,$"create database {db} precision '{PrecisionString(precision)}'", ReqId.GetReqId());
+                        DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
+                        DoExec(client, $"create database {db} precision '{PrecisionString(precision)}'",
+                            ReqId.GetReqId());
                     }
 
-                    DoExec(client,$"use {db}");
+                    DoExec(client, $"use {db}");
                     var createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
-                    DoExec(client,createTableSql);
+                    DoExec(client, createTableSql);
                     var stmt = client.StmtInit(ReqId.GetReqId());
                     stmt.Prepare(
                         $"insert into ? using {superTableName} tags(?) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
@@ -1798,10 +1868,10 @@ namespace Driver.Test.Client.Query
                 }
                 finally
                 {
-                    DoExec(client,$"drop table if exists {superTableName}");
+                    DoExec(client, $"drop table if exists {superTableName}");
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}", ReqId.GetReqId());
+                        DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
                     }
                 }
             }
@@ -1823,12 +1893,12 @@ namespace Driver.Test.Client.Query
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}", ReqId.GetReqId());
-                        DoExec(client,$"create database {db} precision 'ms'");
+                        DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
+                        DoExec(client, $"create database {db} precision 'ms'");
                     }
 
-                    DoExec(client,$"use {db}");
-                    DoExec(client,$"create table if not exists {tableName}(ts timestamp,c1 varbinary(65517))");
+                    DoExec(client, $"use {db}");
+                    DoExec(client, $"create table if not exists {tableName}(ts timestamp,c1 varbinary(65517))");
                     var stmt = client.StmtInit(ReqId.GetReqId());
                     stmt.Prepare($"insert into {tableName} values(?,?)");
                     var isInsert = stmt.IsInsert();
@@ -1865,10 +1935,10 @@ namespace Driver.Test.Client.Query
                 }
                 finally
                 {
-                    DoExec(client,$"drop table if exists {tableName}");
+                    DoExec(client, $"drop table if exists {tableName}");
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
+                        DoExec(client, $"drop database if exists {db}");
                     }
                 }
             }
@@ -1886,11 +1956,11 @@ namespace Driver.Test.Client.Query
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
-                        DoExec(client,$"create database {db} precision 'ns'");
+                        DoExec(client, $"drop database if exists {db}");
+                        DoExec(client, $"create database {db} precision 'ns'");
                     }
 
-                    DoExec(client,$"use {db}");
+                    DoExec(client, $"use {db}");
                     var data =
                         @"http_response,host=host161,method=GET,result=success,server=http://localhost,status_code=404 response_time=0.003226372,http_response_code=404i,content_length=19i,result_type=""success"",result_code=0i 1648090640000000000
 request_histogram_latency_seconds_max,aaa=bb,api_range=all,host=host161,url=http://192.168.17.148:8080/actuator/prometheus gauge=0 1648090640000000000
@@ -1994,7 +2064,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
+                        DoExec(client, $"drop database if exists {db}");
                     }
                 }
             }
@@ -2011,11 +2081,11 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
-                        DoExec(client,$"create database {db} precision 'ns'");
+                        DoExec(client, $"drop database if exists {db}");
+                        DoExec(client, $"create database {db} precision 'ns'");
                     }
 
-                    DoExec(client,$"use {db}");
+                    DoExec(client, $"use {db}");
                     var data = new string[]
                     {
                         "sys_if_bytes_out 1479496100 1.3E3 host=web01 interface=eth0",
@@ -2033,7 +2103,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
+                        DoExec(client, $"drop database if exists {db}");
                     }
                 }
             }
@@ -2050,11 +2120,11 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
-                        DoExec(client,$"create database {db} precision 'ns'");
+                        DoExec(client, $"drop database if exists {db}");
+                        DoExec(client, $"create database {db} precision 'ns'");
                     }
 
-                    DoExec(client,$"use {db}");
+                    DoExec(client, $"use {db}");
                     var data = new string[]
                     {
                         @"{
@@ -2079,7 +2149,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
+                        DoExec(client, $"drop database if exists {db}");
                     }
                 }
             }
@@ -2225,12 +2295,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             {
                 if (!inCloud)
                 {
-                    DoExec(client,$"drop database if exists {db}");
-                    DoExec(client,$"create database {db} precision '{PrecisionString(precision)}'");
+                    DoExec(client, $"drop database if exists {db}");
+                    DoExec(client, $"create database {db} precision '{PrecisionString(precision)}'");
                 }
 
-                DoExec(client,$"use {db}");
-                DoExec(client,$"create table if not exists {tableName} (ts timestamp, a int, b float, c binary(10))");
+                DoExec(client, $"use {db}");
+                DoExec(client, $"create table if not exists {tableName} (ts timestamp, a int, b float, c binary(10))");
                 var ts = new long[count];
                 var dateTime = DateTime.Now;
                 var tsv = new DateTime[count];
@@ -2247,7 +2317,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     valuesStr += $"({ts[i]}, {i}, {i}, '中文')";
                 }
 
-                DoExec(client,$"insert into {tableName} values {valuesStr}");
+                DoExec(client, $"insert into {tableName} values {valuesStr}");
                 var tasks = new List<Task>();
                 for (var i = 0; i < count; i++)
                 {
@@ -2283,10 +2353,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
             }
             finally
             {
-                DoExec(client,$"drop table if exists {tableName}");
+                DoExec(client, $"drop table if exists {tableName}");
                 if (!inCloud)
                 {
-                    DoExec(client,$"drop database if exists {db}");
+                    DoExec(client, $"drop database if exists {db}");
                 }
 
                 client.Dispose();
@@ -2337,15 +2407,16 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}", ReqId.GetReqId());
-                        DoExec(client,$"create database {db} precision '{PrecisionString(precision)}'", ReqId.GetReqId());
+                        DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
+                        DoExec(client, $"create database {db} precision '{PrecisionString(precision)}'",
+                            ReqId.GetReqId());
                     }
 
-                    DoExec(client,$"use {db}", ReqId.GetReqId());
-                    DoExec(utcClient,$"use {db}", ReqId.GetReqId());
+                    DoExec(client, $"use {db}", ReqId.GetReqId());
+                    DoExec(utcClient, $"use {db}", ReqId.GetReqId());
                     var createTableSql =
                         $"create table if not exists {superTableName} (ts timestamp,v int) tags (tg int)";
-                    DoExec(client,createTableSql, ReqId.GetReqId());
+                    DoExec(client, createTableSql, ReqId.GetReqId());
 
                     var ts = TDengineConstant.ConvertDateTimeToTimestamp(now, precision);
                     var targetTime = TDengineConstant.ConvertTimestampToDateTime(ts, precision, tz);
@@ -2370,7 +2441,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     string insertQuery =
                         $"insert into {subTableName} using {superTableName} tags('1') values('{insertTime}',1)";
                     _output.WriteLine("SQL: " + insertQuery);
-                    DoExec(utcClient,insertQuery, ReqId.GetReqId());
+                    DoExec(utcClient, insertQuery, ReqId.GetReqId());
                     string query = $"select * from {superTableName} order by ts asc";
                     using (var rows = client.Query(query, ReqId.GetReqId()))
                     {
@@ -2393,10 +2464,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 }
                 finally
                 {
-                    DoExec(client,$"drop table if exists {superTableName}", ReqId.GetReqId());
+                    DoExec(client, $"drop table if exists {superTableName}", ReqId.GetReqId());
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}", ReqId.GetReqId());
+                        DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
                     }
                 }
             }
@@ -2428,14 +2499,15 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 {
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}", ReqId.GetReqId());
-                        DoExec(client,$"create database {db} precision '{PrecisionString(precision)}'", ReqId.GetReqId());
+                        DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
+                        DoExec(client, $"create database {db} precision '{PrecisionString(precision)}'",
+                            ReqId.GetReqId());
                     }
 
-                    DoExec(client,$"use {db}", ReqId.GetReqId());
+                    DoExec(client, $"use {db}", ReqId.GetReqId());
                     var createTableSql =
                         $"create table if not exists {superTableName} (ts timestamp, v int) tags (t_tag timestamp)";
-                    DoExec(client,createTableSql, ReqId.GetReqId());
+                    DoExec(client, createTableSql, ReqId.GetReqId());
                     var stmt = client.StmtInit(ReqId.GetReqId());
                     // bind row
                     stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
@@ -2595,10 +2667,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 }
                 finally
                 {
-                    DoExec(client,$"drop table if exists {superTableName}", ReqId.GetReqId());
+                    DoExec(client, $"drop table if exists {superTableName}", ReqId.GetReqId());
                     if (!inCloud)
                     {
-                        DoExec(client,$"drop database if exists {db}");
+                        DoExec(client, $"drop database if exists {db}");
                     }
                 }
             }
@@ -2608,7 +2680,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
         {
             try
             {
-                return reqId != 0 ? client.Exec(sql):client.Exec(sql,reqId);
+                return reqId != 0 ? client.Exec(sql) : client.Exec(sql, reqId);
             }
             catch (TDengineError e)
             {
