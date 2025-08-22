@@ -144,21 +144,112 @@ namespace Driver.Test.Client.Query
                     break;
             }
 
-            if (withDecimal)
+            if (!_is3360Test)
             {
+                if (withDecimal)
+                {
+                    sql = $"values" +
+                          $"({timeStampes[0]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10:G9},{v11:G17},'test_binary','test_nchar','中文','POINT(100 100)',{v16},{v17})" +
+                          $"({timeStampes[1]},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)" +
+                          $"({timeStampes[2]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'中文','中文','中文','POINT(100 100)',{v16},{v17})" +
+                          $"({timeStampes[3]},{v1_3},{v2_3},{v3_3},{v4_3},{v5_3},{v6_3},{v7_3},{v8_3},{v9_3},{v10_3},{v11_3},'中文','中文','中文','POINT(100 100)',{v16_3},{v17_3})" +
+                          $"({timeStampes[4]},{v1_4},{v2_4},{v3_4},{v4_4},{v5_4},{v6_4},{v7_4},{v8_4},{v9_4},{v10_4},{v11_4},'中文','中文','中文','POINT(100 100)',{v16_4},{v17_4})";
+                    return new object[][]
+                    {
+                        new object[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(timeStampes[0], precision), v1, v2, v3, v4, v5,
+                            v6,
+                            v7,
+                            v8, v9, v10,
+                            v11,
+                            Encoding.UTF8.GetBytes("test_binary"),
+                            "test_nchar", Encoding.UTF8.GetBytes("中文"),
+                            new byte[]
+                            {
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00,
+                                0x00,
+                                0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                            },
+                            v16, v17,
+                        },
+                        new object[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(timeStampes[1], precision), null, null, null,
+                            null,
+                            null,
+                            null,
+                            null, null, null, null, null, null, null, null, null, null, null
+                        },
+                        new object[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(timeStampes[2], precision), v1, v2, v3, v4, v5,
+                            v6,
+                            v7,
+                            v8, v9, v10,
+                            v11,
+                            Encoding.UTF8.GetBytes("中文"),
+                            "中文", Encoding.UTF8.GetBytes("中文"),
+                            new byte[]
+                            {
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00,
+                                0x00,
+                                0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                            },
+                            v16, v17,
+                        },
+                        new object[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(timeStampes[3], precision), v1_3, v2_3, v3_3,
+                            v4_3,
+                            v5_3,
+                            v6_3, v7_3, v8_3, v9_3, v10_3,
+                            v11_3,
+                            Encoding.UTF8.GetBytes("中文"),
+                            "中文", Encoding.UTF8.GetBytes("中文"),
+                            new byte[]
+                            {
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00,
+                                0x00,
+                                0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                            },
+                            v16_3, v17_3,
+                        },
+                        new object[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(timeStampes[4], precision), v1_4, v2_4, v3_4,
+                            v4_4,
+                            v5_4,
+                            v6_4, v7_4, v8_4, v9_4, v10_4,
+                            v11_4,
+                            Encoding.UTF8.GetBytes("中文"),
+                            "中文", Encoding.UTF8.GetBytes("中文"),
+                            new byte[]
+                            {
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00,
+                                0x00,
+                                0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                            },
+                            v16_4, v17_4,
+                        },
+                    };
+                }
+
                 sql = $"values" +
-                      $"({timeStampes[0]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10:G9},{v11:G17},'test_binary','test_nchar','中文','POINT(100 100)',{v16},{v17})" +
+                      $"({timeStampes[0]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'test_binary','test_nchar','中文','POINT(100 100)')" +
                       $"({timeStampes[1]},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)" +
-                      $"({timeStampes[2]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'中文','中文','中文','POINT(100 100)',{v16},{v17})" +
-                      $"({timeStampes[3]},{v1_3},{v2_3},{v3_3},{v4_3},{v5_3},{v6_3},{v7_3},{v8_3},{v9_3},{v10_3},{v11_3},'中文','中文','中文','POINT(100 100)',{v16_3},{v17_3})" +
-                      $"({timeStampes[4]},{v1_4},{v2_4},{v3_4},{v4_4},{v5_4},{v6_4},{v7_4},{v8_4},{v9_4},{v10_4},{v11_4},'中文','中文','中文','POINT(100 100)',{v16_4},{v17_4})";
+                      $"({timeStampes[2]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'中文','中文','中文','POINT(100 100)')" +
+                      $"({timeStampes[3]},{v1_3},{v2_3},{v3_3},{v4_3},{v5_3},{v6_3},{v7_3},{v8_3},{v9_3},{v10_3},{v11_3},'中文','中文','中文','POINT(100 100)')" +
+                      $"({timeStampes[4]},{v1_4},{v2_4},{v3_4},{v4_4},{v5_4},{v6_4},{v7_4},{v8_4},{v9_4},{v10_4},{v11_4},'中文','中文','中文','POINT(100 100)')";
                 return new object[][]
                 {
                     new object[]
                     {
-                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[0], precision), v1, v2, v3, v4, v5, v6,
+                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[0], precision, tz), v1, v2, v3, v4, v5,
+                        v6,
                         v7,
-                        v8, v9, v10,
+                        v8,
+                        v9, v10,
                         v11,
                         Encoding.UTF8.GetBytes("test_binary"),
                         "test_nchar", Encoding.UTF8.GetBytes("中文"),
@@ -167,20 +258,22 @@ namespace Driver.Test.Client.Query
                             0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00, 0x59, 0x40
                         },
-                        v16, v17,
                     },
                     new object[]
                     {
-                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[1], precision), null, null, null, null,
+                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[1], precision, tz), null, null, null,
                         null,
                         null,
-                        null, null, null, null, null, null, null, null, null, null, null
+                        null,
+                        null, null, null, null, null, null, null, null, null
                     },
                     new object[]
                     {
-                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[2], precision), v1, v2, v3, v4, v5, v6,
+                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[2], precision, tz), v1, v2, v3, v4, v5,
+                        v6,
                         v7,
-                        v8, v9, v10,
+                        v8,
+                        v9, v10,
                         v11,
                         Encoding.UTF8.GetBytes("中文"),
                         "中文", Encoding.UTF8.GetBytes("中文"),
@@ -189,11 +282,11 @@ namespace Driver.Test.Client.Query
                             0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00, 0x59, 0x40
                         },
-                        v16, v17,
                     },
                     new object[]
                     {
-                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[3], precision), v1_3, v2_3, v3_3, v4_3,
+                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[3], precision, tz), v1_3, v2_3, v3_3,
+                        v4_3,
                         v5_3,
                         v6_3, v7_3, v8_3, v9_3, v10_3,
                         v11_3,
@@ -204,11 +297,11 @@ namespace Driver.Test.Client.Query
                             0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00, 0x59, 0x40
                         },
-                        v16_3, v17_3,
                     },
                     new object[]
                     {
-                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[4], precision), v1_4, v2_4, v3_4, v4_4,
+                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[4], precision, tz), v1_4, v2_4, v3_4,
+                        v4_4,
                         v5_4,
                         v6_4, v7_4, v8_4, v9_4, v10_4,
                         v11_4,
@@ -219,88 +312,139 @@ namespace Driver.Test.Client.Query
                             0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00, 0x59, 0x40
                         },
-                        v16_4, v17_4,
                     },
                 };
             }
-
-            sql = $"values" +
-                  $"({timeStampes[0]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'test_binary','test_nchar','中文','POINT(100 100)')" +
-                  $"({timeStampes[1]},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)" +
-                  $"({timeStampes[2]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'中文','中文','中文','POINT(100 100)')" +
-                  $"({timeStampes[3]},{v1_3},{v2_3},{v3_3},{v4_3},{v5_3},{v6_3},{v7_3},{v8_3},{v9_3},{v10_3},{v11_3},'中文','中文','中文','POINT(100 100)')" +
-                  $"({timeStampes[4]},{v1_4},{v2_4},{v3_4},{v4_4},{v5_4},{v6_4},{v7_4},{v8_4},{v9_4},{v10_4},{v11_4},'中文','中文','中文','POINT(100 100)')";
-            return new object[][]
+            else
             {
-                new object[]
+                if (withDecimal)
                 {
-                    TDengineConstant.ConvertTimestampToDateTime(timeStampes[0], precision, tz), v1, v2, v3, v4, v5, v6,
-                    v7,
-                    v8,
-                    v9, v10,
-                    v11,
-                    Encoding.UTF8.GetBytes("test_binary"),
-                    "test_nchar", Encoding.UTF8.GetBytes("中文"),
-                    new byte[]
+                    sql = $"values" +
+                          $"({timeStampes[0]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10:G9},{v11:G17},'test_binary','test_nchar','中文',{v16},{v17})" +
+                          $"({timeStampes[1]},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)" +
+                          $"({timeStampes[2]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'中文','中文','中文',{v16},{v17})" +
+                          $"({timeStampes[3]},{v1_3},{v2_3},{v3_3},{v4_3},{v5_3},{v6_3},{v7_3},{v8_3},{v9_3},{v10_3},{v11_3},'中文','中文','中文',{v16_3},{v17_3})" +
+                          $"({timeStampes[4]},{v1_4},{v2_4},{v3_4},{v4_4},{v5_4},{v6_4},{v7_4},{v8_4},{v9_4},{v10_4},{v11_4},'中文','中文','中文',{v16_4},{v17_4})";
+                    return new object[][]
                     {
-                        0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x59, 0x40
-                    },
-                },
-                new object[]
+                        new object[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(timeStampes[0], precision), v1, v2, v3, v4, v5,
+                            v6,
+                            v7,
+                            v8, v9, v10,
+                            v11,
+                            Encoding.UTF8.GetBytes("test_binary"),
+                            "test_nchar", Encoding.UTF8.GetBytes("中文"),
+                            v16, v17,
+                        },
+                        new object[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(timeStampes[1], precision), null, null, null,
+                            null,
+                            null,
+                            null,
+                            null, null, null, null, null, null, null, null, null, null
+                        },
+                        new object[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(timeStampes[2], precision), v1, v2, v3, v4, v5,
+                            v6,
+                            v7,
+                            v8, v9, v10,
+                            v11,
+                            Encoding.UTF8.GetBytes("中文"),
+                            "中文", Encoding.UTF8.GetBytes("中文"),
+                            v16, v17,
+                        },
+                        new object[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(timeStampes[3], precision), v1_3, v2_3, v3_3,
+                            v4_3,
+                            v5_3,
+                            v6_3, v7_3, v8_3, v9_3, v10_3,
+                            v11_3,
+                            Encoding.UTF8.GetBytes("中文"),
+                            "中文", Encoding.UTF8.GetBytes("中文"),
+                            v16_3, v17_3,
+                        },
+                        new object[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(timeStampes[4], precision), v1_4, v2_4, v3_4,
+                            v4_4,
+                            v5_4,
+                            v6_4, v7_4, v8_4, v9_4, v10_4,
+                            v11_4,
+                            Encoding.UTF8.GetBytes("中文"),
+                            "中文", Encoding.UTF8.GetBytes("中文"),
+                            v16_4, v17_4,
+                        },
+                    };
+                }
+
+                sql = $"values" +
+                      $"({timeStampes[0]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'test_binary','test_nchar','中文')" +
+                      $"({timeStampes[1]},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)" +
+                      $"({timeStampes[2]},{v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9},{v10},{v11},'中文','中文','中文')" +
+                      $"({timeStampes[3]},{v1_3},{v2_3},{v3_3},{v4_3},{v5_3},{v6_3},{v7_3},{v8_3},{v9_3},{v10_3},{v11_3},'中文','中文','中文')" +
+                      $"({timeStampes[4]},{v1_4},{v2_4},{v3_4},{v4_4},{v5_4},{v6_4},{v7_4},{v8_4},{v9_4},{v10_4},{v11_4},'中文','中文','中文')";
+                return new object[][]
                 {
-                    TDengineConstant.ConvertTimestampToDateTime(timeStampes[1], precision, tz), null, null, null, null,
-                    null,
-                    null,
-                    null, null, null, null, null, null, null, null, null
-                },
-                new object[]
-                {
-                    TDengineConstant.ConvertTimestampToDateTime(timeStampes[2], precision, tz), v1, v2, v3, v4, v5, v6,
-                    v7,
-                    v8,
-                    v9, v10,
-                    v11,
-                    Encoding.UTF8.GetBytes("中文"),
-                    "中文", Encoding.UTF8.GetBytes("中文"),
-                    new byte[]
+                    new object[]
                     {
-                        0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[0], precision, tz), v1, v2, v3, v4, v5,
+                        v6,
+                        v7,
+                        v8,
+                        v9, v10,
+                        v11,
+                        Encoding.UTF8.GetBytes("test_binary"),
+                        "test_nchar", Encoding.UTF8.GetBytes("中文"),
                     },
-                },
-                new object[]
-                {
-                    TDengineConstant.ConvertTimestampToDateTime(timeStampes[3], precision, tz), v1_3, v2_3, v3_3, v4_3,
-                    v5_3,
-                    v6_3, v7_3, v8_3, v9_3, v10_3,
-                    v11_3,
-                    Encoding.UTF8.GetBytes("中文"),
-                    "中文", Encoding.UTF8.GetBytes("中文"),
-                    new byte[]
+                    new object[]
                     {
-                        0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[1], precision, tz), null, null, null,
+                        null,
+                        null,
+                        null,
+                        null, null, null, null, null, null, null, null
                     },
-                },
-                new object[]
-                {
-                    TDengineConstant.ConvertTimestampToDateTime(timeStampes[4], precision, tz), v1_4, v2_4, v3_4, v4_4,
-                    v5_4,
-                    v6_4, v7_4, v8_4, v9_4, v10_4,
-                    v11_4,
-                    Encoding.UTF8.GetBytes("中文"),
-                    "中文", Encoding.UTF8.GetBytes("中文"),
-                    new byte[]
+                    new object[]
                     {
-                        0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[2], precision, tz), v1, v2, v3, v4, v5,
+                        v6,
+                        v7,
+                        v8,
+                        v9, v10,
+                        v11,
+                        Encoding.UTF8.GetBytes("中文"),
+                        "中文", Encoding.UTF8.GetBytes("中文"),
                     },
-                },
-            };
+                    new object[]
+                    {
+                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[3], precision, tz), v1_3, v2_3, v3_3,
+                        v4_3,
+                        v5_3,
+                        v6_3, v7_3, v8_3, v9_3, v10_3,
+                        v11_3,
+                        Encoding.UTF8.GetBytes("中文"),
+                        "中文", Encoding.UTF8.GetBytes("中文"),
+                    },
+                    new object[]
+                    {
+                        TDengineConstant.ConvertTimestampToDateTime(timeStampes[4], precision, tz), v1_4, v2_4, v3_4,
+                        v4_4,
+                        v5_4,
+                        v6_4, v7_4, v8_4, v9_4, v10_4,
+                        v11_4,
+                        Encoding.UTF8.GetBytes("中文"),
+                        "中文", Encoding.UTF8.GetBytes("中文"),
+                    },
+                };
+            }
         }
 
-        private static string GenerateCreateTableSql(string tableName, bool withDecimal)
+        private string GenerateCreateTableSql(string tableName, bool withDecimal)
         {
             var commonColumns = new StringBuilder()
                 .Append($"create table if not exists {tableName} (ts timestamp,")
@@ -317,8 +461,11 @@ namespace Driver.Test.Client.Query
                 .Append("c11 double,")
                 .Append("c12 binary(20),")
                 .Append("c13 nchar(20),")
-                .Append("c14 varbinary(20),")
-                .Append("c15 geometry(100)");
+                .Append("c14 varbinary(20)");
+            if (!_is3360Test)
+            {
+                commonColumns.Append(",c15 geometry(100)");
+            }
 
             if (withDecimal)
             {
@@ -332,14 +479,11 @@ namespace Driver.Test.Client.Query
             return commonColumns.ToString();
         }
 
-        private static Array[] TransposeToTypedArrays(object[][] data)
+        private  Array[] TransposeToTypedArrays(object[][] data)
         {
             if (data == null || data.Length == 0)
                 throw new ArgumentException("Data cannot be null or empty", nameof(data));
-
-            int rowCount = data.Length;
-
-            return new Array[]
+            var array = new Array[]
             {
                 CreateColumnArray<DateTime>(data, 0, o => (DateTime)o),
                 CreateNullableColumnArray<bool>(data, 1, o => (bool)o),
@@ -356,8 +500,20 @@ namespace Driver.Test.Client.Query
                 CreateColumnArray<byte[]>(data, 12, o => (byte[])o),
                 CreateColumnArray<string>(data, 13, o => (string)o),
                 CreateColumnArray<byte[]>(data, 14, o => (byte[])o),
-                CreateColumnArray<byte[]>(data, 15, o => (byte[])o)
+                
             };
+            if (!_is3360Test)
+            {
+                array = new Array[]
+                {
+                    array[0], array[1], array[2], array[3], array[4], array[5],
+                    array[6], array[7], array[8], array[9], array[10], array[11],
+                    array[12], array[13], array[14],
+                    CreateColumnArray<byte[]>(data, 15, o => (byte[])o),
+                };
+            }
+
+            return array;
         }
 
         private static T[] CreateColumnArray<T>(object[][] data, int columnIndex, Func<object, T> converter)
@@ -854,6 +1010,7 @@ namespace Driver.Test.Client.Query
             {
                 stmt = client.StmtInit();
             }
+
             stmt.Prepare(sql);
             var isInsert = stmt.IsInsert();
             Assert.True(isInsert);
@@ -1723,6 +1880,7 @@ namespace Driver.Test.Client.Query
             {
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
+
             if (_is3360Test)
             {
                 stmt.Dispose();
@@ -1781,6 +1939,12 @@ namespace Driver.Test.Client.Query
                     stmt.Exec();
                     var affected = stmt.Affected();
                     Assert.Equal((long)rowCount, affected);
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
                     stmt.Prepare($"select * from {superTableName} where ts >= ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
@@ -1792,6 +1956,7 @@ namespace Driver.Test.Client.Query
                         this.AssertColumn(rows, withDecimal);
                         this.AssertValue(rows, data, precision);
                     }
+                    stmt.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -1810,7 +1975,7 @@ namespace Driver.Test.Client.Query
         }
 
 
-        private void  StmtBindColumnsTest(string connectString, string db, TDenginePrecision precision)
+        private void StmtBindColumnsTest(string connectString, string db, TDenginePrecision precision)
         {
             var withDecimal = false;
             var data = this.GenerateValue(precision, withDecimal, out _);
@@ -1837,8 +2002,20 @@ namespace Driver.Test.Client.Query
                     var createTableSql = GenerateCreateTableSql(superTableName, withDecimal);
                     DoExec(client, createTableSql);
                     var stmt = client.StmtInit(ReqId.GetReqId());
+                    StringBuilder questionMarks = new StringBuilder();
+                    var count = data[0].Length;
+                    for (int i = 0; i < count; i++)
+                    {
+                        questionMarks.Append("?");
+                        if (i < count - 1)
+                        {
+                            questionMarks.Append(", ");
+                        }
+                    }
+
+                    var values = questionMarks.ToString();
                     stmt.Prepare(
-                        $"insert into ? using {superTableName} tags(?) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                        $"insert into ? using {superTableName} tags(?) values({values})");
                     var isInsert = stmt.IsInsert();
                     Assert.True(isInsert);
                     stmt.SetTableName(subTableName);
@@ -1849,6 +2026,11 @@ namespace Driver.Test.Client.Query
                     stmt.Exec();
                     var affected = stmt.Affected();
                     Assert.Equal((long)data.Length, affected);
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
                     stmt.Prepare($"select * from {superTableName} where ts >= ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
@@ -1860,6 +2042,7 @@ namespace Driver.Test.Client.Query
                         this.AssertColumn(result, withDecimal);
                         this.AssertValue(result, data, precision);
                     }
+                    stmt.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -1916,6 +2099,11 @@ namespace Driver.Test.Client.Query
                     stmt.Exec();
                     var affected = stmt.Affected();
                     Assert.Equal((long)1, affected);
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
                     stmt.Prepare($"select * from {tableName} where c1 = ?");
                     stmt.BindRow(new object[] { data });
                     stmt.AddBatch();
@@ -1927,6 +2115,7 @@ namespace Driver.Test.Client.Query
                         Assert.Equal(now, resut.GetValue(0));
                         Assert.Equal(data, resut.GetValue(1));
                     }
+                    stmt.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -2159,41 +2348,79 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
         {
             Assert.Equal(1, result.GetOrdinal("c1"));
             var fieldCount = result.FieldCount;
-            if (withDecimal)
+            if (!_is3360Test)
             {
-                Assert.Equal(19, fieldCount);
+                if (withDecimal)
+                {
+                    Assert.Equal(19, fieldCount);
+                }
+                else
+                {
+                    Assert.Equal(17, fieldCount);
+                }
             }
             else
             {
-                Assert.Equal(17, fieldCount);
+                if (withDecimal)
+                {
+                    Assert.Equal(18, fieldCount);
+                }
+                else
+                {
+                    Assert.Equal(16, fieldCount);
+                }
             }
 
-            Assert.Equal("ts", result.GetName(0));
-            Assert.Equal("c1", result.GetName(1));
-            Assert.Equal("c2", result.GetName(2));
-            Assert.Equal("c3", result.GetName(3));
-            Assert.Equal("c4", result.GetName(4));
-            Assert.Equal("c5", result.GetName(5));
-            Assert.Equal("c6", result.GetName(6));
-            Assert.Equal("c7", result.GetName(7));
-            Assert.Equal("c8", result.GetName(8));
-            Assert.Equal("c9", result.GetName(9));
-            Assert.Equal("c10", result.GetName(10));
-            Assert.Equal("c11", result.GetName(11));
-            Assert.Equal("c12", result.GetName(12));
-            Assert.Equal("c13", result.GetName(13));
-            Assert.Equal("c14", result.GetName(14));
-            Assert.Equal("c15", result.GetName(15));
+            var index = 0;
+            Assert.Equal("ts", result.GetName(index));
+            index++;
+            Assert.Equal("c1", result.GetName(index));
+            index++;
+            Assert.Equal("c2", result.GetName(index));
+            index++;
+            Assert.Equal("c3", result.GetName(index));
+            index++;
+            Assert.Equal("c4", result.GetName(index));
+            index++;
+            Assert.Equal("c5", result.GetName(index));
+            index++;
+            Assert.Equal("c6", result.GetName(index));
+            index++;
+            Assert.Equal("c7", result.GetName(index));
+            index++;
+            Assert.Equal("c8", result.GetName(index));
+            index++;
+            Assert.Equal("c9", result.GetName(index));
+            index++;
+            Assert.Equal("c10", result.GetName(index));
+            index++;
+            Assert.Equal("c11", result.GetName(index));
+            index++;
+            Assert.Equal("c12", result.GetName(index));
+            index++;
+            Assert.Equal("c13", result.GetName(index));
+            index++;
+            Assert.Equal("c14", result.GetName(index));
+            index++;
+            if (!_is3360Test)
+            {
+                Assert.Equal("c15", result.GetName(index));
+                index++;
+            }
+
             if (withDecimal)
             {
-                Assert.Equal("c16", result.GetName(16));
-                Assert.Equal("c17", result.GetName(17));
-                Assert.Equal("t", result.GetName(18));
+                Assert.Equal("c16", result.GetName(index));
+                index++;
+                Assert.Equal("c17", result.GetName(index));
+                index++;
+                Assert.Equal("t", result.GetName(index));
             }
             else
             {
-                Assert.Equal("t", result.GetName(16));
+                Assert.Equal("t", result.GetName(index));
             }
+
 
             Assert.Equal(-1, result.AffectRows);
         }
@@ -2522,6 +2749,11 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     stmt.Exec();
                     var affected = stmt.Affected();
                     Assert.Equal((long)1, affected);
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
                     stmt.Prepare($"select * from {superTableName} where ts = ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
@@ -2544,6 +2776,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
 
 
                     // bind column
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
                     stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
                     isInsert = stmt.IsInsert();
                     Assert.True(isInsert);
@@ -2560,6 +2798,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     stmt.Exec();
                     affected = stmt.Affected();
                     Assert.Equal((long)1, affected);
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
                     stmt.Prepare($"select * from {superTableName} where ts = ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
@@ -2584,6 +2828,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     }
 
                     // bind column with DateTimeOffset?[]
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
                     stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
                     isInsert = stmt.IsInsert();
                     Assert.True(isInsert);
@@ -2601,6 +2851,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     stmt.Exec();
                     affected = stmt.Affected();
                     Assert.Equal((long)1, affected);
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
                     stmt.Prepare($"select * from {superTableName} where ts = ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
@@ -2626,6 +2882,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
 
 
                     // bind row with long
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
                     stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
                     isInsert = stmt.IsInsert();
                     Assert.True(isInsert);
@@ -2637,6 +2899,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     stmt.Exec();
                     affected = stmt.Affected();
                     Assert.Equal((long)1, affected);
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
                     stmt.Prepare($"select * from {superTableName} where ts = ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
@@ -2659,6 +2927,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             precision), next3SecondTs);
                         CheckValue(rows.GetInt64(0), next3SecondTs);
                     }
+                    stmt.Dispose();
                 }
                 catch (Exception e)
                 {
