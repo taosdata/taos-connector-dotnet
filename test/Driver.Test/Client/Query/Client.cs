@@ -21,7 +21,7 @@ namespace Driver.Test.Client.Query
 
         public Client(ITestOutputHelper output)
         {
-            this._is3360Test = Environment.GetEnvironmentVariable("TDENGINE_TEST_3360") == "true";
+            this._is3360Test = Environment.GetEnvironmentVariable("TD_3360_TEST") == "true";
             // _is3360Test = true;
             this._output = output;
             this._nativeConnectString = "host=localhost;port=6030;username=root;password=taosdata";
