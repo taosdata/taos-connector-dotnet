@@ -361,5 +361,11 @@ namespace Driver.Test.Client.Query
             var db = "ws_stmt_wrong_test_ns";
             this.StmtTestWrongType(this._wsConnectString, db, TDenginePrecision.TSDB_TIME_PRECISION_NANO);
         }
+        [Fact]
+        public void WebSocketStmtQuery()
+        {
+            var db = "ws_stmt_query_test";
+            this.StmtQuery(this._wsConnectString,db);
+        }
     }
 }

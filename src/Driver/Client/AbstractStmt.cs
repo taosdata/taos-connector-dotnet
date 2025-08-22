@@ -569,7 +569,7 @@ namespace TDengine.Driver.Client
                     switch (row[i])
                     {
                         case bool val:
-                            var i8Builder = new I8Builder(TDengineDataType.TSDB_DATA_TYPE_BLOB);
+                            var i8Builder = new I8Builder(TDengineDataType.TSDB_DATA_TYPE_BOOL);
                             i8Builder.Append(val ? (sbyte)1 : (sbyte)0);
                             _colBuilders[i] = i8Builder;
                             break;
@@ -645,7 +645,7 @@ namespace TDengine.Driver.Client
                             _colBuilders[i] = stringBuilder;
                             break;
                         default:
-                            throw new NotSupportedException(
+                            throw new ArgumentException(
                                 $"Bind type {row[i].GetType()} not supported for query parameter");
                     }
                 }

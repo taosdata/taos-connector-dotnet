@@ -766,21 +766,21 @@ namespace Driver.Test.Client.Query
                     // bool
                     DoExec(client, $"create table if not exists test_bool (ts timestamp, c1 bool)");
                     // tinyint
-                    DoExec(client, $"create table if not exists test_i8 (ts timestamp, ci tinyint)");
+                    DoExec(client, $"create table if not exists test_i8 (ts timestamp, c1 tinyint)");
                     // smallint
-                    DoExec(client, $"create table if not exists test_i16 (ts timestamp, ci smallint)");
+                    DoExec(client, $"create table if not exists test_i16 (ts timestamp, c1 smallint)");
                     // int
-                    DoExec(client, $"create table if not exists test_i32 (ts timestamp, ci int)");
+                    DoExec(client, $"create table if not exists test_i32 (ts timestamp, c1 int)");
                     // bigint
-                    DoExec(client, $"create table if not exists test_i64 (ts timestamp, ci bigint)");
+                    DoExec(client, $"create table if not exists test_i64 (ts timestamp, c1 bigint)");
                     // tinyint unsigned
-                    DoExec(client, $"create table if not exists test_u8 (ts timestamp, ci tinyint unsigned)");
+                    DoExec(client, $"create table if not exists test_u8 (ts timestamp, c1 tinyint unsigned)");
                     // smallint unsigned
-                    DoExec(client, $"create table if not exists test_u16 (ts timestamp, ci smallint unsigned)");
+                    DoExec(client, $"create table if not exists test_u16 (ts timestamp, c1 smallint unsigned)");
                     // int unsigned
-                    DoExec(client, $"create table if not exists test_u32 (ts timestamp, ci int unsigned)");
+                    DoExec(client, $"create table if not exists test_u32 (ts timestamp, c1 int unsigned)");
                     // bigint unsigned
-                    DoExec(client, $"create table if not exists test_u64 (ts timestamp, ci bigint unsigned)");
+                    DoExec(client, $"create table if not exists test_u64 (ts timestamp, c1 bigint unsigned)");
                     // float
                     DoExec(client, $"create table if not exists test_f32 (ts timestamp, c1 float)");
                     // double
@@ -2703,6 +2703,355 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 utcClient?.Dispose();
 
                 client?.Dispose();
+            }
+        }
+
+        private void StmtQuery(string connectString, string db)
+        {
+            var builder = new ConnectionStringBuilder(connectString);
+            using (var client = DbDriver.Open(builder))
+            {
+                var now = DateTime.Now;
+                try
+                {
+                    DoExec(client, $"drop database if exists {db}");
+                    DoExec(client, $"create database {db}");
+
+                    DoExec(client, $"use {db}");
+                    // timestamp
+                    DoExec(client, $"create table if not exists test_ts (ts timestamp, c1 timestamp)");
+                    DoExec(client, $"insert into test_ts values(now, 123)");
+                    // bool
+                    DoExec(client, $"create table if not exists test_bool (ts timestamp, c1 bool)");
+                    DoExec(client, $"insert into test_bool values(now, true)");
+                    DoExec(client, $"insert into test_bool values(now+1s, false)");
+                    // bigint
+                    DoExec(client, $"create table if not exists test_i64 (ts timestamp, c1 bigint)");
+                    DoExec(client, $"insert into test_i64 values(now, 8)");
+                    // bigint unsigned
+                    DoExec(client, $"create table if not exists test_u64 (ts timestamp, c1 bigint unsigned)");
+                    DoExec(client, $"insert into test_u64 values(now, 8)");
+                    // float
+                    DoExec(client, $"create table if not exists test_f32 (ts timestamp, c1 float)");
+                    DoExec(client, $"insert into test_f32 values(now, 1.23)");
+                    // double
+                    DoExec(client, $"create table if not exists test_f64 (ts timestamp, c1 double)");
+                    DoExec(client, $"insert into test_f64 values(now, 2.34)");
+                    // binary
+                    DoExec(client, $"create table if not exists test_binary (ts timestamp, c1 binary(100))");
+                    DoExec(client, $"insert into test_binary values(now,'abc')");
+                    DoExec(client, $"insert into test_binary values(now+1s,'中文')");
+                    // nchar
+                    DoExec(client, $"create table if not exists test_nchar (ts timestamp, c1 nchar(100))");
+                    DoExec(client, $"insert into test_nchar values(now,'abc')");
+                    DoExec(client, $"insert into test_nchar values(now+1s,'中文')");
+                    // varbinary
+                    DoExec(client, $"create table if not exists test_varbinary (ts timestamp, c1 varbinary(100))");
+                    DoExec(client, $"insert into test_varbinary values(now,'abc')");
+                    DoExec(client, $"insert into test_varbinary values(now+1s,'中文')");
+                    
+                    // multi
+                    DoExec(client, $"create table if not exists test_multi (ts timestamp, c1 int, c2 binary(100))");
+                    DoExec(client, $"insert into test_multi values(now, 123, 'abc')");
+
+                    
+                    // prepare statement
+                    var stmt = client.StmtInit();
+                    // query timestamp
+                    stmt.Prepare("select * from test_ts where c1 = ?");
+                    var isInsert = stmt.IsInsert();
+                    Assert.False(isInsert);
+                    // bind int
+                    stmt.BindRow(new object[]{(int)123});
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    var count = 0;
+                    using (var rows = stmt.Result())
+                    {
+                        while (rows.Read())
+                        {
+                            count += 1;
+                            Assert.Equal(123,rows.GetInt64(1));
+                        }
+                    }
+                    Assert.Equal(1, count);
+                    // bind long
+                    stmt.BindRow(new object[]{(long)123});
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    count = 0;
+                    using (var rows = stmt.Result())
+                    {
+                        while (rows.Read())
+                        {
+                            count += 1;
+                            Assert.Equal(123,rows.GetInt64(1));
+                        }
+                    }
+                    Assert.Equal(1, count);
+                    // query bool
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
+                    stmt.Prepare("select * from test_bool where c1 = ?");
+                    // true
+                    stmt.BindRow(new object[]{true});
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    count = 0;
+                    using (var rows = stmt.Result())
+                    {
+                        while (rows.Read())
+                        {
+                            count += 1;
+                            Assert.True(rows.GetBoolean(1));
+                        }
+                    }
+                    Assert.Equal(1, count);
+                    // false
+                    stmt.BindRow(new object[]{false});
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    count = 0;
+                    using (var rows = stmt.Result())
+                    {
+                        while (rows.Read())
+                        {
+                            count += 1;
+                            Assert.False(rows.GetBoolean(1));
+                        }
+                    }
+                    Assert.Equal(1, count);
+                    Assert.Throws<ArgumentException>(()=>stmt.BindRow(new object[] { null}));
+                    // query bigint
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+                    stmt.Prepare("select * from test_i64 where c1 = ?");
+                    var bindData = new object[]
+                    {
+                        (sbyte)8,
+                        (byte)8,
+                        (short)8,
+                        (ushort)8,
+                        (int)8,
+                        (uint)8,
+                        (long)8,
+                        (ulong)8,
+                    };
+                    foreach (var d in bindData)
+                    {
+                        stmt.BindRow(new object[]{d});
+                        stmt.AddBatch();
+                        stmt.Exec();
+                        count = 0;
+                        using (var rows = stmt.Result())
+                        {
+                            while (rows.Read())
+                            {
+                                count += 1;
+                                Assert.Equal(8,rows.GetInt64(1));
+                            }
+                        }
+                        Assert.Equal(1, count);
+                    }
+                    // query bigint unsigned
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+                    stmt.Prepare("select * from test_u64 where c1 = ?");
+                    foreach (var d in bindData)
+                    {
+                        stmt.BindRow(new object[]{d});
+                        stmt.AddBatch();
+                        stmt.Exec();
+                        count = 0;
+                        using (var rows = stmt.Result())
+                        {
+                            while (rows.Read())
+                            {
+                                count += 1;
+                                Assert.Equal(8,rows.GetInt64(1));
+                            }
+                        }
+                        Assert.Equal(1, count);
+                    }
+                    // query float
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+                    stmt.Prepare("select * from test_f32 where c1 = ?");
+                    bindData = new object[]
+                    {
+                        (float)1.23,
+                        (double)1.23,
+                    };
+                    foreach (var d in bindData)
+                    {
+                        stmt.BindRow(new object[]{d});
+                        stmt.AddBatch();
+                        stmt.Exec();
+                        count = 0;
+                        using (var rows = stmt.Result())
+                        {
+                            while (rows.Read())
+                            {
+                                count += 1;
+                                CheckValue(1.23f,rows.GetFloat(1));
+                            }
+                        }
+                        Assert.Equal(1, count);
+                    }
+                    // query double
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+                    stmt.Prepare("select * from test_f64 where c1 = ?");
+                    bindData = new object[]
+                    {
+                        (double)2.34,
+                    };
+                    foreach (var d in bindData)
+                    {
+                        stmt.BindRow(new object[]{d});
+                        stmt.AddBatch();
+                        stmt.Exec();
+                        count = 0;
+                        using (var rows = stmt.Result())
+                        {
+                            while (rows.Read())
+                            {
+                                count += 1;
+                                CheckValue(2.34,rows.GetDouble(1));
+                            }
+                        }
+                        Assert.Equal(1, count);
+                    }
+                    // query string
+
+
+                    var stringDatabases = new string[]
+                    {
+                        "test_binary",
+                        "test_nchar",
+                        "test_varbinary",
+                    };
+                    var stringValues = new string[]
+                    {
+                        "abc",
+                        "中文",
+                    };
+                    var bytesValues = new byte[][]
+                    {
+                        Encoding.UTF8.GetBytes("abc"),
+                        Encoding.UTF8.GetBytes("中文"),
+                    };
+                    foreach (var dbName in stringDatabases)
+                    {
+                        if (_is3360Test)
+                        {
+                            stmt.Dispose();
+                            stmt = client.StmtInit();
+                        }
+                        stmt.Prepare($"select * from {dbName} where c1 = ?");
+                        for (int i = 0; i < stringValues.Length; i++)
+                        {
+                            // _output.WriteLine($"{stringValues[i]},{dbName}");
+                            stmt.BindRow(new object[]{stringValues[i]});
+                            stmt.AddBatch();
+                            stmt.Exec();
+                            count = 0;
+                            using (var rows = stmt.Result())
+                            {
+                                while (rows.Read())
+                                {
+                                    count += 1;
+                                    Assert.Equal(stringValues[i],rows.GetString(1));
+                                }
+                            }
+                            Assert.Equal(1, count);
+                        }
+                        for (int i = 0; i < bytesValues.Length; i++)
+                        {
+                            stmt.BindRow(new object[]{bytesValues[i]});
+                            stmt.AddBatch();
+                            stmt.Exec();
+                            count = 0;
+                            using (var rows = stmt.Result())
+                            {
+                                while (rows.Read())
+                                {
+                                    count += 1;
+                                    Assert.Equal(stringValues[i],rows.GetString(1));
+                                }
+                            }
+                            Assert.Equal(1, count);
+                        }
+                    }
+                    
+                    // query multi
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
+                    stmt.Prepare("select * from test_multi where c1 = ? and c2 = ?");
+                    // wrong length 
+                    Assert.Throws<ArgumentException>(()=>stmt.BindRow(new object[]{'a','a','a'}));
+                    // bind twice
+                    stmt.BindRow(new object[] { 123, "abc" });
+                    Assert.Throws<InvalidOperationException>(()=>stmt.BindRow(new object[]{123, "abc"}));
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    count = 0;
+                    using (var rows = stmt.Result())
+                    {
+                        while (rows.Read())
+                        {
+                            count += 1;
+                            Assert.Equal(123,rows.GetInt32(1));
+                            Assert.Equal("abc",rows.GetString(2));
+                        }
+                    }
+                    Assert.Equal(1, count);
+                    // bind wrong type
+                    Assert.Throws<ArgumentException>(()=>stmt.BindRow(new object[] { 123, new TAOS_STMT2_BIND() }));
+                    stmt.BindRow(new object[] { 123, "abc" });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    count = 0;
+                    using (var rows = stmt.Result())
+                    {
+                        while (rows.Read())
+                        {
+                            count += 1;
+                            Assert.Equal(123,rows.GetInt32(1));
+                            Assert.Equal("abc",rows.GetString(2));
+                        }
+                    }
+                    Assert.Equal(1, count);
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
+                finally
+                {
+                    // DoExec(client, $"drop database if exists {db}");
+                }
             }
         }
 
