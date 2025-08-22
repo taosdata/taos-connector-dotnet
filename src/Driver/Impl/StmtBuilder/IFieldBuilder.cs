@@ -5,7 +5,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
     public interface IFieldBuilder
     {
         TDengineDataType DataType { get; }
-        int Length { get; }
+        int Count { get; }
         void AppendNull();
         void Clear();
         Stmt2BindColInfo ToStmt2BindColInfo();

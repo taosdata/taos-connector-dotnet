@@ -8,7 +8,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
     public class VariableLengthBuilder : IFieldBuilder
     {
         public TDengineDataType DataType { get; }
-        public int Length { get; private set; }
+        public int Count { get; private set; }
         private List<int> LengthList { get; } = new List<int>(1);
         private List<byte> Values { get; set; } = new List<byte>(0);
         private List<byte> NullMem { get; set; } = new List<byte>();
@@ -34,20 +34,20 @@ namespace TDengine.Driver.Impl.StmtBuilder
                 NullMem.Add(0);
             }
 
-            Length += 1;
+            Count += 1;
         }
 
         public void AppendNull()
         {
             if (NullCount == 0)
             {
-                NullMem = new List<byte>(new byte[Length]);
+                NullMem = new List<byte>(new byte[Count]);
             }
 
             LengthList.Add(0);
             NullMem.Add(1);
             NullCount += 1;
-            Length += 1;
+            Count += 1;
         }
 
         public void Clear()
@@ -56,7 +56,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
             LengthList.Clear();
             NullMem.Clear();
             NullCount = 0;
-            Length = 0;
+            Count = 0;
         }
 
         private byte[] ValueBuffer()
@@ -81,16 +81,16 @@ namespace TDengine.Driver.Impl.StmtBuilder
             uint totalLength = 4 + // TotalLength field length
                                4 + // DataType field length
                                4 + // Num field length
-                               (uint)(Length) + // IsNull field length
+                               (uint)(Count) + // IsNull field length
                                1 + // HaveLength field length
-                               (uint)(Length * 4) + // Length field length, each length is 4 bytes
+                               (uint)(Count * 4) + // Length field length, each length is 4 bytes
                                4 + // BufferLength field length
                                (uint)valueBuffer.Length; // Buffer field length
             return new Stmt2BindColInfo
             {
                 TotalLength = totalLength,
                 DataType = (int)DataType,
-                Num = Length,
+                Num = Count,
                 IsNull = isNull,
                 HaveLength = 1,
                 Length = DataLength(),
@@ -114,18 +114,18 @@ namespace TDengine.Driver.Impl.StmtBuilder
             // IsNull
             if (source.IsNull != null || NullMem.Count > 0)
             {
-                target.IsNull = new byte[source.Num + Length];
+                target.IsNull = new byte[source.Num + Count];
                 if (source.IsNull != null)
                 {
                     Array.Copy(source.IsNull, 0, target.IsNull, 0, source.Num);
                 }
                 if (NullMem.Count > 0)
                 {
-                    Array.Copy(NullMem.ToArray(), 0, target.IsNull, source.Num, Length);
+                    Array.Copy(NullMem.ToArray(), 0, target.IsNull, source.Num, Count);
                 }
             }
 
-            target.Num = source.Num + Length;
+            target.Num = source.Num + Count;
             var valueBuffer = ValueBuffer();
             target.BufferLength = source.BufferLength + (uint)valueBuffer.Length;
             target.Buffer = new byte[target.BufferLength];
@@ -136,25 +136,25 @@ namespace TDengine.Driver.Impl.StmtBuilder
             var dataLength = DataLength();
             target.Length = new int[source.Length.Length + dataLength.Length];
             Buffer.BlockCopy(source.Length, 0, target.Length, 0, source.Length.Length * 4);
-            Buffer.BlockCopy(dataLength, 0, target.Length, source.Length.Length * 4, Length * 4);
+            Buffer.BlockCopy(dataLength, 0, target.Length, source.Length.Length * 4, Count * 4);
             // TotalLength
-            target.TotalLength += source.TotalLength + (uint)Length // length of IsNull
+            target.TotalLength += source.TotalLength + (uint)Count // length of IsNull
                                        + (uint)valueBuffer.Length + // length of Buffer
-                                       +(uint)(Length * 4); // length of Length
+                                       +(uint)(Count * 4); // length of Length
             return target;
         }
 
         public void Remove(int count)
         {
-            if (count < 0 || count > Length)
+            if (count < 0 || count > Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(count),
                     "Count must be non-negative and less than or equal to the number of elements in Mem.");
             }
 
             var removeByteCount = 0;
-            var removeIndex = Length - count;
-            for (var i = removeIndex; i < Length; i++)
+            var removeIndex = Count - count;
+            for (var i = removeIndex; i < Count; i++)
             {
                 removeByteCount += LengthList[i];
             }
@@ -165,7 +165,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
             }
             if (NullCount > 0)
             {
-                for (var i = removeIndex; i < Length; i++)
+                for (var i = removeIndex; i < Count; i++)
                 {
                     if (NullMem[i] == 1)
                     {
@@ -182,7 +182,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
                     NullMem.RemoveRange(removeIndex, count);
                 }
             }
-            Length -= count;
+            Count -= count;
             LengthList.RemoveRange(removeIndex,count);
         }
     }

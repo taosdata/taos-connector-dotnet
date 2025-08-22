@@ -1382,18 +1382,18 @@ namespace TDengine.Driver.Client
             }
 
             // check row count
-            var rowCount = _colBuilders[0].Length;
+            var rowCount = _colBuilders[0].Count;
             for (var i = 0; i < _colBuilders.Length; i++)
             {
-                if (_colBuilders[i].Length == 0)
+                if (_colBuilders[i].Count == 0)
                 {
                     throw new InvalidOperationException($"Column at index {i} has no rows to add.");
                 }
 
-                if (_colBuilders[i].Length != rowCount)
+                if (_colBuilders[i].Count != rowCount)
                 {
                     throw new InvalidOperationException(
-                        $"Column at index {i} has a different row count than the first column. Expected {rowCount}, but got {_colBuilders[i].Length}.");
+                        $"Column at index {i} has a different row count than the first column. Expected {rowCount}, but got {_colBuilders[i].Count}.");
                 }
             }
 

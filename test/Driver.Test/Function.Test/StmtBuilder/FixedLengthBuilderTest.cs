@@ -430,6 +430,125 @@ namespace Driver.Test.Function.Test.StmtBuilder
             };
             actual = i64Builder.ToStmt2BindColInfo();
             AssertEqual(expected, actual);
+            // remove without null
+            i64Builder.Remove(1);
+            expected = new Stmt2BindColInfo
+            {
+                TotalLength = 4 + // TotalLength field length
+                              4 + // DataType field length
+                              4 + // Num field length
+                              2 * 1 + // IsNull field length
+                              1 + // HaveLength field length
+                              4 + // BufferLength field length
+                              2 * 8, // Buffer field length
+                DataType = (int)TDengineDataType.TSDB_DATA_TYPE_BIGINT,
+                Num = 2,
+                IsNull = new byte[]
+                {
+                    0,
+                    1,
+                },
+                HaveLength = 0,
+                Length = null,
+                BufferLength = 16,
+                Buffer = new byte[]
+                {
+                    255, 255, 255, 255, 255, 255, 255, 127,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                }
+            };
+            actual = i64Builder.ToStmt2BindColInfo();
+            AssertEqual(expected, actual);
+            // remove with null
+            i64Builder.Remove(1);
+            expected = new Stmt2BindColInfo
+            {
+                TotalLength = 4 + // TotalLength field length
+                              4 + // DataType field length
+                              4 + // Num field length
+                              1 * 1 + // IsNull field length
+                              1 + // HaveLength field length
+                              4 + // BufferLength field length
+                              1 * 8, // Buffer field length
+                DataType = (int)TDengineDataType.TSDB_DATA_TYPE_BIGINT,
+                Num = 1,
+                IsNull = null,
+                HaveLength = 0,
+                Length = null,
+                BufferLength = 8,
+                Buffer = new byte[]
+                {
+                    255, 255, 255, 255, 255, 255, 255, 127,
+                }
+            };
+            actual = i64Builder.ToStmt2BindColInfo();
+            AssertEqual(expected, actual);
+            // remove multiple with null
+            i64Builder.AppendNull();
+            i64Builder.Append(3L);
+            i64Builder.AppendNull();
+            i64Builder.Remove(2);
+            expected = new Stmt2BindColInfo
+            {
+                TotalLength = 4 + // TotalLength field length
+                              4 + // DataType field length
+                              4 + // Num field length
+                              2 * 1 + // IsNull field length
+                              1 + // HaveLength field length
+                              4 + // BufferLength field length
+                              2 * 8, // Buffer field length
+                DataType = (int)TDengineDataType.TSDB_DATA_TYPE_BIGINT,
+                Num = 2,
+                IsNull = new byte[]
+                {
+                    0,
+                    1,
+                },
+                HaveLength = 0,
+                Length = null,
+                BufferLength = 16,
+                Buffer = new byte[]
+                {
+                    255, 255, 255, 255, 255, 255, 255, 127,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                }
+            };
+            actual = i64Builder.ToStmt2BindColInfo();
+            AssertEqual(expected, actual);
+            // remove multiple without null
+            i64Builder.Append(3L);
+            i64Builder.Append(4L);
+            i64Builder.Append(5L);
+            i64Builder.Remove(2);
+            expected = new Stmt2BindColInfo
+            {
+                TotalLength = 4 + // TotalLength field length
+                              4 + // DataType field length
+                              4 + // Num field length
+                              3 * 1 + // IsNull field length
+                              1 + // HaveLength field length
+                              4 + // BufferLength field length
+                              3 * 8, // Buffer field length
+                DataType = (int)TDengineDataType.TSDB_DATA_TYPE_BIGINT,
+                Num = 3,
+                IsNull = new byte[]
+                {
+                    0,
+                    1,
+                    0,
+                },
+                HaveLength = 0,
+                Length = null,
+                BufferLength = 24,
+                Buffer = new byte[]
+                {
+                    255, 255, 255, 255, 255, 255, 255, 127,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    3, 0, 0, 0, 0, 0, 0, 0,
+                }
+            };
+            actual = i64Builder.ToStmt2BindColInfo();
+            AssertEqual(expected, actual);
         }
 
         [Fact]

@@ -28,7 +28,7 @@ namespace Driver.Test.Function.Test.StmtBuilder
             builder.AppendNull();
             builder.AppendBytes(new byte[] { 1, 2, 3, 4, 5 });
             builder.AppendString("中文");
-            Assert.Equal(5, builder.Length);
+            Assert.Equal(5, builder.Count);
             var expectedStmt2BindColInfo = new Stmt2BindColInfo
             {
                 TotalLength = 4 + // TotalLength field length
@@ -248,7 +248,7 @@ namespace Driver.Test.Function.Test.StmtBuilder
             builder.AppendNull();
             builder.AppendBytes(new byte[] { 1, 2, 3, 4, 5 });
             builder.AppendString("中文");
-            Assert.Equal(5, builder.Length);
+            Assert.Equal(5, builder.Count);
             var expectedStmt2BindColInfo = new Stmt2BindColInfo
             {
                 TotalLength = 4 + // TotalLength field length
@@ -295,7 +295,7 @@ namespace Driver.Test.Function.Test.StmtBuilder
             builder.AppendString("Hello");
             builder.AppendNull();
             builder.AppendString("中文");
-            Assert.Equal(4, builder.Length);
+            Assert.Equal(4, builder.Count);
             expectedStmt2BindColInfo = new Stmt2BindColInfo
             {
                 TotalLength = 4 + // TotalLength field length
