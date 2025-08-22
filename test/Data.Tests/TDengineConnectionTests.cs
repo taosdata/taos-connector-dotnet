@@ -1,6 +1,10 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
+using System.Diagnostics;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using TDengine.Data.Client;
-using TDengine.Driver;
 using Xunit;
 
 namespace Data.Tests
@@ -79,6 +83,138 @@ namespace Data.Tests
 
             // Assert
             Assert.Equal(ConnectionState.Closed, _connection.State);
+        }
+
+        [Fact]
+        public void TestChangeDatabase()
+        {
+            var connection = new TDengineConnection("username=root;password=taosdata");
+            Assert.Equal("", connection.Database);
+            connection = new TDengineConnection("username=root;password=taosdata;db=test_db");
+            Assert.Equal("test_db", connection.Database);
+            connection = new TDengineConnection("username=root;password=taosdata");
+            connection.Open();
+            Assert.Equal("", connection.Database);
+            using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = "create database if not exists test_db";
+                cmd.ExecuteNonQuery();
+            }
+
+            connection.ChangeDatabase("test_db");
+            Assert.Equal("test_db", connection.Database);
+            using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = "drop database if exists test_db";
+                cmd.ExecuteNonQuery();
+            }
+
+            connection.Close();
+        }
+
+        private Process NewTaosAdapter(string port)
+        {
+            string exec;
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                exec = "C:\\TDengine\\taosadapter.exe";
+            }
+            else
+            {
+                exec = "taosadapter";
+            }
+
+            ProcessStartInfo startInfo = new ProcessStartInfo(exec, $"--port {port}");
+            Process process = new Process { StartInfo = startInfo };
+            return process;
+        }
+
+        private async Task Start(Process process, string port)
+        {
+            process.Start();
+            await WaitForStart(port);
+        }
+
+        private void Stop(Process process)
+        {
+            if (process.HasExited)
+            {
+                return;
+            }
+            
+            process.Kill();
+        }
+
+        private async Task WaitForStart(string port)
+        {
+            HttpClient client = new HttpClient();
+            string url = $"http://127.0.0.1:{port}/-/ping";
+            bool success = await WaitForPingSuccess(client, url);
+            if (!success)
+            {
+                throw new Exception("Failed to start taosadapter");
+            }
+        }
+
+        static async Task<bool> WaitForPingSuccess(HttpClient client, string url)
+        {
+            bool success = false;
+            int retryCount = 20;
+            int retryDelayMs = 100;
+
+            for (int i = 0; i < retryCount; i++)
+            {
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(url);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        success = true;
+                        break;
+                    }
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+
+                await Task.Delay(retryDelayMs);
+            }
+
+            return success;
+        }
+
+        [Fact]
+        public void TestState()
+        {
+            var port = "56041";
+            var process = NewTaosAdapter(port);
+            Start(process, port).Wait();
+            Thread.Sleep(1000);
+            var connStr =
+                $"protocol=WebSocket;host=localhost;port={port};useSSL=false;username=root;password=taosdata;";
+            var connection = new TDengineConnection(connStr);
+            Assert.Equal(ConnectionState.Closed, connection.State);
+            connection.Open();
+            Assert.Equal(ConnectionState.Open, connection.State);
+            connection.Close();
+            Assert.Equal(ConnectionState.Closed, connection.State);
+            connection.Open();
+            Assert.Equal(ConnectionState.Open, connection.State);
+            Stop(process);
+            for (int i = 0; i < 6; i++)
+            {
+                if (process.HasExited)
+                {
+                    Thread.Sleep(1000);
+                    Assert.Equal(ConnectionState.Broken, connection.State);
+                    break;
+                }
+
+                Thread.Sleep(1000);
+            }
+
+            connection.Close();
         }
     }
 }
