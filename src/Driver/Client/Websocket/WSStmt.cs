@@ -1,22 +1,25 @@
 ﻿using System;
 using TDengine.Driver.Impl.WebSocketMethods;
+using TDengine.Driver.Impl.WebSocketMethods.Protocol;
 
 namespace TDengine.Driver.Client.Websocket
 {
     public class WSStmt : AbstractStmt
     {
-        private readonly ulong _stmt;
+        private readonly WSClient _client;
         private readonly TimeZoneInfo _tz;
-        private readonly Connection _connection;
+        private Connection _connection;
+        private ulong _stmt;
         private bool _closed;
 
-        public WSStmt(ulong stmt, TimeZoneInfo tz, Connection connection):base(30)
+        public WSStmt(WSClient client, ulong stmt, TimeZoneInfo tz, Connection connection) : base(30)
         {
+            _client = client;
             _stmt = stmt;
             _tz = tz;
             _connection = connection;
         }
-        
+
         public override void Dispose()
         {
             if (_closed) return;
@@ -31,9 +34,14 @@ namespace TDengine.Driver.Client.Websocket
             {
                 // ignored
             }
+            finally
+            {
+                _connection = null;
+            }
         }
 
-        protected override void PrepareInternal(string query, out bool isInsert, out int count, out TaosFieldAll[] fields)
+        protected override void PrepareInternal(string query, out bool isInsert, out int count,
+            out TaosFieldAll[] fields)
         {
             var resp = _connection.Stmt2Prepare(_stmt, query);
             isInsert = resp.IsInsert;
@@ -43,6 +51,7 @@ namespace TDengine.Driver.Client.Websocket
                 fields = null;
                 return;
             }
+
             fields = new TaosFieldAll[resp.Fields.Count];
             for (int i = 0; i < resp.Fields.Count; i++)
             {
@@ -57,7 +66,7 @@ namespace TDengine.Driver.Client.Websocket
                 };
             }
         }
-        
+
         protected override void BindBinaryInternal(byte[] data, out int affectedRows)
         {
             _connection.Stmt2Bind(_stmt, data);
@@ -65,12 +74,27 @@ namespace TDengine.Driver.Client.Websocket
             affectedRows = resp.Affected;
         }
 
+        protected override bool IsConnectionAvailable(Exception exception)
+        {
+            return _connection != null && _connection.IsAvailable(exception);
+        }
+
+        protected override  void ReconnectInternal()
+        {
+            _stmt = 0;
+            var newConnection = _client.TryReconnectOrGetConnection(_connection);
+            _connection = newConnection;
+            // init again
+            var resp = _connection.Stmt2Init((ulong)ReqId.GetReqId());
+            _stmt = resp.StmtId;
+        }
+
         protected override IRows QueryResultInternal()
         {
             var resp = _connection.Stmt2UseResult(_stmt);
             return new WSRows(resp.ResultId, resp, _connection, _tz);
         }
-        
+
         protected override IRows InsertResultInternal(int affectedRows)
         {
             return new WSRows(affectedRows);

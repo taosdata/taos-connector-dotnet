@@ -376,6 +376,15 @@ namespace TDengine.Driver.Client.Native
             return new NativeRows(affectedRows);
         }
 
+        protected override bool IsConnectionAvailable(Exception exception)
+        {
+            return true;
+        }
+
+        protected override void ReconnectInternal()
+        {
+        }
+
         public override void Dispose()
         {
             if (_stmt == IntPtr.Zero) return;
