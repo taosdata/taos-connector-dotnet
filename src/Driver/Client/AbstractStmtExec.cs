@@ -35,7 +35,7 @@ namespace TDengine.Driver.Client
                 catch (Exception e)
                 {
                     // if the connection is available, throw the exception directly
-                    if (IsConnectionAvailable(e)) throw;
+                    if (!AutoReconnectInternal() || IsConnectionAvailable(e)) throw;
                     // try reconnect
                     ReconnectInternal();
                     // prepare again

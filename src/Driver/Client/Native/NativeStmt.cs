@@ -327,11 +327,9 @@ namespace TDengine.Driver.Client.Native
                     }
 
                     var code = NativeMethods.TaosStmt2BindParam(_stmt, ref bindV);
-                    if (code != 0)
-                    {
-                        string msg = NativeMethods.TaosStmt2Error(_stmt);
-                        throw new TDengineError(code,msg);
-                    }
+                    if (code == 0) return;
+                    var msg = NativeMethods.TaosStmt2Error(_stmt);
+                    throw new TDengineError(code,msg);
                 }
                 finally
                 {
@@ -383,6 +381,11 @@ namespace TDengine.Driver.Client.Native
 
         protected override void ReconnectInternal()
         {
+        }
+
+        protected override bool AutoReconnectInternal()
+        {
+            return false;
         }
 
         public override void Dispose()

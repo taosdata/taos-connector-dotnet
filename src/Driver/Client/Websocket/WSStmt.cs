@@ -88,6 +88,11 @@ namespace TDengine.Driver.Client.Websocket
             var resp = _connection.Stmt2Init((ulong)ReqId.GetReqId());
             _stmt = resp.StmtId;
         }
+        
+        protected override bool AutoReconnectInternal()
+        {
+            return _client.AutoReconnect;
+        }
 
         protected override IRows QueryResultInternal()
         {

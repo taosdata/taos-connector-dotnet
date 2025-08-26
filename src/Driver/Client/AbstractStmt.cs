@@ -26,8 +26,7 @@ namespace TDengine.Driver.Client
         private bool _executed;
         private TableNameBuilder _tableNameBuilder;
         private int _affectedRows;
-        private bool _needReconnect;
-        private bool _needRePrepare;
+        private bool _schemaChanged;
 
         protected AbstractStmt(int binaryHeaderLength = 0)
         {
@@ -51,6 +50,7 @@ namespace TDengine.Driver.Client
             _addBatched = false;
             _executed = false;
             _tableNameBuilder = null;
+            _schemaChanged = false;
         }
 
         private void CleanBatch()

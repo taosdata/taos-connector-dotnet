@@ -7,6 +7,8 @@ namespace TDengine.Driver.Client
         protected abstract bool IsConnectionAvailable(Exception exception);
 
         protected abstract void ReconnectInternal();
+        
+        protected abstract bool AutoReconnectInternal();
 
         private bool NeedTags => _tagBuilders != null && _tagBuilders.Length > 0;
 
@@ -71,8 +73,9 @@ namespace TDengine.Driver.Client
         {
             // prepare again
             PrepareInternal(_sql, out var insert, out var count, out var fields);
-            if (insert != _isInsert || count != _fieldsCount || CheckFieldsAllEqual(fields, _fields))
+            if (insert != _isInsert || count != _fieldsCount || !CheckFieldsAllEqual(fields, _fields))
             {
+                _schemaChanged = true;
                 // statement type or fields do not match
                 throw new InvalidOperationException(
                     "Failed to re-prepare the statement. The statement type or fields do not match, you should call Prepare() again.");
@@ -84,6 +87,11 @@ namespace TDengine.Driver.Client
             if (string.IsNullOrEmpty(_sql))
             {
                 throw new InvalidOperationException("This statement has not been prepared.");
+            }
+
+            if (_schemaChanged)
+            {
+                throw new InvalidOperationException("The schema has changed, you should call Prepare() again.");
             }
         }
 

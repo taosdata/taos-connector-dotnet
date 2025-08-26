@@ -11,6 +11,8 @@ namespace TDengine.Driver.Client.Websocket
         private readonly ConnectionStringBuilder _builder;
         private readonly object _reconnectLock = new object();
 
+        internal bool AutoReconnect => _builder.AutoReconnect;
+
 
         public WSClient(ConnectionStringBuilder builder)
         {
@@ -72,7 +74,7 @@ namespace TDengine.Driver.Client.Websocket
 
         private void Reconnect(bool force = false, Connection old = null)
         {
-            if (!_builder.AutoReconnect)
+            if (!AutoReconnect)
                 return;
             lock (_reconnectLock)
             {
