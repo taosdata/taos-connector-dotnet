@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace TDengine.Driver.Impl.StmtBuilder
+﻿namespace TDengine.Driver.Impl.StmtBuilder
 {
     public interface IFieldBuilder
     {

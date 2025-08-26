@@ -1,6 +1,5 @@
 ﻿using System;
 using TDengine.Driver.Impl.WebSocketMethods;
-using TDengine.Driver.Impl.WebSocketMethods.Protocol;
 
 namespace TDengine.Driver.Client.Websocket
 {

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 using TDengine.Driver.Impl.NativeMethods;
-using TDengine.Driver.Impl.StmtBuilder;
 
 namespace TDengine.Driver.Client.Native
 {

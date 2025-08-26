@@ -114,11 +114,20 @@ namespace TDengine.Driver.Impl.StmtBuilder
 
         private byte[] ValueBuffer()
         {
-            // todo reduce memory copy
+#if NET5_0_OR_GREATER
+            Span<T> listSpan = CollectionsMarshal.AsSpan(Mem);
+            return MemoryMarshal.AsBytes(listSpan).ToArray();
+#else
+            if (typeof(T) == typeof(byte))
+            {
+                var byteList = Mem as List<byte>;
+                return byteList?.ToArray() ?? new byte[0];
+            }
             var array = Mem.ToArray();
             var byteArray = new byte[ValueLength()];
             Buffer.BlockCopy(array, 0, byteArray, 0, byteArray.Length);
-            return byteArray;
+            return byteArray; 
+#endif
         }
 
         public Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo source)
