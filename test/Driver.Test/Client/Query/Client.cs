@@ -3136,6 +3136,8 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 var next2SecondTs = TDengineConstant.ConvertDateTimeToTimestamp(next2Second, precision);
                 var next3Second = now.AddSeconds(3);
                 var next3SecondTs = TDengineConstant.ConvertDateTimeToTimestamp(next3Second, precision);
+                var next4Second = now.AddSeconds(4);
+                var next4SecondTs = TDengineConstant.ConvertDateTimeToTimestamp(next4Second, precision);
                 var superTableName = $"timestamp_stb_{now.Ticks}";
                 var subTableName = $"timestamp_ctb_{now.Ticks}";
                 try
@@ -3343,6 +3345,59 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         CheckValue(TDengineConstant.ConvertDateTimeOffsetToTimestamp(rows.GetDateTimeOffset(0),
                             precision), next3SecondTs);
                         CheckValue(rows.GetInt64(0), next3SecondTs);
+                    }
+                                        
+                    // bind column with DateTime?[]
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
+                    stmt.Prepare($"insert into ? using {superTableName} tags(?) values(?,?)");
+                    isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    stmt.SetTableName(subTableName);
+                    stmt.SetTags(new object[]
+                        { TDengineConstant.ConvertTimestampToDateTime(ts, precision, TimeZoneInfo.Utc) });
+                    stmt.BindColumn(stmt.GetColFields(),
+                        new DateTime?[]
+                        {
+                            TDengineConstant.ConvertTimestampToDateTime(next4SecondTs, precision,
+                                TimeZoneInfo.Utc)
+                        },
+                        new int?[] { 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    affected = stmt.Affected();
+                    Assert.Equal((long)1, affected);
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+
+                    stmt.Prepare($"select * from {superTableName} where ts = ? order by ts asc");
+                    isInsert = stmt.IsInsert();
+                    Assert.False(isInsert);
+                    stmt.BindRow(new object[]
+                    {
+                        TDengineConstant.ConvertTimestampToDateTimeOffset(next4SecondTs, precision, TimeZoneInfo.Utc)
+                    });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var rows = stmt.Result())
+                    {
+                        var haveNext = rows.Read();
+                        Assert.True(haveNext);
+                        Assert.Equal("ts", rows.GetName(0));
+                        Assert.Equal("v", rows.GetName(1));
+                        Assert.Equal("t_tag", rows.GetName(2));
+                        CheckValue(TDengineConstant.ConvertDateTimeToTimestamp(rows.GetDateTime(0), precision),
+                            next4SecondTs);
+                        CheckValue(TDengineConstant.ConvertDateTimeOffsetToTimestamp(rows.GetDateTimeOffset(0),
+                            precision), next4SecondTs);
+                        CheckValue(rows.GetInt64(0), next4SecondTs);
                     }
 
                     stmt.Dispose();
