@@ -28,7 +28,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
         {
             Values.AddRange(value);
             LengthList.Add(value.Length);
-            if (NullCount != 0)
+            if (NullCount > 0)
             {
                 NullMem.Add(0);
             }
@@ -137,7 +137,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
             Buffer.BlockCopy(source.Length, 0, target.Length, 0, source.Length.Length * 4);
             Buffer.BlockCopy(dataLength, 0, target.Length, source.Length.Length * 4, Count * 4);
             // TotalLength
-            target.TotalLength += source.TotalLength + (uint)Count // length of IsNull
+            target.TotalLength = source.TotalLength + (uint)Count // length of IsNull
                                        + (uint)valueBuffer.Length + // length of Buffer
                                        +(uint)(Count * 4); // length of Length
             return target;
@@ -174,7 +174,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
 
                 if (NullCount == 0)
                 {
-                    NullMem = null;
+                    NullMem.Clear();
                 }
                 else
                 {
