@@ -6,15 +6,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using TDengine.Data.Client;
 using Xunit;
+using Xunit.Sdk;
 
 namespace Data.Tests
 {
     public class TDengineConnectionTests
     {
         private TDengineConnection _connection;
+        private bool _is3360Test = false;
+
 
         public TDengineConnectionTests()
         {
+            this._is3360Test = Environment.GetEnvironmentVariable("TD_3360_TEST") == "true";
+            // this._is3360Test = true;
             _connection = new TDengineConnection("");
         }
 
@@ -141,7 +146,7 @@ namespace Data.Tests
             {
                 return;
             }
-            
+
             process.Kill();
         }
 
@@ -212,6 +217,26 @@ namespace Data.Tests
                 }
 
                 Thread.Sleep(1000);
+            }
+
+            connection.Close();
+        }
+
+        [Fact]
+        public void TestServerVersion()
+        {
+            var connection = new TDengineConnection("username=root;password=taosdata");
+            Assert.Equal("", connection.ServerVersion);
+            connection.Open();
+            var serverVersion = connection.ServerVersion;
+            if (_is3360Test)
+            {
+                Assert.Equal("3.3.6.0", serverVersion);
+            }
+            else
+            {
+                Assert.NotNull(serverVersion);
+                Assert.NotEmpty(serverVersion);
             }
 
             connection.Close();
