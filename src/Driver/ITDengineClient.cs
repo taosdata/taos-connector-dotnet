@@ -26,7 +26,7 @@ namespace TDengine.Driver
         TaosFieldE[] GetTagFields();
         TaosFieldE[] GetColFields();
         void BindRow(object[] row);
-        void BindColumn( TaosFieldE[] fields,params Array[] arrays);
+        void BindColumn( TaosFieldE[] _,params Array[] arrays);
         void AddBatch();
         void Exec();
         long Affected();

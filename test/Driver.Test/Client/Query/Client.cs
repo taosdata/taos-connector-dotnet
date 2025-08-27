@@ -479,7 +479,7 @@ namespace Driver.Test.Client.Query
             return commonColumns.ToString();
         }
 
-        private  Array[] TransposeToTypedArrays(object[][] data)
+        private Array[] TransposeToTypedArrays(object[][] data)
         {
             if (data == null || data.Length == 0)
                 throw new ArgumentException("Data cannot be null or empty", nameof(data));
@@ -500,7 +500,6 @@ namespace Driver.Test.Client.Query
                 CreateColumnArray<byte[]>(data, 12, o => (byte[])o),
                 CreateColumnArray<string>(data, 13, o => (string)o),
                 CreateColumnArray<byte[]>(data, 14, o => (byte[])o),
-                
             };
             if (!_is3360Test)
             {
@@ -1016,7 +1015,7 @@ namespace Driver.Test.Client.Query
                     DoExec(client, $"use {db}");
                     DoExec(client, $"create table if not exists stb (ts timestamp, c1 int) tags(tag1 int)");
                     var stmt = client.StmtInit();
-                    
+
                     var sql = $"insert into ctb using stb tags(?) values(?,?)";
                     _output.WriteLine($"{sql}");
                     stmt.Prepare(sql);
@@ -1025,7 +1024,7 @@ namespace Driver.Test.Client.Query
                     stmt.AddBatch();
                     stmt.Exec();
                     var affected = stmt.Affected();
-                    Assert.Equal(1,affected);
+                    Assert.Equal(1, affected);
                     using (var rows = client.Query("select * from stb"))
                     {
                         Assert.True(rows.Read());
@@ -1998,6 +1997,7 @@ namespace Driver.Test.Client.Query
                         this.AssertColumn(rows, withDecimal);
                         this.AssertValue(rows, data, precision);
                     }
+
                     stmt.Dispose();
                 }
                 catch (Exception e)
@@ -2073,6 +2073,7 @@ namespace Driver.Test.Client.Query
                         stmt.Dispose();
                         stmt = client.StmtInit();
                     }
+
                     stmt.Prepare($"select * from {superTableName} where ts >= ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
@@ -2084,6 +2085,7 @@ namespace Driver.Test.Client.Query
                         this.AssertColumn(result, withDecimal);
                         this.AssertValue(result, data, precision);
                     }
+
                     stmt.Dispose();
                 }
                 catch (Exception e)
@@ -2146,6 +2148,7 @@ namespace Driver.Test.Client.Query
                         stmt.Dispose();
                         stmt = client.StmtInit();
                     }
+
                     stmt.Prepare($"select * from {tableName} where c1 = ?");
                     stmt.BindRow(new object[] { data });
                     stmt.AddBatch();
@@ -2157,6 +2160,7 @@ namespace Driver.Test.Client.Query
                         Assert.Equal(now, resut.GetValue(0));
                         Assert.Equal(data, resut.GetValue(1));
                     }
+
                     stmt.Dispose();
                 }
                 catch (Exception e)
@@ -2791,12 +2795,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     DoExec(client, $"create table if not exists test_varbinary (ts timestamp, c1 varbinary(100))");
                     DoExec(client, $"insert into test_varbinary values(now,'abc')");
                     DoExec(client, $"insert into test_varbinary values(now+1s,'中文')");
-                    
+
                     // multi
                     DoExec(client, $"create table if not exists test_multi (ts timestamp, c1 int, c2 binary(100))");
                     DoExec(client, $"insert into test_multi values(now, 123, 'abc')");
 
-                    
+
                     // prepare statement
                     var stmt = client.StmtInit();
                     // query timestamp
@@ -2804,7 +2808,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     var isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
                     // bind int
-                    stmt.BindRow(new object[]{(int)123});
+                    stmt.BindRow(new object[] { (int)123 });
                     stmt.AddBatch();
                     stmt.Exec();
                     var count = 0;
@@ -2813,12 +2817,13 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         while (rows.Read())
                         {
                             count += 1;
-                            Assert.Equal(123,rows.GetInt64(1));
+                            Assert.Equal(123, rows.GetInt64(1));
                         }
                     }
+
                     Assert.Equal(1, count);
                     // bind long
-                    stmt.BindRow(new object[]{(long)123});
+                    stmt.BindRow(new object[] { (long)123 });
                     stmt.AddBatch();
                     stmt.Exec();
                     count = 0;
@@ -2827,9 +2832,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         while (rows.Read())
                         {
                             count += 1;
-                            Assert.Equal(123,rows.GetInt64(1));
+                            Assert.Equal(123, rows.GetInt64(1));
                         }
                     }
+
                     Assert.Equal(1, count);
                     // query bool
                     if (_is3360Test)
@@ -2840,7 +2846,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
 
                     stmt.Prepare("select * from test_bool where c1 = ?");
                     // true
-                    stmt.BindRow(new object[]{true});
+                    stmt.BindRow(new object[] { true });
                     stmt.AddBatch();
                     stmt.Exec();
                     count = 0;
@@ -2852,9 +2858,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             Assert.True(rows.GetBoolean(1));
                         }
                     }
+
                     Assert.Equal(1, count);
                     // false
-                    stmt.BindRow(new object[]{false});
+                    stmt.BindRow(new object[] { false });
                     stmt.AddBatch();
                     stmt.Exec();
                     count = 0;
@@ -2866,14 +2873,16 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             Assert.False(rows.GetBoolean(1));
                         }
                     }
+
                     Assert.Equal(1, count);
-                    Assert.Throws<ArgumentException>(()=>stmt.BindRow(new object[] { null}));
+                    Assert.Throws<ArgumentException>(() => stmt.BindRow(new object[] { null }));
                     // query bigint
                     if (_is3360Test)
                     {
                         stmt.Dispose();
                         stmt = client.StmtInit();
                     }
+
                     stmt.Prepare("select * from test_i64 where c1 = ?");
                     var bindData = new object[]
                     {
@@ -2888,7 +2897,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     };
                     foreach (var d in bindData)
                     {
-                        stmt.BindRow(new object[]{d});
+                        stmt.BindRow(new object[] { d });
                         stmt.AddBatch();
                         stmt.Exec();
                         count = 0;
@@ -2897,21 +2906,24 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             while (rows.Read())
                             {
                                 count += 1;
-                                Assert.Equal(8,rows.GetInt64(1));
+                                Assert.Equal(8, rows.GetInt64(1));
                             }
                         }
+
                         Assert.Equal(1, count);
                     }
+
                     // query bigint unsigned
                     if (_is3360Test)
                     {
                         stmt.Dispose();
                         stmt = client.StmtInit();
                     }
+
                     stmt.Prepare("select * from test_u64 where c1 = ?");
                     foreach (var d in bindData)
                     {
-                        stmt.BindRow(new object[]{d});
+                        stmt.BindRow(new object[] { d });
                         stmt.AddBatch();
                         stmt.Exec();
                         count = 0;
@@ -2920,17 +2932,20 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             while (rows.Read())
                             {
                                 count += 1;
-                                Assert.Equal(8,rows.GetInt64(1));
+                                Assert.Equal(8, rows.GetInt64(1));
                             }
                         }
+
                         Assert.Equal(1, count);
                     }
+
                     // query float
                     if (_is3360Test)
                     {
                         stmt.Dispose();
                         stmt = client.StmtInit();
                     }
+
                     stmt.Prepare("select * from test_f32 where c1 = ?");
                     bindData = new object[]
                     {
@@ -2939,7 +2954,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     };
                     foreach (var d in bindData)
                     {
-                        stmt.BindRow(new object[]{d});
+                        stmt.BindRow(new object[] { d });
                         stmt.AddBatch();
                         stmt.Exec();
                         count = 0;
@@ -2948,17 +2963,20 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             while (rows.Read())
                             {
                                 count += 1;
-                                CheckValue(1.23f,rows.GetFloat(1));
+                                CheckValue(1.23f, rows.GetFloat(1));
                             }
                         }
+
                         Assert.Equal(1, count);
                     }
+
                     // query double
                     if (_is3360Test)
                     {
                         stmt.Dispose();
                         stmt = client.StmtInit();
                     }
+
                     stmt.Prepare("select * from test_f64 where c1 = ?");
                     bindData = new object[]
                     {
@@ -2966,7 +2984,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     };
                     foreach (var d in bindData)
                     {
-                        stmt.BindRow(new object[]{d});
+                        stmt.BindRow(new object[] { d });
                         stmt.AddBatch();
                         stmt.Exec();
                         count = 0;
@@ -2975,9 +2993,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             while (rows.Read())
                             {
                                 count += 1;
-                                CheckValue(2.34,rows.GetDouble(1));
+                                CheckValue(2.34, rows.GetDouble(1));
                             }
                         }
+
                         Assert.Equal(1, count);
                     }
                     // query string
@@ -3006,11 +3025,12 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             stmt.Dispose();
                             stmt = client.StmtInit();
                         }
+
                         stmt.Prepare($"select * from {dbName} where c1 = ?");
                         for (int i = 0; i < stringValues.Length; i++)
                         {
                             // _output.WriteLine($"{stringValues[i]},{dbName}");
-                            stmt.BindRow(new object[]{stringValues[i]});
+                            stmt.BindRow(new object[] { stringValues[i] });
                             stmt.AddBatch();
                             stmt.Exec();
                             count = 0;
@@ -3019,14 +3039,16 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                                 while (rows.Read())
                                 {
                                     count += 1;
-                                    Assert.Equal(stringValues[i],rows.GetString(1));
+                                    Assert.Equal(stringValues[i], rows.GetString(1));
                                 }
                             }
+
                             Assert.Equal(1, count);
                         }
+
                         for (int i = 0; i < bytesValues.Length; i++)
                         {
-                            stmt.BindRow(new object[]{bytesValues[i]});
+                            stmt.BindRow(new object[] { bytesValues[i] });
                             stmt.AddBatch();
                             stmt.Exec();
                             count = 0;
@@ -3035,13 +3057,14 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                                 while (rows.Read())
                                 {
                                     count += 1;
-                                    Assert.Equal(stringValues[i],rows.GetString(1));
+                                    Assert.Equal(stringValues[i], rows.GetString(1));
                                 }
                             }
+
                             Assert.Equal(1, count);
                         }
                     }
-                    
+
                     // query multi
                     if (_is3360Test)
                     {
@@ -3051,10 +3074,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
 
                     stmt.Prepare("select * from test_multi where c1 = ? and c2 = ?");
                     // wrong length 
-                    Assert.Throws<ArgumentException>(()=>stmt.BindRow(new object[]{'a','a','a'}));
+                    Assert.Throws<ArgumentException>(() => stmt.BindRow(new object[] { 'a', 'a', 'a' }));
                     // bind twice
                     stmt.BindRow(new object[] { 123, "abc" });
-                    Assert.Throws<InvalidOperationException>(()=>stmt.BindRow(new object[]{123, "abc"}));
+                    Assert.Throws<InvalidOperationException>(() => stmt.BindRow(new object[] { 123, "abc" }));
                     stmt.AddBatch();
                     stmt.Exec();
                     count = 0;
@@ -3063,13 +3086,14 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         while (rows.Read())
                         {
                             count += 1;
-                            Assert.Equal(123,rows.GetInt32(1));
-                            Assert.Equal("abc",rows.GetString(2));
+                            Assert.Equal(123, rows.GetInt32(1));
+                            Assert.Equal("abc", rows.GetString(2));
                         }
                     }
+
                     Assert.Equal(1, count);
                     // bind wrong type
-                    Assert.Throws<ArgumentException>(()=>stmt.BindRow(new object[] { 123, new TAOS_STMT2_BIND() }));
+                    Assert.Throws<ArgumentException>(() => stmt.BindRow(new object[] { 123, new TAOS_STMT2_BIND() }));
                     stmt.BindRow(new object[] { 123, "abc" });
                     stmt.AddBatch();
                     stmt.Exec();
@@ -3079,10 +3103,11 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         while (rows.Read())
                         {
                             count += 1;
-                            Assert.Equal(123,rows.GetInt32(1));
-                            Assert.Equal("abc",rows.GetString(2));
+                            Assert.Equal(123, rows.GetInt32(1));
+                            Assert.Equal("abc", rows.GetString(2));
                         }
                     }
+
                     Assert.Equal(1, count);
                 }
                 catch (Exception e)
@@ -3092,7 +3117,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 }
                 finally
                 {
-                    // DoExec(client, $"drop database if exists {db}");
+                    DoExec(client, $"drop database if exists {db}");
                 }
             }
         }
@@ -3145,6 +3170,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         stmt.Dispose();
                         stmt = client.StmtInit();
                     }
+
                     stmt.Prepare($"select * from {superTableName} where ts = ? order by ts asc");
                     isInsert = stmt.IsInsert();
                     Assert.False(isInsert);
@@ -3318,6 +3344,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             precision), next3SecondTs);
                         CheckValue(rows.GetInt64(0), next3SecondTs);
                     }
+
                     stmt.Dispose();
                 }
                 catch (Exception e)
@@ -3332,6 +3359,92 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     {
                         DoExec(client, $"drop database if exists {db}");
                     }
+                }
+            }
+        }
+
+        private void StmtErrorProcessTest(string connectString, string db)
+        {
+            var builder = new ConnectionStringBuilder(connectString);
+            using (var client = DbDriver.Open(builder))
+            {
+                var now = DateTime.Now;
+                try
+                {
+                    DoExec(client, $"drop database if exists {db}");
+                    DoExec(client, $"create database {db}");
+
+                    DoExec(client, $"use {db}");
+                    // create table
+                    DoExec(client, $"create table if not exists test (ts timestamp, c1 int)");
+                    DoExec(client, $"insert into test values(now, 1)");
+
+                    var stmt = client.StmtInit();
+                    // not prepare statement
+                    Assert.Throws<InvalidOperationException>(() => stmt.IsInsert());
+                    Assert.Throws<InvalidOperationException>(() => stmt.GetColFields());
+                    Assert.Throws<InvalidOperationException>(() => stmt.GetTagFields());
+                    Assert.Throws<InvalidOperationException>(() => stmt.BindRow(new object[] { now, 1 }));
+                    Assert.Throws<InvalidOperationException>(() => stmt.BindColumn(null, new long[1], new int[] { 1 }));
+                    Assert.Throws<InvalidOperationException>(() => stmt.AddBatch());
+                    Assert.Throws<InvalidOperationException>(() => stmt.Exec());
+                    // prepare statement
+                    stmt.Prepare("insert into test values(?,?)");
+                    var isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    var tagFields = stmt.GetTagFields();
+                    Assert.Empty(tagFields);
+                    var colFields = stmt.GetColFields();
+                    Assert.Equal(2, colFields.Length);
+                    Assert.Equal("ts", colFields[0].name);
+                    Assert.Equal((sbyte)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP, colFields[0].type);
+                    Assert.Equal("c1", colFields[1].name);
+                    Assert.Equal((sbyte)TDengineDataType.TSDB_DATA_TYPE_INT, colFields[1].type);
+                    Assert.Throws<InvalidOperationException>(() => stmt.SetTableName("wrong"));
+                    Assert.Throws<InvalidOperationException>(() => stmt.SetTags(new object[] { "wrong" }));
+                    Assert.Throws<InvalidOperationException>(() => stmt.AddBatch());
+                    Assert.Throws<InvalidOperationException>(() => stmt.Exec());
+                    stmt.BindRow(new object[] { now, 1 });
+                    stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1) }, new int[] { 2 });
+                    Assert.Throws<InvalidOperationException>(() => stmt.Exec());
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    Assert.Equal(2, stmt.Affected());
+                    stmt.Dispose();
+                    stmt = client.StmtInit();
+                    stmt.Prepare("select * from test where ts = ?");
+                    isInsert = stmt.IsInsert();
+                    Assert.False(isInsert);
+                    Assert.Throws<InvalidOperationException>(() =>
+                        stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1) }));
+                    Assert.Throws<InvalidOperationException>(() => stmt.SetTableName("wrong"));
+                    Assert.Throws<InvalidOperationException>(() => stmt.SetTags(new object[] { "wrong" }));
+                    Assert.Throws<InvalidOperationException>(() => stmt.AddBatch());
+                    Assert.Throws<InvalidOperationException>(() => stmt.Exec());
+                    stmt.BindRow(new object[] { now.AddSeconds(1) });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    var queryCount = 0;
+                    using (var result = stmt.Result())
+                    {
+                        Assert.True(result.HasRows);
+                        while (result.Read())
+                        {
+                            queryCount += 1;
+                            Assert.Equal(2, result.GetInt32(1));
+                        }
+                    }
+                    Assert.Equal(1, queryCount);
+                    stmt.Dispose();
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
+                finally
+                {
+                    DoExec(client, $"drop database if exists {db}");
                 }
             }
         }

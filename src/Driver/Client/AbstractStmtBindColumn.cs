@@ -650,7 +650,7 @@ namespace TDengine.Driver.Client
             }
         }
         
-        public void BindColumn(TaosFieldE[] field, params Array[] arrays)
+        public void BindColumn(TaosFieldE[] _, params Array[] arrays)
         {
             CheckPrepared();
             if (_isInsert)
