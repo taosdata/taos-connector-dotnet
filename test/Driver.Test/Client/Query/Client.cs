@@ -1003,6 +1003,48 @@ namespace Driver.Test.Client.Query
             }
         }
 
+        private void StmtTestBindTagWithoutTable(string connectString, string db)
+        {
+            var builder = new ConnectionStringBuilder(connectString);
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    DoExec(client, $"drop database if exists {db}");
+                    DoExec(client, $"create database {db}");
+
+                    DoExec(client, $"use {db}");
+                    DoExec(client, $"create table if not exists stb (ts timestamp, c1 int) tags(tag1 int)");
+                    var stmt = client.StmtInit();
+                    
+                    var sql = $"insert into ctb using stb tags(?) values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    stmt.Prepare(sql);
+                    stmt.SetTags(new object[] { (int)123 });
+                    stmt.BindRow(new object[] { DateTime.Now, 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    var affected = stmt.Affected();
+                    Assert.Equal(1,affected);
+                    using (var rows = client.Query("select * from stb"))
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(1, rows.GetInt32(1));
+                        Assert.Equal(123, rows.GetInt32(2));
+                    }
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
+                finally
+                {
+                    DoExec(client, $"drop database if exists {db}");
+                }
+            }
+        }
+
         private void doStmtTest(ITDengineClient client, IStmt stmt, string sql, TDengineDataType dataType)
         {
             var now = DateTime.UtcNow;

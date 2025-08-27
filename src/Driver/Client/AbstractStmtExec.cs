@@ -68,7 +68,7 @@ namespace TDengine.Driver.Client
             // table name
             if (_needTableName)
             {
-                tableNameLengthLen = (uint)(_tableNameBuilder.Length * 2);
+                tableNameLengthLen = (uint)(_tableNameBuilder.Count * 2);
                 tableNameBufferLen = (uint)_tableNameBuilder.TotalBufferLen;
             }
 
@@ -122,7 +122,7 @@ namespace TDengine.Driver.Client
                     (int)tableNameLengthLen);
                 Buffer.BlockCopy(_tableNameBuilder.GetBytes(), 0, buffer, tableNameBufferOffset,
                     (int)tableNameBufferLen);
-                for (var i = 0; i < _tableNameBuilder.Length; i++)
+                for (var i = 0; i < _tableNameBuilder.Count; i++)
                 {
                     var tableName = _tableNameBuilder.TableNames[i];
                     var tableInfo = _tableInfos[tableName];

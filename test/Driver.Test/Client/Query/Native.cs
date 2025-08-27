@@ -206,6 +206,13 @@ namespace Driver.Test.Client.Query
         }
 
         [Fact]
+        public void NativeStmtTestBindTagWithoutTable()
+        {
+            var db = "stmt_bind_tag_no_table";
+            this.StmtTestBindTagWithoutTable(this._nativeConnectString, db);
+        }
+        
+        [Fact]
         public void NativeStmtQuery()
         {
             var db = "stmt_query_test";

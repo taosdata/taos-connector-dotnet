@@ -5,7 +5,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
 {
     public class TableNameBuilder
     {
-        public int Length { get; private set; }
+        public int Count => TableNames.Count;
         public int TotalBufferLen => Values.Count;
         private List<short> LengthList { get; } = new List<short>();
         private List<byte> Values { get; } = new List<byte>();
@@ -27,7 +27,6 @@ namespace TDengine.Driver.Impl.StmtBuilder
             LengthList.Add(checked((short)len));
             Values.AddRange(bs);
             Values.Add(0); // Null-terminator for the string
-            Length += 1;
             TableNames.Add(tableName);
         }
         public void Clear()
@@ -35,7 +34,6 @@ namespace TDengine.Driver.Impl.StmtBuilder
             LengthList.Clear();
             Values.Clear();
             TableNames.Clear();
-            Length = 0;
         }
     }
 }
