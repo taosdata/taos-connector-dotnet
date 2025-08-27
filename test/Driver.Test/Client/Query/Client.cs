@@ -828,7 +828,7 @@ namespace Driver.Test.Client.Query
                     // ts
                     sql = $"insert into test_ts values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP);
                     using (var rows = client.Query("select count(*) from test_ts"))
                     {
                         Assert.True(rows.Read());
@@ -839,7 +839,7 @@ namespace Driver.Test.Client.Query
                     // bool
                     sql = $"insert into test_bool values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BOOL);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BOOL);
                     using (var rows = client.Query("select count(*) from test_bool"))
                     {
                         Assert.True(rows.Read());
@@ -849,7 +849,7 @@ namespace Driver.Test.Client.Query
                     // tinyint
                     sql = $"insert into test_i8 values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_TINYINT);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_TINYINT);
                     using (var rows = client.Query("select count(*) from test_i8"))
                     {
                         Assert.True(rows.Read());
@@ -859,7 +859,7 @@ namespace Driver.Test.Client.Query
                     // smallint
                     sql = $"insert into test_i16 values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_SMALLINT);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_SMALLINT);
                     using (var rows = client.Query("select count(*) from test_i16"))
                     {
                         Assert.True(rows.Read());
@@ -869,7 +869,7 @@ namespace Driver.Test.Client.Query
                     // int
                     sql = $"insert into test_i32 values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_INT);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_INT);
                     using (var rows = client.Query("select count(*) from test_i32"))
                     {
                         Assert.True(rows.Read());
@@ -879,7 +879,7 @@ namespace Driver.Test.Client.Query
                     // bigint
                     sql = $"insert into test_i64 values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BIGINT);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BIGINT);
                     using (var rows = client.Query("select count(*) from test_i64"))
                     {
                         Assert.True(rows.Read());
@@ -889,7 +889,7 @@ namespace Driver.Test.Client.Query
                     // tinyint unsigned
                     sql = $"insert into test_u8 values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UTINYINT);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UTINYINT);
                     using (var rows = client.Query("select count(*) from test_u8"))
                     {
                         Assert.True(rows.Read());
@@ -899,7 +899,7 @@ namespace Driver.Test.Client.Query
                     // smallint unsigned
                     sql = $"insert into test_u16 values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_USMALLINT);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_USMALLINT);
                     using (var rows = client.Query("select count(*) from test_u16"))
                     {
                         Assert.True(rows.Read());
@@ -909,7 +909,7 @@ namespace Driver.Test.Client.Query
                     // int unsigned
                     sql = $"insert into test_u32 values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UINT);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UINT);
                     using (var rows = client.Query("select count(*) from test_u32"))
                     {
                         Assert.True(rows.Read());
@@ -919,7 +919,7 @@ namespace Driver.Test.Client.Query
                     // bigint unsigned
                     sql = $"insert into test_u64 values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UBIGINT);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_UBIGINT);
                     using (var rows = client.Query("select count(*) from test_u64"))
                     {
                         Assert.True(rows.Read());
@@ -929,7 +929,7 @@ namespace Driver.Test.Client.Query
                     // float
                     sql = $"insert into test_f32 values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_FLOAT);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_FLOAT);
                     using (var rows = client.Query("select count(*) from test_f32"))
                     {
                         Assert.True(rows.Read());
@@ -939,7 +939,7 @@ namespace Driver.Test.Client.Query
                     // double
                     sql = $"insert into test_f64 values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_DOUBLE);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_DOUBLE);
                     using (var rows = client.Query("select count(*) from test_f64"))
                     {
                         Assert.True(rows.Read());
@@ -949,7 +949,7 @@ namespace Driver.Test.Client.Query
                     // binary
                     sql = $"insert into test_binary values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BINARY);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BINARY);
                     using (var rows = client.Query("select count(*) from test_binary"))
                     {
                         Assert.True(rows.Read());
@@ -960,7 +960,7 @@ namespace Driver.Test.Client.Query
                     // nchar
                     sql = $"insert into test_nchar values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_NCHAR);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_NCHAR);
                     using (var rows = client.Query("select count(*) from test_nchar"))
                     {
                         Assert.True(rows.Read());
@@ -971,7 +971,7 @@ namespace Driver.Test.Client.Query
                     // varbinary
                     sql = $"insert into test_varbinary values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_VARBINARY);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_VARBINARY);
                     using (var rows = client.Query("select count(*) from test_varbinary"))
                     {
                         Assert.True(rows.Read());
@@ -982,7 +982,7 @@ namespace Driver.Test.Client.Query
                     // geometry
                     sql = $"insert into test_geometry values(?,?)";
                     _output.WriteLine($"{sql}");
-                    doStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_GEOMETRY);
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_GEOMETRY);
                     using (var rows = client.Query("select count(*) from test_geometry"))
                     {
                         Assert.True(rows.Read());
@@ -1044,7 +1044,7 @@ namespace Driver.Test.Client.Query
             }
         }
 
-        private void doStmtTest(ITDengineClient client, IStmt stmt, string sql, TDengineDataType dataType)
+        private void DoStmtTest(ITDengineClient client, IStmt stmt, string sql, TDengineDataType dataType)
         {
             var now = DateTime.UtcNow;
             if (_is3360Test)
@@ -3388,6 +3388,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     Assert.Throws<InvalidOperationException>(() => stmt.BindColumn(null, new long[1], new int[] { 1 }));
                     Assert.Throws<InvalidOperationException>(() => stmt.AddBatch());
                     Assert.Throws<InvalidOperationException>(() => stmt.Exec());
+                    Assert.Throws<InvalidOperationException>(() => stmt.Result());
                     // prepare statement
                     stmt.Prepare("insert into test values(?,?)");
                     var isInsert = stmt.IsInsert();

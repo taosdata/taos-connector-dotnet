@@ -24,7 +24,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
                 dataType => new VariableLengthBuilder(dataType), //TSDB_DATA_TYPE_JSONTAG,
                 dataType => new VariableLengthBuilder(dataType), //TSDB_DATA_TYPE_VARBINARY,
                 null, //TSDB_DATA_TYPE_DECIMAL
-                dataType => new VariableLengthBuilder(dataType), //TSDB_DATA_TYPE_BLOB
+                null, //TSDB_DATA_TYPE_BLOB
                 null, //TSDB_DATA_TYPE_MEDIUMBLOB
                 dataType => new VariableLengthBuilder(dataType), //TSDB_DATA_TYPE_GEOMETRY
                 null, //TSDB_DATA_TYPE_DECIMAL64
