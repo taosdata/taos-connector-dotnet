@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using TDengine.Driver.Impl.StmtBuilder;
 
 namespace TDengine.Driver.Client
@@ -194,7 +195,7 @@ namespace TDengine.Driver.Client
                 }
             }
 
-            return totalLen;
+            return offset;
         }
 
         // little-endian write int32 to buffer
