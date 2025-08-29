@@ -27,9 +27,41 @@ namespace TDengine.Driver.Client
         private int _affectedRows;
         private bool _schemaChanged;
 
+        private readonly Pool _bufferPool;
+        private Queue<Stmt2BindTableInfo> _cachedTableInfos = new Queue<Stmt2BindTableInfo>();
+
+        private Stmt2BindTableInfo GetStmt2BindTableInfo()
+        {
+            if (_cachedTableInfos.Count > 0)
+            {
+                return _cachedTableInfos.Dequeue();
+            }
+
+            return new Stmt2BindTableInfo();
+        }
+
+        private void ReturnStmt2BindTableInfo(Stmt2BindTableInfo info)
+        {
+            info.TableName = null;
+            if (info.Tags != null)
+            {
+                _bufferPool.ReturnColInfos(info.Tags);
+                info.Tags = null;
+            }
+
+            if (info.Cols != null)
+            {
+                _bufferPool.ReturnColInfos(info.Cols);
+                info.Cols = null;
+            }
+
+            _cachedTableInfos.Enqueue(info);
+        }
+
         protected AbstractStmt(int binaryHeaderLength = 0)
         {
             _binaryHeaderLength = binaryHeaderLength;
+            _bufferPool = new Pool();
         }
 
         private void CleanCache()
@@ -43,7 +75,12 @@ namespace TDengine.Driver.Client
             _colBuilders = null;
             _tagBuilders = null;
             _needTableName = false;
-            _tableInfos = new Dictionary<string, Stmt2BindTableInfo>();
+            foreach (var tableInfo in _tableInfos.Values)
+            {
+                ReturnStmt2BindTableInfo(tableInfo);
+            }
+
+            _tableInfos.Clear();
             _isTableNameSet = false;
             _isTagsSet = false;
             _addBatched = false;
@@ -68,6 +105,11 @@ namespace TDengine.Driver.Client
 
             _addBatched = false;
             _executed = true;
+            foreach (var tableInfo in _tableInfos.Values)
+            {
+                ReturnStmt2BindTableInfo(tableInfo);
+            }
+
             _tableInfos.Clear();
         }
 

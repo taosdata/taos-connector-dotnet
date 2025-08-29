@@ -7,8 +7,10 @@
         void AppendNull();
         void Clear();
         Stmt2BindColInfo ToStmt2BindColInfo();
+        void ToStmt2BindColInfo2(ref Stmt2BindColInfo info);
         Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo source);
         void Remove(int count);
+        void SetBufferPool(BufferPool pool);
     }
 
     public sealed class I8Builder : FixedLengthBuilder<sbyte>
@@ -84,6 +86,8 @@
     public struct Stmt2BindTableInfo
     {
         public string TableName; // table name
+        public int ColsLength; // how many columns
+        public int TagsLength; // how many tags
         public Stmt2BindColInfo[] Cols; // col info
         public Stmt2BindColInfo[] Tags; // tag info
     }

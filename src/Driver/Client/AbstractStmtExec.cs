@@ -83,16 +83,16 @@ namespace TDengine.Driver.Client
                 // tags
                 if (NeedTags)
                 {
-                    foreach (var tag in tableInfo.Tags)
+                    for (int i = 0; i < tableInfo.TagsLength; i++)
                     {
-                        tagsBufferLen += tag.TotalLength;
+                        tagsBufferLen += tableInfo.Tags[i].TotalLength;
                     }
                 }
 
                 // cols
-                foreach (var col in tableInfo.Cols)
+                for (int i = 0; i < tableInfo.ColsLength; i++)
                 {
-                    colsBufferLen += col.TotalLength;
+                    colsBufferLen += tableInfo.Cols[i].TotalLength;
                 }
             }
 
@@ -121,21 +121,22 @@ namespace TDengine.Driver.Client
             {
                 Buffer.BlockCopy(_tableNameBuilder.GetLengths(), 0, buffer, tableNameLengthOffset,
                     (int)tableNameLengthLen);
-                Buffer.BlockCopy(_tableNameBuilder.GetBytes(), 0, buffer, tableNameBufferOffset,
-                    (int)tableNameBufferLen);
+                _tableNameBuilder.CopyValueTo(buffer,tableNameBufferOffset, (int)tableNameBufferLen);
+                // Buffer.BlockCopy(_tableNameBuilder.GetBytes(), 0, buffer, tableNameBufferOffset,
+                //     (int)tableNameBufferLen);
                 for (var i = 0; i < _tableNameBuilder.Count; i++)
                 {
                     var tableName = _tableNameBuilder.TableNames[i];
                     var tableInfo = _tableInfos[tableName];
                     if (NeedTags)
                     {
-                        tagsBufferOffset = SetBindData(buffer, tagsBufferOffset, tableInfo.Tags,
+                        tagsBufferOffset = SetBindData(buffer, tagsBufferOffset, tableInfo.Tags,tableInfo.TagsLength,
                             out var tableTagLength);
                         WriteU32(buffer, tagsLengthOffset, (uint)tableTagLength); // TagsDataLength
                         tagsLengthOffset += 4;
                     }
 
-                    colsBufferOffset = SetBindData(buffer, colsBufferOffset, tableInfo.Cols,
+                    colsBufferOffset = SetBindData(buffer, colsBufferOffset, tableInfo.Cols,tableInfo.ColsLength,
                         out var tableColLength);
                     WriteU32(buffer, colsLengthOffset, (uint)tableColLength); // ColData
                     colsLengthOffset += 4;
@@ -148,21 +149,21 @@ namespace TDengine.Driver.Client
                 var tableInfo = _tableInfos[string.Empty];
                 if (NeedTags)
                 {
-                    SetBindData(buffer, tagsBufferOffset, tableInfo.Tags, out var tableTagLength);
+                    SetBindData(buffer, tagsBufferOffset, tableInfo.Tags,tableInfo.TagsLength, out var tableTagLength);
                     WriteU32(buffer, tagsLengthOffset, (uint)tableTagLength); // TagsDataLength
                 }
 
-                SetBindData(buffer, colsBufferOffset, tableInfo.Cols, out var tableColLength);
+                SetBindData(buffer, colsBufferOffset, tableInfo.Cols,tableInfo.ColsLength, out var tableColLength);
                 WriteU32(buffer, colsLengthOffset, (uint)tableColLength); // ColData
             }
 
             return buffer;
         }
 
-        private int SetBindData(byte[] buffer, int offset, Stmt2BindColInfo[] fields, out int totalLen)
+        private int SetBindData(byte[] buffer, int offset, Stmt2BindColInfo[] fields,int fieldsCount, out int totalLen)
         {
             totalLen = 0;
-            for (var i = 0; i < fields.Length; i++)
+            for (var i = 0; i < fieldsCount; i++)
             {
                 totalLen += (int)fields[i].TotalLength;
                 WriteU32(buffer, offset, fields[i].TotalLength); // TotalLength
@@ -190,8 +191,9 @@ namespace TDengine.Driver.Client
                 offset += 4;
                 if (fields[i].Buffer != null)
                 {
-                    Buffer.BlockCopy(fields[i].Buffer, 0, buffer, offset, fields[i].Buffer.Length); // Buffer
-                    offset += fields[i].Buffer.Length;
+                    Buffer.BlockCopy(fields[i].Buffer, 0, buffer, offset, (int)fields[i].BufferLength); // Buffer
+                    offset += (int)fields[i].BufferLength;
+                    _bufferPool.ReturnBytes(fields[i].Buffer);
                 }
             }
 

@@ -64,11 +64,13 @@ namespace TDengine.Driver.Client
                     {
                         case TaosFieldType.TAOS_FIELD_TAG:
                             _tagBuilders[tagIndex] = Builder.CreateBuilder((TDengineDataType)_fields[i].type);
+                            _tagBuilders[tagIndex].SetBufferPool(_bufferPool);
                             _tagFields[tagIndex] = TDengineConstant.ConvertToTaosFieldE(fields[i]);
                             tagIndex++;
                             break;
                         case TaosFieldType.TAOS_FIELD_COL:
                             _colBuilders[colIndex] = Builder.CreateBuilder((TDengineDataType)_fields[i].type);
+                            _colBuilders[colIndex].SetBufferPool(_bufferPool);
                             _colFields[colIndex] = TDengineConstant.ConvertToTaosFieldE(fields[i]);
                             colIndex++;
                             break;

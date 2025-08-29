@@ -16,6 +16,11 @@ namespace TDengine.Driver.Impl.StmtBuilder
             return Values.ToArray();
         }
 
+        public void CopyValueTo(byte[] bytes, int offset, int length)
+        {
+            Values.CopyTo(0,bytes,offset,length);
+        }
+
         public short[] GetLengths()
         {
             return LengthList.ToArray();

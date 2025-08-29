@@ -13,10 +13,17 @@ namespace TDengine.Driver.Impl.StmtBuilder
         private List<byte> NullMem { get; set; } = new List<byte>();
 
         private int _nullCount;
+        private BufferPool _pool = null;
 
         public FixedLengthBuilder(TDengineDataType dataType)
         {
             DataType = dataType;
+            _pool = NoPool.Instance;
+        }
+
+        public void SetBufferPool(BufferPool pool)
+        {
+            _pool = pool;
         }
 
         public void Append(T value)
@@ -59,6 +66,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
                 throw new ArgumentOutOfRangeException(nameof(count),
                     "Count must be non-negative and less than or equal to the number of elements in Mem.");
             }
+
             var totalCount = Mem.Count;
             var removeIndex = totalCount - count;
             Mem.RemoveRange(removeIndex, count);
@@ -91,14 +99,14 @@ namespace TDengine.Driver.Impl.StmtBuilder
                 isNull = NullMem.ToArray();
             }
 
-            var valueBuffer = ValueBuffer();
+            var valueBuffer = ValueBuffer(out var bufferLength);
             uint totalLength = 4 + // TotalLength field length
                                4 + // DataType field length
                                4 + // Num field length
                                (uint)(Count) + // IsNull field length
                                1 + // HaveLength field length
                                4 + // BufferLength field length
-                               (uint)valueBuffer.Length; // Buffer field length
+                               (uint)bufferLength; // Buffer field length
             return new Stmt2BindColInfo
             {
                 TotalLength = totalLength,
@@ -107,26 +115,57 @@ namespace TDengine.Driver.Impl.StmtBuilder
                 IsNull = isNull,
                 HaveLength = 0, // Fixed length does not have length
                 Length = null, // Fixed length does not have length
-                BufferLength = (uint)valueBuffer.Length,
+                BufferLength = (uint)bufferLength,
                 Buffer = valueBuffer
             };
         }
 
-        private byte[] ValueBuffer()
+        public void ToStmt2BindColInfo2(ref Stmt2BindColInfo info)
         {
+            byte[] isNull = null;
+            if (_nullCount > 0)
+            {
+                isNull = NullMem.ToArray();
+            }
+
+            var valueBuffer = ValueBuffer(out var bufferLength);
+            uint totalLength = 4 + // TotalLength field length
+                               4 + // DataType field length
+                               4 + // Num field length
+                               (uint)(Count) + // IsNull field length
+                               1 + // HaveLength field length
+                               4 + // BufferLength field length
+                               (uint)bufferLength; // Buffer field length
+
+
+            info.TotalLength = totalLength;
+            info.DataType = (int)DataType;
+            info.Num = Count;
+            info.IsNull = isNull;
+            info.HaveLength = 0; // Fixed length does not have length
+            info.Length = null; // Fixed length does not have length
+            info.BufferLength = (uint)bufferLength;
+            info.Buffer = valueBuffer;
+        }
+
+        private byte[] ValueBuffer(out int length)
+        {
+            length = ValueLength();
+            var bytes = _pool.GetBytes(length);
 #if NET5_0_OR_GREATER
             Span<T> listSpan = CollectionsMarshal.AsSpan(Mem);
-            return MemoryMarshal.AsBytes(listSpan).ToArray();
+            MemoryMarshal.AsBytes(listSpan).CopyTo(bytes);
+            return bytes;
 #else
             if (typeof(T) == typeof(byte))
             {
                 var byteList = Mem as List<byte>;
-                return byteList?.ToArray() ?? new byte[0];
+                byteList?.CopyTo(bytes);
+                return bytes;
             }
             var array = Mem.ToArray();
-            var byteArray = new byte[ValueLength()];
-            Buffer.BlockCopy(array, 0, byteArray, 0, byteArray.Length);
-            return byteArray; 
+            Buffer.BlockCopy(array, 0, bytes, 0, length);
+            return bytes;
 #endif
         }
 
@@ -136,6 +175,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
             {
                 throw new ArgumentException($"Data type mismatch: expected {DataType}, got {source.DataType}");
             }
+
             var target = new Stmt2BindColInfo
             {
                 DataType = source.DataType,
@@ -150,21 +190,31 @@ namespace TDengine.Driver.Impl.StmtBuilder
                 {
                     Array.Copy(source.IsNull, 0, target.IsNull, 0, source.Num);
                 }
+
                 if (NullMem.Count > 0)
                 {
                     Array.Copy(NullMem.ToArray(), 0, target.IsNull, source.Num, Count);
                 }
             }
+
             target.Num = source.Num + Count;
-            var valueBuffer = ValueBuffer();
-            target.BufferLength = source.BufferLength + (uint)valueBuffer.Length;
-            target.Buffer = new byte[target.BufferLength];
-            Buffer.BlockCopy(source.Buffer,0, target.Buffer,0, (int)source.BufferLength);
-            Buffer.BlockCopy(valueBuffer, 0, target.Buffer, (int)source.BufferLength, valueBuffer.Length);
-            // TotalLength
-            target.TotalLength = source.TotalLength + (uint)Count // length of IsNull
-                                       + (uint)valueBuffer.Length; // length of Buffer
-            return target;
+            var valueBuffer = ValueBuffer(out var bufferLength);
+            try
+            {
+                // var valueBuffer = ValueBuffer(out var bufferLength);
+                target.BufferLength = source.BufferLength + (uint)bufferLength;
+                target.Buffer = _pool.GetBytes((int)target.BufferLength);
+                Buffer.BlockCopy(source.Buffer, 0, target.Buffer, 0, (int)source.BufferLength);
+                Buffer.BlockCopy(valueBuffer, 0, target.Buffer, (int)source.BufferLength, bufferLength);
+                // TotalLength
+                target.TotalLength = source.TotalLength + (uint)Count // length of IsNull
+                                                        + (uint)bufferLength; // length of Buffer
+                return target;
+            }
+            finally
+            {
+                _pool.ReturnBytes(valueBuffer);
+            }
         }
     }
 }

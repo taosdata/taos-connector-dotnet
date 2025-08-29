@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using TDengine.Driver.Impl.StmtBuilder;
 
 namespace TDengine.Driver.Client
@@ -52,29 +53,29 @@ namespace TDengine.Driver.Client
             {
                 if (!_tableInfos.TryGetValue(string.Empty, out tableInfo))
                 {
-                    tableInfo = new Stmt2BindTableInfo()
-                    {
-                        TableName = string.Empty
-                    };
+                    tableInfo = GetStmt2BindTableInfo();
+                    tableInfo.TableName = string.Empty;
                 }
             }
 
             // set table columns
             if (tableInfo.Cols == null || tableInfo.Cols.Length == 0)
             {
-                tableInfo.Cols = new Stmt2BindColInfo[_colBuilders.Length];
+                var cols = _bufferPool.GetColInfos(_colBuilders.Length);
+                tableInfo.ColsLength = _colBuilders.Length;
+                tableInfo.Cols = cols;
                 for (var i = 0; i < _colBuilders.Length; i++)
                 {
-                    tableInfo.Cols[i] = _colBuilders[i].ToStmt2BindColInfo();
+                    _colBuilders[i].ToStmt2BindColInfo2(ref tableInfo.Cols[i]);
                     _colBuilders[i].Clear();
                 }
             }
             else
             {
-                if (tableInfo.Cols.Length != _colBuilders.Length)
+                if (tableInfo.ColsLength != _colBuilders.Length)
                 {
                     throw new InvalidOperationException(
-                        $"Column count mismatch. Expected {tableInfo.Cols.Length}, but got {_colBuilders.Length}.");
+                        $"Column count mismatch. Expected {_colBuilders.Length}, but got {tableInfo.ColsLength}.");
                 }
 
                 for (var i = 0; i < _colBuilders.Length; i++)
@@ -89,10 +90,13 @@ namespace TDengine.Driver.Client
             {
                 if (tableInfo.Tags == null || tableInfo.Tags.Length == 0)
                 {
-                    tableInfo.Tags = new Stmt2BindColInfo[_tagBuilders.Length];
+                    var tags = _bufferPool.GetColInfos(_tagBuilders.Length);
+                    tableInfo.TagsLength = _tagBuilders.Length;
+                    tableInfo.Tags = tags;
+                    // tableInfo.Tags = new Stmt2BindColInfo[_tagBuilders.Length];
                     for (var i = 0; i < _tagBuilders.Length; i++)
                     {
-                        tableInfo.Tags[i] = _tagBuilders[i].ToStmt2BindColInfo();
+                        _tagBuilders[i].ToStmt2BindColInfo2(ref tableInfo.Tags[i]);
                         _tagBuilders[i].Clear();
                     }
                 }
