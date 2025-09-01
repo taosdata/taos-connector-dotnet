@@ -21,12 +21,12 @@ namespace TDengine.Driver.Client
                     throw new ArgumentException("Table name cannot be null or empty");
                 }
 
-                _tableNameBuilder.Add(tableName);
                 if (_tableInfos.TryGetValue(tableName, out var info))
                 {
                 }
                 else
                 {
+                    _tableNameBuilder.Add(tableName);
                     info = new Stmt2BindTableInfo
                     {
                         TableName = tableName
