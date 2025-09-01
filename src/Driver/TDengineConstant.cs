@@ -545,6 +545,23 @@ namespace TDengine.Driver
                 bytes = source.bytes
             };
         }
+        
+        public static bool IsVarDataType(byte colType)
+        {
+            switch ((TDengineDataType)colType)
+            {
+                case TDengineDataType.TSDB_DATA_TYPE_BINARY:
+                case TDengineDataType.TSDB_DATA_TYPE_NCHAR:
+                case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
+                case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
+                case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
+                case TDengineDataType.TSDB_DATA_TYPE_BLOB:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+        
     }
 
     public enum TMQ_CONF_RES

@@ -1,4 +1,6 @@
-﻿namespace TDengine.Driver.Impl.StmtBuilder
+﻿using System.Collections.Generic;
+
+namespace TDengine.Driver.Impl.StmtBuilder
 {
     public interface IFieldBuilder
     {
@@ -7,7 +9,7 @@
         void AppendNull();
         void Clear();
         Stmt2BindColInfo ToStmt2BindColInfo();
-        void ToStmt2BindColInfo2(ref Stmt2BindColInfo info);
+        void ToStmt2BindColInfo2(Stmt2BindColInfo info);
         Stmt2BindColInfo AddToStmt2BindColInfo(Stmt2BindColInfo source);
         void Remove(int count);
         void SetBufferPool(BufferPool pool);
@@ -83,16 +85,18 @@
         }
     }
 
-    public struct Stmt2BindTableInfo
+    public class Stmt2BindTableInfo
     {
         public string TableName; // table name
+        public List<object[]> colsData;
+        public object[] tagsData;
         public int ColsLength; // how many columns
         public int TagsLength; // how many tags
         public Stmt2BindColInfo[] Cols; // col info
         public Stmt2BindColInfo[] Tags; // tag info
     }
 
-    public struct Stmt2BindColInfo
+    public class Stmt2BindColInfo
     {
         public uint TotalLength; // current Info total length, includes TotalLength field length
         public int DataType; // data type, see TDengineDataType

@@ -30,59 +30,58 @@ namespace TDengine.Driver.Client
                 _fieldsCount = count;
                 _fields = fields;
                 _sql = query;
-                if (!_isInsert) return;
-                var tagCount = 0;
-                var colCount = 0;
-                for (var i = 0; i < _fieldsCount; i++)
+                if (_isInsert)
                 {
-                    switch ((TaosFieldType)_fields[i].field_type)
+                    var tagCount = 0;
+                    var colCount = 0;
+                    for (var i = 0; i < _fieldsCount; i++)
                     {
-                        case TaosFieldType.TAOS_FIELD_TAG:
-                            tagCount++;
-                            break;
-                        case TaosFieldType.TAOS_FIELD_COL:
-                            colCount++;
-                            break;
-                        case TaosFieldType.TAOS_FIELD_QUERY:
-                        case TaosFieldType.TAOS_FIELD_TBNAME:
-                            break;
-                        default:
-                            throw new NotSupportedException(
-                                $"stmt field type not support: {(TaosFieldType)_fields[i].field_type}");
+                        switch ((TaosFieldType)_fields[i].field_type)
+                        {
+                            case TaosFieldType.TAOS_FIELD_TAG:
+                                tagCount++;
+                                break;
+                            case TaosFieldType.TAOS_FIELD_COL:
+                                colCount++;
+                                break;
+                            case TaosFieldType.TAOS_FIELD_QUERY:
+                            case TaosFieldType.TAOS_FIELD_TBNAME:
+                                break;
+                            default:
+                                throw new NotSupportedException(
+                                    $"stmt field type not support: {(TaosFieldType)_fields[i].field_type}");
+                        }
+                    }
+
+                    // _colBuilders = new IFieldBuilder[colCount];
+                    _colFields = new TaosFieldE[colCount];
+                    // _tagBuilders = new IFieldBuilder[tagCount];
+                    _tagFields = new TaosFieldE[tagCount];
+                    var tagIndex = 0;
+                    var colIndex = 0;
+                    for (var i = 0; i < _fields.Length; i++)
+                    {
+                        switch ((TaosFieldType)_fields[i].field_type)
+                        {
+                            case TaosFieldType.TAOS_FIELD_TAG:
+                                _tagFields[tagIndex] = TDengineConstant.ConvertToTaosFieldE(fields[i]);
+                                tagIndex++;
+                                break;
+                            case TaosFieldType.TAOS_FIELD_COL:
+                                _colFields[colIndex] = TDengineConstant.ConvertToTaosFieldE(fields[i]);
+                                colIndex++;
+                                break;
+                            case TaosFieldType.TAOS_FIELD_TBNAME:
+                                _needTableName = true;
+                                break;
+                            default:
+                                throw new NotSupportedException(
+                                    $"stmt field type not support: {(TaosFieldType)_fields[i].field_type}");
+                        }
                     }
                 }
 
-                _colBuilders = new IFieldBuilder[colCount];
-                _colFields = new TaosFieldE[colCount];
-                _tagBuilders = new IFieldBuilder[tagCount];
-                _tagFields = new TaosFieldE[tagCount];
-                var tagIndex = 0;
-                var colIndex = 0;
-                for (var i = 0; i < _fields.Length; i++)
-                {
-                    switch ((TaosFieldType)_fields[i].field_type)
-                    {
-                        case TaosFieldType.TAOS_FIELD_TAG:
-                            _tagBuilders[tagIndex] = Builder.CreateBuilder((TDengineDataType)_fields[i].type);
-                            _tagBuilders[tagIndex].SetBufferPool(_bufferPool);
-                            _tagFields[tagIndex] = TDengineConstant.ConvertToTaosFieldE(fields[i]);
-                            tagIndex++;
-                            break;
-                        case TaosFieldType.TAOS_FIELD_COL:
-                            _colBuilders[colIndex] = Builder.CreateBuilder((TDengineDataType)_fields[i].type);
-                            _colBuilders[colIndex].SetBufferPool(_bufferPool);
-                            _colFields[colIndex] = TDengineConstant.ConvertToTaosFieldE(fields[i]);
-                            colIndex++;
-                            break;
-                        case TaosFieldType.TAOS_FIELD_TBNAME:
-                            _needTableName = true;
-                            _tableNameBuilder = new TableNameBuilder();
-                            break;
-                        default:
-                            throw new NotSupportedException(
-                                $"stmt field type not support: {(TaosFieldType)_fields[i].field_type}");
-                    }
-                }
+                _currentTableInfo = new Stmt2TableData(isInsert ? _colFields.Length : count);
             }
             catch
             {

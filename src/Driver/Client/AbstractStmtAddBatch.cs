@@ -29,89 +29,24 @@ namespace TDengine.Driver.Client
             }
 
             // check row count
-            var rowCount = _colBuilders[0].Count;
-            for (var i = 0; i < _colBuilders.Length; i++)
+            
+            var rowCount = _currentTableInfo.Cols[0].Count;
+            for (var i = 1; i < _currentTableInfo.Cols.Length; i++)
             {
-                if (_colBuilders[i].Count == 0)
+                if (_currentTableInfo.Cols[i].Count == 0)
                 {
                     throw new InvalidOperationException($"Column at index {i} has no rows to add.");
                 }
 
-                if (_colBuilders[i].Count != rowCount)
+                if (_currentTableInfo.Cols[i].Count != rowCount)
                 {
                     throw new InvalidOperationException(
-                        $"Column at index {i} has a different row count than the first column. Expected {rowCount}, but got {_colBuilders[i].Count}.");
-                }
-            }
-
-            Stmt2BindTableInfo tableInfo;
-            if (_currentTableInfo.HasValue)
-            {
-                tableInfo = _currentTableInfo.Value;
-            }
-            else
-            {
-                if (!_tableInfos.TryGetValue(string.Empty, out tableInfo))
-                {
-                    tableInfo = GetStmt2BindTableInfo();
-                    tableInfo.TableName = string.Empty;
-                }
-            }
-
-            // set table columns
-            if (tableInfo.Cols == null || tableInfo.Cols.Length == 0)
-            {
-                var cols = _bufferPool.GetColInfos(_colBuilders.Length);
-                tableInfo.ColsLength = _colBuilders.Length;
-                tableInfo.Cols = cols;
-                for (var i = 0; i < _colBuilders.Length; i++)
-                {
-                    _colBuilders[i].ToStmt2BindColInfo2(ref tableInfo.Cols[i]);
-                    _colBuilders[i].Clear();
-                }
-            }
-            else
-            {
-                if (tableInfo.ColsLength != _colBuilders.Length)
-                {
-                    throw new InvalidOperationException(
-                        $"Column count mismatch. Expected {_colBuilders.Length}, but got {tableInfo.ColsLength}.");
-                }
-
-                for (var i = 0; i < _colBuilders.Length; i++)
-                {
-                    tableInfo.Cols[i] = _colBuilders[i].AddToStmt2BindColInfo(tableInfo.Cols[i]);
-                    _colBuilders[i].Clear();
-                }
-            }
-
-            // set table tags
-            if (NeedTags && IsTagsSet)
-            {
-                if (tableInfo.Tags == null || tableInfo.Tags.Length == 0)
-                {
-                    var tags = _bufferPool.GetColInfos(_tagBuilders.Length);
-                    tableInfo.TagsLength = _tagBuilders.Length;
-                    tableInfo.Tags = tags;
-                    // tableInfo.Tags = new Stmt2BindColInfo[_tagBuilders.Length];
-                    for (var i = 0; i < _tagBuilders.Length; i++)
-                    {
-                        _tagBuilders[i].ToStmt2BindColInfo2(ref tableInfo.Tags[i]);
-                        _tagBuilders[i].Clear();
-                    }
-                }
-                else
-                {
-                    // tag has been set, ignore the current tags
-                    foreach (var t in _tagBuilders)
-                    {
-                        t.Clear();
-                    }
+                        $"Column at index {i} has a different row count than the first column. Expected {rowCount}, but got {_currentTableInfo.Cols[i].Count}.");
                 }
             }
 
             // cache to dictionary
-            _tableInfos[tableInfo.TableName] = tableInfo;
+            _tableInfos[_currentTableInfo.TableName] = _currentTableInfo;
             // reset the current table info
 
             _addBatched = true;

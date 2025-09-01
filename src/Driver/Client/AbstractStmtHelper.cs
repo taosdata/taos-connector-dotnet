@@ -10,7 +10,7 @@ namespace TDengine.Driver.Client
         
         protected abstract bool AutoReconnectInternal();
 
-        private bool NeedTags => _tagBuilders != null && _tagBuilders.Length > 0;
+        private bool NeedTags => _tagFields != null && _tagFields.Length > 0;
 
         private bool IsTableNameSet
         {
@@ -92,6 +92,14 @@ namespace TDengine.Driver.Client
             if (_schemaChanged)
             {
                 throw new InvalidOperationException("The schema has changed, you should call Prepare() again.");
+            }
+        }
+
+        private void CheckTableNameSet()
+        {
+            if (_needTableName && !IsTableNameSet)
+            {
+                throw new InvalidOperationException("Table name is not set, you should call SetTableName() first.");
             }
         }
 

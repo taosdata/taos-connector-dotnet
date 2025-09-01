@@ -108,7 +108,7 @@ namespace TDengine.Driver.Impl.StmtBuilder
             };
         }
 
-        public void ToStmt2BindColInfo2(ref Stmt2BindColInfo info)
+        public void ToStmt2BindColInfo2(Stmt2BindColInfo info)
         {
             byte[] isNull = null;
             if (NullCount > 0)

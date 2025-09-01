@@ -21,17 +21,15 @@ namespace TDengine.Driver.Client
                     throw new ArgumentException("Table name cannot be null or empty");
                 }
 
-                _tableNameBuilder.Add(tableName);
                 if (_tableInfos.TryGetValue(tableName, out var info))
                 {
+                    _currentTableInfo = info;
                 }
                 else
                 {
-                    info = GetStmt2BindTableInfo();
-                    info.TableName = tableName;
+                    _currentTableInfo.TableName = tableName;
                 }
 
-                _currentTableInfo = info;
                 IsTableNameSet = true;
             }
             else
@@ -43,12 +41,14 @@ namespace TDengine.Driver.Client
 
         public void SetTags(object[] tags)
         {
+            CheckPrepared();
+            CheckTableNameSet();
             if (tags.Length == 0)
             {
                 return;
             }
 
-            if (_tagBuilders == null || _tagBuilders.Length == 0 || !_isInsert)
+            if (_tagFields == null || _tagFields.Length == 0 || !_isInsert)
             {
                 throw new InvalidOperationException("This statement does not need tags.");
             }
@@ -58,15 +58,19 @@ namespace TDengine.Driver.Client
                 throw new InvalidOperationException("Tags have already been set for current batch");
             }
 
-            if (tags.Length != _tagBuilders.Length)
+            if (tags.Length != _tagFields.Length)
             {
                 throw new ArgumentException(
-                    $"Expected {_tagBuilders.Length} tags, but got {tags.Length}");
+                    $"Expected {_tagFields.Length} tags, but got {tags.Length}");
             }
 
-            CacheRowValue(tags, _tagBuilders, _tagFields);
+            CheckRowValue(tags, _tagFields);
+            if (_currentTableInfo.Tags == null)
+            {
+                _currentTableInfo.Tags = tags;
+            }
+
             IsTagsSet = true;
         }
-
     }
 }
