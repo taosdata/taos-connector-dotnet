@@ -3752,6 +3752,83 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         }
                     }
                     Assert.True(hasValue);
+                    if (_is3360Test)
+                    {
+                        stmt.Dispose();
+                        stmt = client.StmtInit();
+                    }
+                    stmt.Prepare("insert into ? using stb_json tags(?) values(?,?)");
+                    isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    stmt.SetTableName("jtb_1");
+                    stmt.SetTags(new object[] { "{\"tag1\":1,\"tag2\":\"标签\",\"tag3\":true}" });
+                    stmt.BindRow(new object[] { DateTime.Now, 1 });
+                    stmt.AddBatch();
+                    stmt.SetTableName("jtb_2");
+                    stmt.SetTags(new object[] { null });
+                    stmt.BindRow(new object[] { DateTime.Now.Add(TimeSpan.FromSeconds(1)), 1 });
+                    stmt.AddBatch();
+                    stmt.SetTableName("jtb_3");
+                    stmt.SetTags(new object[] { "{}" });
+                    stmt.BindRow(new object[] { DateTime.Now.Add(TimeSpan.FromSeconds(2)), 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    Assert.Equal((long)3, stmt.Affected());
+                    hasValue = false;
+                    using (var result = client.Query("select * from stb_json where tbname = 'jtb_1'"))
+                    {
+                        while (result.Read())
+                        {
+                            Assert.Equal("{\"tag1\":1,\"tag2\":\"标签\",\"tag3\":true}", result.GetString(2));
+                            hasValue = true;
+                        }
+                    }
+                    Assert.True(hasValue);
+                    hasValue = false;
+                    using (var result = client.Query("select * from stb_json where tbname = 'jtb_2'"))
+                    {
+                        while (result.Read())
+                        {
+                            Assert.Equal("null", result.GetString(2));
+                            hasValue = true;
+                        }
+                    }
+                    Assert.True(hasValue);
+                    hasValue = false;
+                    using (var result = client.Query("select * from stb_json where tbname = 'jtb_3'"))
+                    {
+                        while (result.Read())
+                        {
+                            Assert.Null(result.GetValue(2));
+                            hasValue = true;
+                        }
+                    }
+                    Assert.True(hasValue);
+                    // duplicate table
+                    stmt.SetTableName("jtb_4");
+                    stmt.SetTags(new object[] { "{\"tag1\":1,\"tag2\":\"标签\",\"tag3\":true}" });
+                    stmt.BindRow(new object[] { DateTime.Now, 1 });
+                    stmt.AddBatch();
+                    stmt.SetTableName("jtb_4");
+                    stmt.SetTags(new object[] { null });
+                    stmt.BindRow(new object[] { DateTime.Now.Add(TimeSpan.FromSeconds(1)), 1 });
+                    stmt.AddBatch();
+                    stmt.SetTableName("jtb_4");
+                    stmt.SetTags(new object[] { "{}" });
+                    stmt.BindRow(new object[] { DateTime.Now.Add(TimeSpan.FromSeconds(2)), 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    Assert.Equal((long)3, stmt.Affected());
+                    hasValue = false;
+                    using (var result = client.Query("select * from stb_json where tbname = 'jtb_4'"))
+                    {
+                        while (result.Read())
+                        {
+                            Assert.Equal("{\"tag1\":1,\"tag2\":\"标签\",\"tag3\":true}", result.GetString(2));
+                            hasValue = true;
+                        }
+                    }
+                    Assert.True(hasValue);
                     stmt.Dispose();
                 }
                 catch (Exception e)
