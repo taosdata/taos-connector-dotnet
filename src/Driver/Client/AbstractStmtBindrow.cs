@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Reflection;
-using TDengine.Driver.Impl.StmtBuilder;
 
 namespace TDengine.Driver.Client
 {

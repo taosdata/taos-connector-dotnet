@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
-using TDengine.Driver.Impl.StmtBuilder;
 
 namespace TDengine.Driver.Client
 {
@@ -80,22 +80,16 @@ namespace TDengine.Driver.Client
                 // hasLength
                 bool isVarData = TDengineConstant.IsVarDataType((byte)tagFields[i].type);
 
-                if (isVarData)
-                {
-                    buffer[startOffset + HaveLengthOffset] = 1;
-                }
-                else
-                {
-                    buffer[startOffset + HaveLengthOffset] = 0;
-                }
-
                 // isNull
                 if (tags[i] == null)
                 {
                     buffer[startOffset + IsNullOffset] = 1;
                     if (isVarData)
                     {
-                        buffer[startOffset + HaveLengthOffset] = 0;
+                        // have length
+                        buffer[startOffset + HaveLengthOffset] = 1;
+                        // length
+                        WriteU32(buffer, startOffset + HaveLengthOffset + 4, 0);
                         // write TotalLength
                         totalLength = 4 + // TotalLength field length
                                       4 + // DataType field length
@@ -114,7 +108,7 @@ namespace TDengine.Driver.Client
                                       1 + // IsNull field length
                                       1 + // HaveLength field length
                                       4 + // BufferLength field length
-                                      tagFields[i].bytes;
+                                      TDengineConstant.TypeLengthMap[(TDengineDataType)tagFields[i].type];
                     }
 
                     WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
@@ -360,21 +354,7 @@ namespace TDengine.Driver.Client
 
             return startOffset;
         }
-
-        // public class Stmt2BindColInfo
-        // {
-        //     public uint TotalLength; // current Info total length, includes TotalLength field length
-        //     public int DataType; // data type, see TDengineDataType
-        //     public int Num; // how many rows of data, 1 for single row, >1 for multi rows
-        //     public byte[] IsNull; // Num * 1, each row data is null or not, Num elements
-        //
-        //     public byte
-        //         HaveLength; // 1, whether it has length, 0 for no, 1 for yes, when data type is variable length (binary, nchar, json, varbinary, varchar) must have length
-        //
-        //     public int[] Length; // each row data length, Num elements, when HaveLength is 0, this field is not used
-        //     public uint BufferLength; // Buffer length, the length of the data in Buffer
-        //     public byte[] Buffer; // bound data, the actual data buffer, the length is BufferLength
-        // }
+        
         private int WriteBindCol(TaosFieldE[] colFields, List<object>[] cols, int rows, byte[] buffer, int offset)
         {
             var startOffset = offset;
@@ -384,38 +364,35 @@ namespace TDengine.Driver.Client
             var variableLengthOffset = haveLengthOffset + 1;
             var variableBufferLengthOffset = variableLengthOffset + (4 * rows);
             var variableBufferOffset = variableBufferLengthOffset + 4;
-            for (int colIndex = 0; colIndex < cols.Length; colIndex++)
+            for (var colIndex = 0; colIndex < cols.Length; colIndex++)
             {
+                var colData = cols[colIndex];
                 var totalLength = 0;
                 // write DataType
                 WriteU32(buffer, startOffset + DataTypeOffset, (uint)colFields[colIndex].type);
                 // write Num
                 WriteU32(buffer, startOffset + NumOffset, (uint)rows);
                 // hasLength
-                bool isVarData = TDengineConstant.IsVarDataType((byte)colFields[colIndex].type);
+                var isVarData = TDengineConstant.IsVarDataType((byte)colFields[colIndex].type);
                 if (isVarData)
                 {
                     buffer[startOffset + haveLengthOffset] = 1;
-                }
-
-                if (isVarData)
-                {
                     var variableOffset = startOffset + variableBufferOffset;
                     // variable length data
                     var totalVarBufferLength = 0;
-                    for (int rowIndex = 0; rowIndex < rows; rowIndex++)
+                    for (var rowIndex = 0; rowIndex < rows; rowIndex++)
                     {
-                        if (cols[colIndex][rowIndex] == null || Convert.IsDBNull(cols[colIndex][rowIndex]))
+                        var value = colData[rowIndex];
+                        if (value == null || Convert.IsDBNull(value))
                         {
                             // is null
                             buffer[startOffset + IsNullOffset + rowIndex] = 1;
                             // length
-                            WriteU32(buffer, startOffset + variableLengthOffset + rowIndex * 4,
-                                (uint)0);
+                            // WriteU32(buffer, startOffset + variableLengthOffset + rowIndex * 4, 0);
                         }
                         else
                         {
-                            switch (cols[colIndex][rowIndex])
+                            switch (value)
                             {
                                 case string strVal:
                                 {
@@ -460,15 +437,16 @@ namespace TDengine.Driver.Client
                     var totalFixedBufferLength = 0;
                     var typeLength = TDengineConstant.TypeLengthMap[(TDengineDataType)colFields[colIndex].type];
                     var fixedOffset = startOffset + fixedBufferOffset;
-                    for (int rowIndex = 0; rowIndex < rows; rowIndex++)
+                    for (var rowIndex = 0; rowIndex < rows; rowIndex++)
                     {
-                        if (cols[colIndex][rowIndex] == null || Convert.IsDBNull(cols[colIndex][rowIndex]))
+                        var value = colData[rowIndex];
+                        if (value == null || Convert.IsDBNull(value))
                         {
                             buffer[startOffset + IsNullOffset + rowIndex] = 1;
                         }
                         else
                         {
-                            switch (cols[colIndex][rowIndex])
+                            switch (value)
                             {
                                 case DateTimeOffset dto:
                                     var timestamp = TDengineConstant.ConvertDateTimeOffsetToTimestamp(dto,
@@ -540,7 +518,7 @@ namespace TDengine.Driver.Client
                     // write TotalLength
                     WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
                     // write BufferLength
-                    WriteU32(buffer, startOffset + FixedBufferLengthOffset, (uint)totalFixedBufferLength);
+                    WriteU32(buffer, startOffset + fixedBufferLengthOffset, (uint)totalFixedBufferLength);
                 }
 
                 startOffset += totalLength;
@@ -778,18 +756,36 @@ namespace TDengine.Driver.Client
 
             return buffer;
         }
-
-        // little-endian write int32 to buffer
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteU32(byte[] buffer, int offset, uint value)
         {
+#if NETSTANDARD2_1_OR_GREATER ||NET5_0_OR_GREATER||NETCOREAPP2_1_OR_GREATER
+            Span<byte> span = buffer.AsSpan(offset);
+#if NET8_0_OR_GREATER
+            MemoryMarshal.Write(span, in value);
+#else
+            MemoryMarshal.Write(span, ref value);
+#endif
+#else
             buffer[offset] = (byte)value;
             buffer[offset + 1] = (byte)(value >> 8);
             buffer[offset + 2] = (byte)(value >> 16);
             buffer[offset + 3] = (byte)(value >> 24);
+#endif
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteU64(byte[] buffer, int offset, ulong value)
         {
+#if NETSTANDARD2_1_OR_GREATER ||NET5_0_OR_GREATER||NETCOREAPP2_1_OR_GREATER
+            Span<byte> span = buffer.AsSpan(offset);
+#if NET8_0_OR_GREATER
+            MemoryMarshal.Write(span, in value);
+#else
+            MemoryMarshal.Write(span, ref value);
+#endif
+#else
             buffer[offset] = (byte)value;
             buffer[offset + 1] = (byte)(value >> 8);
             buffer[offset + 2] = (byte)(value >> 16);
@@ -798,13 +794,24 @@ namespace TDengine.Driver.Client
             buffer[offset + 5] = (byte)(value >> 40);
             buffer[offset + 6] = (byte)(value >> 48);
             buffer[offset + 7] = (byte)(value >> 56);
+#endif
         }
 
-
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteU16(byte[] buffer, int offset, ushort value)
         {
+#if NETSTANDARD2_1_OR_GREATER ||NET5_0_OR_GREATER||NETCOREAPP2_1_OR_GREATER
+            Span<byte> span = buffer.AsSpan(offset);
+#if NET8_0_OR_GREATER
+            MemoryMarshal.Write(span, in value);
+#else
+            MemoryMarshal.Write(span, ref value);
+#endif
+#else
             buffer[offset] = (byte)value;
             buffer[offset + 1] = (byte)(value >> 8);
+#endif
         }
 
         protected abstract void BindBinaryInternal(byte[] data, out int affectedRows);

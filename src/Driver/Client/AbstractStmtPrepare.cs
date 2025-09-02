@@ -1,5 +1,4 @@
 ﻿using System;
-using TDengine.Driver.Impl.StmtBuilder;
 
 namespace TDengine.Driver.Client
 {
@@ -81,7 +80,7 @@ namespace TDengine.Driver.Client
                     }
                 }
 
-                _currentTableInfo = new Stmt2TableData(isInsert ? _colFields.Length : count);
+                _currentTableInfo = NewStmt2TableData();
             }
             catch
             {

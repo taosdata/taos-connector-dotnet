@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using TDengine.Driver.Impl.StmtBuilder;
 
 namespace TDengine.Driver.Client
 {
@@ -9,14 +8,10 @@ namespace TDengine.Driver.Client
         public List<object>[] Cols;
         public object[] Tags;
         
-        public Stmt2TableData(int colCount)
+        public Stmt2TableData(List<object>[] cols)
         {
             TableName = string.Empty;
-            Cols = new List<object>[colCount];
-            for (int i = 0; i < colCount; i++)
-            {
-                Cols[i] = new List<object>(1);
-            }
+            Cols = cols;
         }
 
         public bool IsColSet => Cols[0].Count > 0;
@@ -37,7 +32,7 @@ namespace TDengine.Driver.Client
         // private IFieldBuilder[] _tagBuilders;
         private bool _needTableName;
         
-        private Dictionary<string, Stmt2TableData> _tableInfos = new Dictionary<string, Stmt2TableData>();
+        private readonly Dictionary<string, Stmt2TableData> _tableInfos = new Dictionary<string, Stmt2TableData>();
         private Stmt2TableData _currentTableInfo;
         private bool _isTableNameSet;
         private bool _isTagsSet;
@@ -48,6 +43,73 @@ namespace TDengine.Driver.Client
         private bool _schemaChanged;
         private TaosFieldE[] _queryFields;
         
+        private readonly Queue<List<object>> _objectListQueue = new Queue<List<object>>();
+        private readonly Queue<Stmt2TableData> _tableInfoQueue = new Queue<Stmt2TableData>();
+        
+        private bool TryGetTableInfo(out Stmt2TableData tableInfo)
+        {
+            if (_tableInfoQueue.Count > 0)
+            {
+                tableInfo = _tableInfoQueue.Dequeue();
+                return true;
+            }
+
+            tableInfo = null;
+            return false;
+        }
+        
+        private void SetObjectList(List<object>[] lists)
+        {
+            for (int i = 0; i < lists.Length; i++)
+            {
+                lists[i] = GetObjectList();
+            }
+        }
+        
+        private List<object> GetObjectList()
+        {
+            return _objectListQueue.Count > 0 ? _objectListQueue.Dequeue() : new List<object>();
+        }
+        
+        private void ReturnObjectLists(List<object>[] lists)
+        {
+            for (int i = 0; i < lists.Length; i++)
+            {
+                ReturnObjectList(lists[i]);
+                lists[i] = null;
+            }
+        }
+        private void ReturnObjectList(List<object> list)
+        {
+            list.Clear();
+            _objectListQueue.Enqueue(list);
+        }
+
+        private Stmt2TableData NewStmt2TableData()
+        {
+            if (TryGetTableInfo(out var info))
+            {
+                SetObjectList(info.Cols);
+            }
+            else
+            {
+                // new one
+                var lists = new List<object>[_isInsert? _colFields.Length: _fieldsCount];
+                SetObjectList(lists);
+                info = new Stmt2TableData(lists);
+            }
+
+            return info;
+        }
+        
+        private void ReturnTableInfo(Stmt2TableData info)
+        {
+            if (info == null) return;
+            ReturnObjectLists(info.Cols);
+            info.Tags = null;
+            info.TableName = string.Empty;
+            _tableInfoQueue.Enqueue(info);
+        }
         
         protected AbstractStmt(int binaryHeaderLength = 0)
         {
@@ -62,24 +124,24 @@ namespace TDengine.Driver.Client
             _fields = null;
             _tagFields = null;
             _colFields = null;
-            // _colBuilders = null;
-            // _tagBuilders = null;
             _needTableName = false;
             _tableInfos.Clear();
             _isTableNameSet = false;
             _isTagsSet = false;
             _addBatched = false;
             _executed = false;
-            // _tableNameBuilder = null;
             _schemaChanged = false;
             _currentTableInfo = null;
+            // clean cached object lists and table info queue
+            _tableInfoQueue.Clear();
+            _objectListQueue.Clear();
         }
 
         private void CleanBatch()
         {
             _isTableNameSet = false;
             _isTagsSet = false;
-            _currentTableInfo = new Stmt2TableData(_isInsert? _colFields.Length: _fieldsCount);
+            _currentTableInfo = NewStmt2TableData();
         }
 
         private void CleanExec()
@@ -91,6 +153,11 @@ namespace TDengine.Driver.Client
 
             _addBatched = false;
             _executed = true;
+            foreach (var tableInfo in _tableInfos.Values)
+            {
+                // return to cache
+                ReturnTableInfo(tableInfo);
+            }
             _tableInfos.Clear();
         }
 
