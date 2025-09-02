@@ -354,7 +354,7 @@ namespace TDengine.Driver.Client
 
             return startOffset;
         }
-        
+
         private int WriteBindCol(TaosFieldE[] colFields, List<object>[] cols, int rows, byte[] buffer, int offset)
         {
             var startOffset = offset;
@@ -414,7 +414,7 @@ namespace TDengine.Driver.Client
                                 }
                                 default:
                                     throw new NotSupportedException(
-                                        $"col field type not support: {(TDengineDataType)colFields[colIndex].type}");
+                                        $"col field type not support: {(TDengineDataType)colFields[colIndex].type}, value: {value}");
                             }
                         }
                     }
@@ -572,23 +572,25 @@ namespace TDengine.Driver.Client
                         {
                             // variant type
                             var bsCount = 0;
-                            switch (tableInfo.Value.Tags[i])
+                            var tagVal = tableInfo.Value.Tags[i];
+                            if (tagVal != null && !Convert.IsDBNull(tagVal))
                             {
-                                case null:
-                                    break;
-                                case string strVal:
+                                switch (tableInfo.Value.Tags[i])
                                 {
-                                    bsCount = Encoding.UTF8.GetByteCount(strVal);
-                                    break;
+                                    case string strVal:
+                                    {
+                                        bsCount = Encoding.UTF8.GetByteCount(strVal);
+                                        break;
+                                    }
+                                    case byte[] binVal:
+                                    {
+                                        bsCount = binVal.Length;
+                                        break;
+                                    }
+                                    default:
+                                        throw new NotSupportedException(
+                                            $"tag field type not support: {(TDengineDataType)_tagFields[i].type}, value: {tagVal}");
                                 }
-                                case byte[] binVal:
-                                {
-                                    bsCount = binVal.Length;
-                                    break;
-                                }
-                                default:
-                                    throw new NotSupportedException(
-                                        $"tag field type not support: {(TDengineDataType)_tagFields[i].type}");
                             }
 
                             uint totalLength = 4 + // TotalLength field length
@@ -631,10 +633,13 @@ namespace TDengine.Driver.Client
                         var bsCount = 0;
                         for (int j = 0; j < rows; j++)
                         {
+                            var colVal = tableInfo.Value.Cols[i][j];
+                            if (colVal == null || Convert.IsDBNull(colVal))
+                            {
+                                continue;
+                            }
                             switch (tableInfo.Value.Cols[i][j])
                             {
-                                case null:
-                                    break;
                                 case string strVal:
                                 {
                                     bsCount += Encoding.UTF8.GetByteCount(strVal);
@@ -647,7 +652,7 @@ namespace TDengine.Driver.Client
                                 }
                                 default:
                                     throw new NotSupportedException(
-                                        $"col field type not support: {(TDengineDataType)colFields[i].type}");
+                                        $"col field type not support: {(TDengineDataType)colFields[i].type}, value: {colVal}");
                             }
                         }
 
@@ -756,7 +761,7 @@ namespace TDengine.Driver.Client
 
             return buffer;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteU32(byte[] buffer, int offset, uint value)
         {
@@ -797,7 +802,7 @@ namespace TDengine.Driver.Client
 #endif
         }
 
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteU16(byte[] buffer, int offset, ushort value)
         {

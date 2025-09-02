@@ -185,7 +185,7 @@ namespace TDengine.Driver.Client
                     throw new ArgumentException(
                         $"Expected {_fieldsCount} fields, but got {row.Length}");
                 }
-                
+
                 if (_currentTableInfo.IsColSet)
                 {
                     throw new InvalidOperationException("Query parameters have already been set.");
@@ -194,128 +194,132 @@ namespace TDengine.Driver.Client
                 var fields = new TaosFieldE[row.Length];
                 for (var i = 0; i < row.Length; i++)
                 {
-                    if (row[i] == null || Convert.IsDBNull(row[i]))
+                    try
                     {
-                        throw new ArgumentException("query parameter cannot be null or DBNull");
-                    }
+                        if (row[i] == null || Convert.IsDBNull(row[i]))
+                        {
+                            throw new ArgumentException("query parameter cannot be null or DBNull");
+                        }
 
-                    switch (row[i])
+                        switch (row[i])
+                        {
+                            case DateTime dt:
+                                _currentTableInfo.Cols[i].Add(dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK"));
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
+                                };
+                                break;
+                            case DateTimeOffset dto:
+                                _currentTableInfo.Cols[i].Add(dto.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK"));
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
+                                };
+                                break;
+                            case sbyte _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_TINYINT,
+                                    bytes = 1
+                                };
+                                break;
+                            case short _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_SMALLINT,
+                                    bytes = 2
+                                };
+                                break;
+                            case int _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_INT,
+                                    bytes = 4
+                                };
+                                break;
+                            case long _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BIGINT,
+                                };
+                                break;
+                            case byte _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UTINYINT,
+                                };
+                                break;
+                            case ushort _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_USMALLINT,
+                                };
+                                break;
+                            case uint _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UINT,
+                                };
+                                break;
+                            case ulong _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UBIGINT,
+                                };
+                                break;
+                            case float _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_FLOAT,
+                                };
+                                break;
+                            case double _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_DOUBLE,
+                                };
+                                break;
+                            case string _:
+                            case byte[] _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
+                                };
+                                break;
+                            case bool _:
+                                _currentTableInfo.Cols[i].Add(row[i]);
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BOOL,
+                                };
+                                break;
+                            default:
+                                throw new ArgumentException(
+                                    $"BindIndex: {i}, stmt bind query param type not supported: {row[i].GetType()}");
+                        }
+                    }
+                    catch
                     {
-                        case DateTime dt:
-                            _currentTableInfo.Cols[i].Add(dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK"));
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
-                            };
-                            break;
-                        case DateTimeOffset dto:
-                            _currentTableInfo.Cols[i].Add(dto.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK"));
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
-                            };
-                            break;
-                        case sbyte _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_TINYINT,
-                                bytes = 1
-                            };
-                            break;
-                        case short _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_SMALLINT,
-                                bytes = 2
-                            };
-                            break;
-                        case int _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_INT,
-                                bytes = 4
-                            };
-                            break;
-                        case long _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BIGINT,
-                                bytes = 8
-                            };
-                            break;
-                        case byte _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UTINYINT,
-                                bytes = 1
-                            };
-                            break;
-                        case ushort _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_USMALLINT,
-                                bytes = 2
-                            };
-                            break;
-                        case uint _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UINT,
-                                bytes = 4
-                            };
-                            break;
-                        case ulong _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UBIGINT,
-                                bytes = 8
-                            };
-                            break;
-                        case float _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_FLOAT,
-                                bytes = 4
-                            };
-                            break;
-                        case double _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_DOUBLE,
-                                bytes = 8
-                            };
-                            break;
-                        case string _:
-                        case byte[] _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
-                            };
-                            break;
-                        case bool _:
-                            _currentTableInfo.Cols[i].Add(row[i]);
-                            fields[i] = new TaosFieldE
-                            {
-                                type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BOOL,
-                                bytes = 1
-                            };
-                            break;
-                        default:
-                            throw new ArgumentException(
-                                $"BindIndex: {i}, stmt bind query param type not supported: {row[i].GetType()}");
+                        for (var j = 0; j < i; j++)
+                        {
+                            _currentTableInfo.Cols[j].RemoveAt(_currentTableInfo.Cols[j].Count - 1);
+                        }
+                        throw;
                     }
                 }
+
                 _queryFields = fields;
             }
 
