@@ -117,7 +117,7 @@ namespace TDengine.Driver.Client
                 }
                 else
                 {
-                    if (isVarData)
+                    if (!isVarData)
                     {
                         var dataLength = (uint)TDengineConstant.TypeLengthMap[(TDengineDataType)tagFields[i].type];
 
@@ -177,7 +177,7 @@ namespace TDengine.Driver.Client
                                 break;
                             default:
                                 throw new ArgumentException(
-                                    $"tag fields type not support: {(TDengineDataType)tagFields[i].type}");
+                                    $"tag fields type not support: {(TDengineDataType)tagFields[i].type}, value: {tags[i]}");
                         }
 
                         totalLength = 4 + // TotalLength field length
@@ -196,7 +196,7 @@ namespace TDengine.Driver.Client
                     }
                     else
                     {
-                        var dataLength = (uint)0;
+                        uint dataLength;
                         switch (tags[i])
                         {
                             case string strVal:
@@ -211,6 +211,9 @@ namespace TDengine.Driver.Client
                                 Buffer.BlockCopy(binVal, 0, buffer, startOffset + HaveLengthOffset + 1 + 4 + 4,
                                     binVal.Length);
                                 break;
+                            default:
+                                throw new ArgumentException(
+                                    $"tag fields type not support: {(TDengineDataType)tagFields[i].type}, value: {tags[i]}");
                         }
 
                         totalLength = 4 + // TotalLength field length
