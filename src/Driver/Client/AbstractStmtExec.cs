@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
+#if NETSTANDARD2_1_OR_GREATER ||NET5_0_OR_GREATER||NETCOREAPP2_0_OR_GREATER
+using System.Runtime.InteropServices;
+#endif
 
 namespace TDengine.Driver.Client
 {
@@ -30,7 +32,7 @@ namespace TDengine.Driver.Client
                 //         sb.AppendLine();
                 // }
                 // Console.WriteLine(sb.ToString());
-                var affectedRows = 0;
+                int affectedRows;
                 try
                 {
                     BindBinaryInternal(buffer, out affectedRows);
@@ -72,7 +74,7 @@ namespace TDengine.Driver.Client
             var startOffset = offset;
             for (var i = 0; i < tags.Length; i++)
             {
-                var totalLength = 0;
+                uint totalLength;
                 // write DataType
                 WriteU32(buffer, startOffset + DataTypeOffset, (uint)tagFields[i].type);
                 // write Num
@@ -108,248 +110,127 @@ namespace TDengine.Driver.Client
                                       1 + // IsNull field length
                                       1 + // HaveLength field length
                                       4 + // BufferLength field length
-                                      TDengineConstant.TypeLengthMap[(TDengineDataType)tagFields[i].type];
+                                      (uint)TDengineConstant.TypeLengthMap[(TDengineDataType)tagFields[i].type];
                     }
 
-                    WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
+                    WriteU32(buffer, startOffset + TotalLengthOffset, totalLength);
                 }
                 else
                 {
-                    buffer[startOffset + IsNullOffset] = 0;
-                    switch (tags[i])
+                    if (isVarData)
                     {
-                        case bool boolVal:
+                        var dataLength = (uint)TDengineConstant.TypeLengthMap[(TDengineDataType)tagFields[i].type];
 
-                            // write TotalLength
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          1; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + IsNullOffset + FixedBufferLengthOffset, 1);
-                            buffer[startOffset + IsNullOffset + FixedBufferOffset] = boolVal ? (byte)1 : (byte)0;
-                            break;
-                        case sbyte sbyteVal:
-                            // write TotalLength
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          1; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 1);
-                            buffer[startOffset + FixedBufferOffset] = (byte)sbyteVal;
-                            break;
-                        case byte byteVal:
-                            // write TotalLength
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          1; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 1);
-                            buffer[startOffset + FixedBufferOffset] = byteVal;
-                            break;
-                        case short shortVal:
-                            // write TotalLength
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          2; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 2);
-                            WriteU16(buffer, startOffset + FixedBufferOffset, (ushort)shortVal);
-                            break;
-                        case ushort ushortVal:
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          2; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 2);
-                            WriteU16(buffer, startOffset + FixedBufferOffset, ushortVal);
-                            break;
-                        case int intVal:
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          4; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 4);
-                            WriteU32(buffer, startOffset + FixedBufferOffset, (uint)intVal);
-                            break;
-                        case uint uintVal:
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          4; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 4);
-                            WriteU32(buffer, startOffset + FixedBufferOffset, uintVal);
-                            break;
-                        case long longVal:
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          8; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 8);
-                            WriteU64(buffer, startOffset + FixedBufferOffset, (ulong)longVal);
-                            break;
-                        case ulong ulongVal:
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          8; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 8);
-                            WriteU64(buffer, startOffset + FixedBufferOffset, ulongVal);
-                            break;
-                        case float floatVal:
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          4; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 4);
+                        switch (tags[i])
+                        {
+                            case bool boolVal:
+                                buffer[startOffset + IsNullOffset + FixedBufferOffset] = boolVal ? (byte)1 : (byte)0;
+                                break;
+                            case sbyte sbyteVal:
+                                buffer[startOffset + FixedBufferOffset] = (byte)sbyteVal;
+                                break;
+                            case byte byteVal:
+                                buffer[startOffset + FixedBufferOffset] = byteVal;
+                                break;
+                            case short shortVal:
+                                WriteU16(buffer, startOffset + FixedBufferOffset, (ushort)shortVal);
+                                break;
+                            case ushort ushortVal:
+                                WriteU16(buffer, startOffset + FixedBufferOffset, ushortVal);
+                                break;
+                            case int intVal:
+                                WriteU32(buffer, startOffset + FixedBufferOffset, (uint)intVal);
+                                break;
+                            case uint uintVal:
+                                WriteU32(buffer, startOffset + FixedBufferOffset, uintVal);
+                                break;
+                            case long longVal:
+                                WriteU64(buffer, startOffset + FixedBufferOffset, (ulong)longVal);
+                                break;
+                            case ulong ulongVal:
+                                WriteU64(buffer, startOffset + FixedBufferOffset, ulongVal);
+                                break;
+                            case float floatVal:
 #if NETSTANDARD2_1_OR_GREATER ||NET5_0_OR_GREATER||NETCOREAPP2_0_OR_GREATER
-                            var floatInt = BitConverter.SingleToInt32Bits(floatVal);
-                            WriteU32(buffer, startOffset + FixedBufferOffset, (uint)floatInt);
+                                var floatInt = BitConverter.SingleToInt32Bits(floatVal);
+                                WriteU32(buffer, startOffset + FixedBufferOffset, (uint)floatInt);
 #else
-                            var floatBytes = BitConverter.GetBytes(floatVal);
-                            Buffer.BlockCopy(floatBytes, 0, buffer, startOffset + FixedBufferOffset, 4);
+                                var floatBytes = BitConverter.GetBytes(floatVal);
+                                Buffer.BlockCopy(floatBytes, 0, buffer, startOffset + FixedBufferOffset, 4);
 #endif
-                            break;
-                        case double doubleVal:
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          8; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 8);
-                            BitConverter.DoubleToInt64Bits(doubleVal);
-                            WriteU64(buffer, startOffset + FixedBufferOffset, (ulong)doubleVal);
-                            break;
-                        case string strVal:
-                            var len = Encoding.UTF8.GetByteCount(strVal);
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // Length field length, each length is 4 bytes
-                                          4 + // BufferLength field length
-                                          len; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            buffer[startOffset + HaveLengthOffset] = 1;
-                            // write LengthField
-                            WriteU32(buffer, startOffset + HaveLengthOffset + 1, (uint)len);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + HaveLengthOffset + 1 + 4, (uint)len);
-                            // write Buffer
-                            Encoding.UTF8.GetBytes(strVal, 0, strVal.Length, buffer,
-                                startOffset + HaveLengthOffset + 1 + 4 + 4);
-                            break;
-                        case byte[] binVal:
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // Length field length, each length is 4 bytes
-                                          4 + // BufferLength field length
-                                          binVal.Length; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            buffer[startOffset + HaveLengthOffset] = 1;
-                            // write LengthField
-                            WriteU32(buffer, startOffset + HaveLengthOffset + 1, (uint)binVal.Length);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + HaveLengthOffset + 1 + 4, (uint)binVal.Length);
-                            // write Buffer
-                            Buffer.BlockCopy(binVal, 0, buffer, startOffset + HaveLengthOffset + 1 + 4 + 4,
-                                binVal.Length);
-                            break;
-                        case DateTime dt:
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          8; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 8);
-                            var ts = TDengineConstant.ConvertDateTimeToTimestamp(dt,
-                                (TDenginePrecision)tagFields[i].precision);
-                            WriteU64(buffer, startOffset + FixedBufferOffset, (ulong)ts);
-                            break;
-                        case DateTimeOffset dto:
-                            totalLength = 4 + // TotalLength field length
-                                          4 + // DataType field length
-                                          4 + // Num field length
-                                          1 + // IsNull field length
-                                          1 + // HaveLength field length
-                                          4 + // BufferLength field length
-                                          8; // Buffer field length
-                            WriteU32(buffer, startOffset + TotalLengthOffset, (uint)totalLength);
-                            // write BufferLength
-                            WriteU32(buffer, startOffset + FixedBufferLengthOffset, 8);
-                            var timestamp =
-                                TDengineConstant.ConvertDateTimeOffsetToTimestamp(dto,
+                                break;
+                            case double doubleVal:
+                                // write BufferLength
+                                BitConverter.DoubleToInt64Bits(doubleVal);
+                                WriteU64(buffer, startOffset + FixedBufferOffset, (ulong)doubleVal);
+                                break;
+                            case DateTime dt:
+                                var ts = TDengineConstant.ConvertDateTimeToTimestamp(dt,
                                     (TDenginePrecision)tagFields[i].precision);
-                            WriteU64(buffer, startOffset + FixedBufferOffset, (ulong)timestamp);
-                            break;
-                        default:
-                            throw new ArgumentException(
-                                $"tag fields type not support: {(TDengineDataType)tagFields[i].type}");
+                                WriteU64(buffer, startOffset + FixedBufferOffset, (ulong)ts);
+                                break;
+                            case DateTimeOffset dto:
+                                var timestamp =
+                                    TDengineConstant.ConvertDateTimeOffsetToTimestamp(dto,
+                                        (TDenginePrecision)tagFields[i].precision);
+                                WriteU64(buffer, startOffset + FixedBufferOffset, (ulong)timestamp);
+                                break;
+                            default:
+                                throw new ArgumentException(
+                                    $"tag fields type not support: {(TDengineDataType)tagFields[i].type}");
+                        }
+
+                        totalLength = 4 + // TotalLength field length
+                                      4 + // DataType field length
+                                      4 + // Num field length
+                                      1 + // IsNull field length
+                                      1 + // HaveLength field length
+                                      4 + // BufferLength field length
+                                      dataLength; // Buffer field length
+                        WriteU32(buffer, startOffset + TotalLengthOffset, totalLength);
+                        // write BufferLength
+                        if (!isVarData)
+                        {
+                            WriteU32(buffer, startOffset + IsNullOffset + FixedBufferLengthOffset, dataLength);
+                        }
+                    }
+                    else
+                    {
+                        var dataLength = (uint)0;
+                        switch (tags[i])
+                        {
+                            case string strVal:
+                                dataLength = (uint)Encoding.UTF8.GetByteCount(strVal);
+                                // write Buffer
+                                Encoding.UTF8.GetBytes(strVal, 0, strVal.Length, buffer,
+                                    startOffset + HaveLengthOffset + 1 + 4 + 4);
+                                break;
+                            case byte[] binVal:
+                                dataLength = (uint)binVal.Length;
+                                // write Buffer
+                                Buffer.BlockCopy(binVal, 0, buffer, startOffset + HaveLengthOffset + 1 + 4 + 4,
+                                    binVal.Length);
+                                break;
+                        }
+
+                        totalLength = 4 + // TotalLength field length
+                                      4 + // DataType field length
+                                      4 + // Num field length
+                                      1 + // IsNull field length
+                                      1 + // HaveLength field length
+                                      4 + // Length field length, each length is 4 bytes
+                                      4 + // BufferLength field length
+                                      dataLength; // Buffer field length
+                        WriteU32(buffer, startOffset + TotalLengthOffset, totalLength);
+                        buffer[startOffset + HaveLengthOffset] = 1;
+                        // write LengthField
+                        WriteU32(buffer, startOffset + HaveLengthOffset + 1, dataLength);
+                        // write BufferLength
+                        WriteU32(buffer, startOffset + HaveLengthOffset + 1 + 4, dataLength);
                     }
                 }
 
-                startOffset += totalLength;
+                startOffset += (int)totalLength;
             }
 
             return startOffset;
@@ -367,7 +248,7 @@ namespace TDengine.Driver.Client
             for (var colIndex = 0; colIndex < cols.Length; colIndex++)
             {
                 var colData = cols[colIndex];
-                var totalLength = 0;
+                int totalLength;
                 // write DataType
                 WriteU32(buffer, startOffset + DataTypeOffset, (uint)colFields[colIndex].type);
                 // write Num
@@ -638,6 +519,7 @@ namespace TDengine.Driver.Client
                             {
                                 continue;
                             }
+
                             switch (tableInfo.Value.Cols[i][j])
                             {
                                 case string strVal:
