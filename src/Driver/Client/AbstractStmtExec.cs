@@ -189,10 +189,7 @@ namespace TDengine.Driver.Client
                                       dataLength; // Buffer field length
                         WriteU32(buffer, startOffset + TotalLengthOffset, totalLength);
                         // write BufferLength
-                        if (!isVarData)
-                        {
-                            WriteU32(buffer, startOffset + IsNullOffset + FixedBufferLengthOffset, dataLength);
-                        }
+                        WriteU32(buffer, startOffset + FixedBufferLengthOffset, dataLength);
                     }
                     else
                     {
