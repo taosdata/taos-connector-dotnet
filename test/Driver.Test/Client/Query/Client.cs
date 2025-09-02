@@ -3346,7 +3346,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             precision), next3SecondTs);
                         CheckValue(rows.GetInt64(0), next3SecondTs);
                     }
-                                        
+
                     // bind column with DateTime?[]
                     if (_is3360Test)
                     {
@@ -3490,7 +3490,268 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             Assert.Equal(2, result.GetInt32(1));
                         }
                     }
+
                     Assert.Equal(1, queryCount);
+                    stmt.Dispose();
+                }
+                catch (Exception e)
+                {
+                    _output.WriteLine(e.ToString());
+                    throw;
+                }
+                finally
+                {
+                    DoExec(client, $"drop database if exists {db}");
+                }
+            }
+        }
+
+        private void StmtBindTagsTest(string connectString, string db)
+        {
+            var builder = new ConnectionStringBuilder(connectString);
+            var inCloud = IsCloudTest(builder);
+            using (var client = DbDriver.Open(builder))
+            {
+                try
+                {
+                    DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
+                    DoExec(client, $"create database {db}", ReqId.GetReqId());
+                    DoExec(client, $"use {db}", ReqId.GetReqId());
+                    
+                    DoExec(client,
+                        $"create table stb_all(ts timestamp,v int) tags(" +
+                        $"t1 bool," +
+                        $"t2 tinyint," +
+                        $"t3 smallint," +
+                        $"t4 int," +
+                        $"t5 bigint," +
+                        $"t6 tinyint unsigned," +
+                        $"t7 smallint unsigned," +
+                        $"t8 int unsigned," +
+                        $"t9 bigint unsigned," +
+                        $"t10 float," +
+                        $"t11 double," +
+                        $"t12 binary(20)," +
+                        $"t13 nchar(20)," +
+                        $"t14 varbinary(20)," +
+                        $"t15 geometry(100)," +
+                        $"t16 timestamp," +
+                        $"t17 timestamp," +
+                        $"t18 timestamp)");
+                    var now = TDengineConstant.ConvertDateTimeToTimestamp(DateTime.Now, TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                    var tag1 = new object[]
+                    {
+                        true,
+                        sbyte.MaxValue,
+                        short.MaxValue,
+                        int.MaxValue,
+                        long.MaxValue,
+                        byte.MaxValue,
+                        ushort.MaxValue,
+                        uint.MaxValue,
+                        ulong.MaxValue,
+                        1.23f,
+                        4.56,
+                        "tag_binary_标签",
+                        "tag_nchar_标签",
+                        Encoding.UTF8.GetBytes("tag_varbinary_标签"),
+                        new byte[]
+                        {
+                            0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                            0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                        },
+                        now,
+                        TDengineConstant.ConvertTimestampToDateTime(now, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
+                        TDengineConstant.ConvertTimestampToDateTimeOffset(now,
+                            TDenginePrecision.TSDB_TIME_PRECISION_MILLI, TimeZoneInfo.Utc)
+                    };
+                    var tag2 = new object[]
+                    {
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                    };
+                    var tag3 = new object[]
+                    {
+                        false,
+                        sbyte.MinValue,
+                        short.MinValue,
+                        int.MinValue,
+                        long.MinValue,
+                        byte.MinValue,
+                        ushort.MinValue,
+                        uint.MinValue,
+                        ulong.MinValue,
+                        1.23f,
+                        4.56,
+                        "tag_binary_标签",
+                        "tag_nchar_标签",
+                        Encoding.UTF8.GetBytes("tag_varbinary_标签"),
+                        new byte[]
+                        {
+                            0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                            0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                        },
+                        now,
+                        TDengineConstant.ConvertTimestampToDateTime(now, TDenginePrecision.TSDB_TIME_PRECISION_MILLI),
+                        TDengineConstant.ConvertTimestampToDateTimeOffset(now,
+                            TDenginePrecision.TSDB_TIME_PRECISION_MILLI, TimeZoneInfo.Utc)
+                    };
+                    DoExec(client, $"create table stb_json(ts timestamp ,v int) tags(t1 json)");
+                    var stmt = client.StmtInit(ReqId.GetReqId());
+                    stmt.Prepare($"insert into ? using stb_all tags(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) values(?,?)");
+                    var isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    stmt.SetTableName("ctb_1");
+                    stmt.SetTags(tag1);
+                    stmt.BindRow(new object[] { DateTime.Now, 1 });
+                    stmt.AddBatch();
+                    stmt.SetTableName("ctb_2");
+                    stmt.SetTags(tag2);
+                    stmt.BindRow(new object[] { DateTime.Now.Add(TimeSpan.FromSeconds(1)), 1 });
+                    stmt.AddBatch();
+                    stmt.SetTableName("ctb_3");
+                    stmt.SetTags(tag3);
+                    stmt.BindRow(new object[] { DateTime.Now.Add(TimeSpan.FromSeconds(2)), 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    Assert.Equal((long)3, stmt.Affected());
+                    var hasValue = false;
+                    using (var result = client.Query("select * from stb_all where tbname = 'ctb_1'"))
+                    {
+                        while (result.Read())
+                        {
+                            Assert.True(result.GetBoolean(2));
+                            Assert.Equal(sbyte.MaxValue,(sbyte)result.GetValue(3));
+                            Assert.Equal(short.MaxValue,(short)result.GetValue(4));
+                            Assert.Equal(int.MaxValue,(int)result.GetValue(5));
+                            Assert.Equal(long.MaxValue,(long)result.GetValue(6));
+                            Assert.Equal(byte.MaxValue,(byte)result.GetValue(7));
+                            Assert.Equal(ushort.MaxValue,(ushort)result.GetValue(8));
+                            Assert.Equal(uint.MaxValue,(uint)result.GetValue(9));
+                            Assert.Equal(ulong.MaxValue,(ulong)result.GetValue(10));
+                            CheckValue(1.23f,(float)result.GetValue(11));
+                            CheckValue(4.56,(double)result.GetValue(12));
+                            Assert.Equal("tag_binary_标签",result.GetString(13));
+                            Assert.Equal("tag_nchar_标签",result.GetString(14));
+                            Assert.Equal("tag_varbinary_标签",Encoding.UTF8.GetString((byte[])result.GetValue(15)));
+                            Assert.Equal(new byte[]
+                            {
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                            },(byte[])result.GetValue(16));
+                            Assert.Equal(now,result.GetInt64(17));
+                            Assert.Equal(now,result.GetInt64(18));
+                            Assert.Equal(now,result.GetInt64(19));
+                            hasValue = true;
+                        }
+                    }
+                    Assert.True(hasValue);
+                    hasValue = false;
+                    using (var result = client.Query("select * from stb_all where tbname = 'ctb_2'"))
+                    {
+                        while (result.Read())
+                        {
+                            for (int i = 2; i < 20; i++)
+                            {
+                                Assert.Null(result.GetValue(i));
+                            }
+                            hasValue = true;
+                        }
+                    }
+                    Assert.True(hasValue);
+                    hasValue = false;
+                    using (var result = client.Query("select * from stb_all where tbname = 'ctb_3'"))
+                    {
+                        while (result.Read())
+                        {
+                            Assert.False(result.GetBoolean(2));
+                            Assert.Equal(sbyte.MinValue,(sbyte)result.GetValue(3));
+                            Assert.Equal(short.MinValue,(short)result.GetValue(4));
+                            Assert.Equal(int.MinValue,(int)result.GetValue(5));
+                            Assert.Equal(long.MinValue,(long)result.GetValue(6));
+                            Assert.Equal(byte.MinValue,(byte)result.GetValue(7));
+                            Assert.Equal(ushort.MinValue,(ushort)result.GetValue(8));
+                            Assert.Equal(uint.MinValue,(uint)result.GetValue(9));
+                            Assert.Equal(ulong.MinValue,(ulong)result.GetValue(10));
+                            CheckValue(1.23f,(float)result.GetValue(11));
+                            CheckValue(4.56,(double)result.GetValue(12));
+                            Assert.Equal("tag_binary_标签",result.GetString(13));
+                            Assert.Equal("tag_nchar_标签",result.GetString(14));
+                            Assert.Equal("tag_varbinary_标签",Encoding.UTF8.GetString((byte[])result.GetValue(15)));
+                            Assert.Equal(new byte[]
+                            {
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                            },(byte[])result.GetValue(16));
+                            Assert.Equal(now,result.GetInt64(17));
+                            Assert.Equal(now,result.GetInt64(18));
+                            Assert.Equal(now,result.GetInt64(19));
+                            hasValue = true;
+                        }
+                    }
+                    Assert.True(hasValue);
+                    // duplicate table
+                    stmt.SetTableName("ctb_4");
+                    stmt.SetTags(tag1);
+                    stmt.BindRow(new object[] { DateTime.Now, 1 });
+                    stmt.AddBatch();
+                    stmt.SetTableName("ctb_4");
+                    stmt.SetTags(tag2);
+                    stmt.BindRow(new object[] { DateTime.Now.Add(TimeSpan.FromSeconds(1)), 1 });
+                    stmt.AddBatch();
+                    stmt.SetTableName("ctb_4");
+                    stmt.SetTags(tag3);
+                    stmt.BindRow(new object[] { DateTime.Now.Add(TimeSpan.FromSeconds(2)), 1 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    Assert.Equal((long)3, stmt.Affected());
+                    hasValue = false;
+                    using (var result = client.Query("select * from stb_all where tbname = 'ctb_4'"))
+                    {
+                        while (result.Read())
+                        {
+                            Assert.True(result.GetBoolean(2));
+                            Assert.Equal(sbyte.MaxValue,(sbyte)result.GetValue(3));
+                            Assert.Equal(short.MaxValue,(short)result.GetValue(4));
+                            Assert.Equal(int.MaxValue,(int)result.GetValue(5));
+                            Assert.Equal(long.MaxValue,(long)result.GetValue(6));
+                            Assert.Equal(byte.MaxValue,(byte)result.GetValue(7));
+                            Assert.Equal(ushort.MaxValue,(ushort)result.GetValue(8));
+                            Assert.Equal(uint.MaxValue,(uint)result.GetValue(9));
+                            Assert.Equal(ulong.MaxValue,(ulong)result.GetValue(10));
+                            CheckValue(1.23f,(float)result.GetValue(11));
+                            CheckValue(4.56,(double)result.GetValue(12));
+                            Assert.Equal("tag_binary_标签",result.GetString(13));
+                            Assert.Equal("tag_nchar_标签",result.GetString(14));
+                            Assert.Equal("tag_varbinary_标签",Encoding.UTF8.GetString((byte[])result.GetValue(15)));
+                            Assert.Equal(new byte[]
+                            {
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00, 0x59, 0x40
+                            },(byte[])result.GetValue(16));
+                            Assert.Equal(now,result.GetInt64(17));
+                            Assert.Equal(now,result.GetInt64(18));
+                            Assert.Equal(now,result.GetInt64(19));
+                            hasValue = true;
+                        }
+                    }
+                    Assert.True(hasValue);
                     stmt.Dispose();
                 }
                 catch (Exception e)

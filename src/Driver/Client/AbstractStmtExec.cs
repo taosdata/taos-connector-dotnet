@@ -83,7 +83,7 @@ namespace TDengine.Driver.Client
                 bool isVarData = TDengineConstant.IsVarDataType((byte)tagFields[i].type);
 
                 // isNull
-                if (tags[i] == null)
+                if (tags[i] == null || Convert.IsDBNull(tags[i]))
                 {
                     buffer[startOffset + IsNullOffset] = 1;
                     if (isVarData)
@@ -104,13 +104,15 @@ namespace TDengine.Driver.Client
                     else
                     {
                         // write TotalLength
+                        var dataLength = (uint)TDengineConstant.TypeLengthMap[(TDengineDataType)tagFields[i].type];
                         totalLength = 4 + // TotalLength field length
                                       4 + // DataType field length
                                       4 + // Num field length
                                       1 + // IsNull field length
                                       1 + // HaveLength field length
                                       4 + // BufferLength field length
-                                      (uint)TDengineConstant.TypeLengthMap[(TDengineDataType)tagFields[i].type];
+                                      dataLength;
+                        WriteU32(buffer, startOffset + FixedBufferLengthOffset, dataLength);
                     }
 
                     WriteU32(buffer, startOffset + TotalLengthOffset, totalLength);
@@ -124,7 +126,7 @@ namespace TDengine.Driver.Client
                         switch (tags[i])
                         {
                             case bool boolVal:
-                                buffer[startOffset + IsNullOffset + FixedBufferOffset] = boolVal ? (byte)1 : (byte)0;
+                                buffer[startOffset + FixedBufferOffset] = boolVal ? (byte)1 : (byte)0;
                                 break;
                             case sbyte sbyteVal:
                                 buffer[startOffset + FixedBufferOffset] = (byte)sbyteVal;
@@ -161,8 +163,8 @@ namespace TDengine.Driver.Client
                                 break;
                             case double doubleVal:
                                 // write BufferLength
-                                BitConverter.DoubleToInt64Bits(doubleVal);
-                                WriteU64(buffer, startOffset + FixedBufferOffset, (ulong)doubleVal);
+                                var doubleInt = BitConverter.DoubleToInt64Bits(doubleVal);
+                                WriteU64(buffer, startOffset + FixedBufferOffset, (ulong)doubleInt);
                                 break;
                             case DateTime dt:
                                 var ts = TDengineConstant.ConvertDateTimeToTimestamp(dt,

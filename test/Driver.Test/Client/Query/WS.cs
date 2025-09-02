@@ -380,5 +380,12 @@ namespace Driver.Test.Client.Query
             const string db = "ws_stmt_error_process_test";
             this.StmtErrorProcessTest(this._wsConnectString, db);
         }
+        
+        [Fact]
+        public void WebSocketStmtBindTags()
+        {
+            const string db = "ws_stmt_bind_tags_test";
+            this.StmtBindTagsTest(this._wsConnectString, db);
+        }
     }
 }

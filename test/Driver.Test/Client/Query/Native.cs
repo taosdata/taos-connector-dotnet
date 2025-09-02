@@ -225,5 +225,12 @@ namespace Driver.Test.Client.Query
             const string db = "stmt_error_process_test";
             this.StmtErrorProcessTest(this._nativeConnectString, db);
         }
+
+        [Fact]
+        public void NativeStmtBindTags()
+        {
+            const string db = "stmt_bind_tags_test";
+            this.StmtBindTagsTest(this._nativeConnectString, db);
+        }
     }
 }
