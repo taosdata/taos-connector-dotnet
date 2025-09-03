@@ -2,10 +2,16 @@
 using System.Data;
 using System.Diagnostics;
 using System.Net.Http;
+using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Driver.Test.Client.Query;
+using Newtonsoft.Json;
 using TDengine.Data.Client;
+using TDengine.Driver.Impl.WebSocketMethods.Protocol;
 using Xunit;
+using Xunit.Abstractions;
 using Xunit.Sdk;
 
 namespace Data.Tests
@@ -13,11 +19,13 @@ namespace Data.Tests
     public class TDengineConnectionTests
     {
         private TDengineConnection _connection;
-        private bool _is3360Test = false;
+        private bool _is3360Test;
+        private readonly ITestOutputHelper _output;
 
 
-        public TDengineConnectionTests()
+        public TDengineConnectionTests(ITestOutputHelper output)
         {
+            _output = output;
             this._is3360Test = Environment.GetEnvironmentVariable("TD_3360_TEST") == "true";
             // this._is3360Test = true;
             _connection = new TDengineConnection("");
@@ -192,10 +200,39 @@ namespace Data.Tests
         [Fact]
         public void TestState()
         {
-            var port = "56041";
-            var process = NewTaosAdapter(port);
-            Start(process, port).Wait();
-            Thread.Sleep(1000);
+            var port = 56041;
+
+            void MessageHandler(WebSocket webSocket, WebSocketMessageType messageType, byte[] message)
+            {
+                _output.WriteLine(Encoding.UTF8.GetString(message));
+                var req = JsonConvert.DeserializeObject<WSActionReq<WSStmt2InitReq>>(Encoding.UTF8.GetString(message));
+                switch (req.Action)
+                {
+                    case "version":
+                    {
+                        var resp = new WSVersionResp { Code = 0, Action = req.Action, ReqId = req.Args.ReqId, Version = "3.3.6.0" };
+                        var respStr = JsonConvert.SerializeObject(resp);
+                        var data = new ArraySegment<byte>(Encoding.UTF8.GetBytes(respStr));
+                        var task = Task.Run(async () => await webSocket.SendAsync(data, messageType, true, CancellationToken.None)
+                            .ConfigureAwait(false));
+                        task.Wait();
+                        break;
+                    }
+                    case "conn":
+                    {
+                        var resp = new WSConnResp { Code = 0, Action = req.Action, ReqId = req.Args.ReqId, };
+                        var respStr = JsonConvert.SerializeObject(resp);
+                        var data = new ArraySegment<byte>(Encoding.UTF8.GetBytes(respStr));
+                        var task = Task.Run(async () => await webSocket.SendAsync(data, messageType, true, CancellationToken.None)
+                            .ConfigureAwait(false));
+                        task.Wait();
+                        break;
+                    }
+                }
+            }
+
+            var mockServer = new MockWSServer(port, MessageHandler);
+            mockServer.Start();
             var connStr =
                 $"protocol=WebSocket;host=localhost;port={port};useSSL=false;username=root;password=taosdata;";
             var connection = new TDengineConnection(connStr);
@@ -206,20 +243,11 @@ namespace Data.Tests
             Assert.Equal(ConnectionState.Closed, connection.State);
             connection.Open();
             Assert.Equal(ConnectionState.Open, connection.State);
-            Stop(process);
-            for (int i = 0; i < 6; i++)
-            {
-                if (process.HasExited)
-                {
-                    Thread.Sleep(1000);
-                    Assert.Equal(ConnectionState.Broken, connection.State);
-                    break;
-                }
-
-                Thread.Sleep(1000);
-            }
-
+            mockServer.Dispose();
+            Thread.Sleep(1000);
+            Assert.Equal(ConnectionState.Broken, connection.State);
             connection.Close();
+            connection.Dispose();
         }
 
         [Fact]
