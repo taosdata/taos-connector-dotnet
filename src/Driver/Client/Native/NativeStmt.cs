@@ -38,6 +38,11 @@ namespace TDengine.Driver.Client.Native
             NativeMethods.TaosStmt2Exec(_stmt,out affectedRows);
         }
 
+        private const int Stmt2BindBufferTypeOffset = 0;
+        private const int Stmt2BindBufferOffset = 8;
+        private const int Stmt2BindLengthOffset = 16;
+        private const int Stmt2BindIsNullOffset = 24;
+        private const int Stmt2BindNumOffset = 32;
         private static void GenerateStmt2Binds(IntPtr data, uint tableCount, uint fieldCount, uint fieldOffset,
             IntPtr bindStruct, IntPtr bindPtrArray)
         {
@@ -56,52 +61,53 @@ namespace TDengine.Driver.Client.Native
                 for (uint fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
                 {
                     IntPtr bindDataPtr = dataPtr;
-                    TAOS_STMT2_BIND bind = new TAOS_STMT2_BIND();
                     IntPtr bindPtr = IntPtr.Add(currentTableStartBindStructPtr, (int)fieldIndex * TDengineConstant.TaosStmt2BindSize);
 
                     // total length
-                    uint bindDataTotalLength = (uint)Marshal.ReadInt32(bindDataPtr);
+                    var bindDataTotalLength = (uint)Marshal.ReadInt32(bindDataPtr);
                     bindDataPtr = IntPtr.Add(bindDataPtr, 4);
 
                     // buffer_type
-                    bind.buffer_type = Marshal.ReadInt32(bindDataPtr);
+                    var bufferType = Marshal.ReadInt32(bindDataPtr);
                     bindDataPtr = IntPtr.Add(bindDataPtr, 4);
 
                     // num
-                    bind.num = Marshal.ReadInt32(bindDataPtr);
+                    var num = Marshal.ReadInt32(bindDataPtr);
                     bindDataPtr = IntPtr.Add(bindDataPtr, 4);
 
                     // is_null
-                    bind.is_null = bindDataPtr;
-                    bindDataPtr = IntPtr.Add(bindDataPtr, bind.num);
+                    var isNull = bindDataPtr;
+                    bindDataPtr = IntPtr.Add(bindDataPtr, num);
 
                     // have_length
-                    byte haveLength = Marshal.ReadByte(bindDataPtr);
+                    var haveLength = Marshal.ReadByte(bindDataPtr);
                     bindDataPtr = IntPtr.Add(bindDataPtr, 1);
 
+                    IntPtr length;
                     if (haveLength == 0)
                     {
-                        bind.length = IntPtr.Zero;
+                        length = IntPtr.Zero;
                     }
                     else
                     {
-                        bind.length = bindDataPtr;
-                        bindDataPtr = IntPtr.Add(bindDataPtr, bind.num * 4);
+                        length = bindDataPtr;
+                        bindDataPtr = IntPtr.Add(bindDataPtr, num * 4);
                     }
 
                     // buffer_length
-                    int bufferLength = Marshal.ReadInt32(bindDataPtr);
+                    var bufferLength = Marshal.ReadInt32(bindDataPtr);
                     bindDataPtr = IntPtr.Add(bindDataPtr, 4);
 
                     // buffer
+                    IntPtr buffer;
                     if (bufferLength > 0)
                     {
-                        bind.buffer = bindDataPtr;
+                        buffer = bindDataPtr;
                         bindDataPtr = IntPtr.Add(bindDataPtr, bufferLength);
                     }
                     else
                     {
-                        bind.buffer = IntPtr.Zero;
+                        buffer = IntPtr.Zero;
                     }
 
                     // check bind data length
@@ -110,8 +116,11 @@ namespace TDengine.Driver.Client.Native
                         throw new InvalidOperationException(
                             $"Bind data length error, tableIndex: {tableIndex}, fieldIndex: {fieldIndex}");
                     }
-
-                    Marshal.StructureToPtr(bind, bindPtr, false);
+                    Marshal.WriteInt32(bindPtr,Stmt2BindBufferTypeOffset, bufferType);
+                    Marshal.WriteIntPtr(bindPtr,Stmt2BindBufferOffset, buffer);
+                    Marshal.WriteIntPtr(bindPtr,Stmt2BindLengthOffset, length);
+                    Marshal.WriteIntPtr(bindPtr,Stmt2BindIsNullOffset, isNull);
+                    Marshal.WriteInt32(bindPtr,Stmt2BindNumOffset, num);
                     dataPtr = bindDataPtr;
                 }
             }
