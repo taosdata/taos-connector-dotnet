@@ -3432,7 +3432,8 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     DoExec(client, $"use {db}");
                     // create table
                     DoExec(client, $"create table if not exists test (ts timestamp, c1 int)");
-                    DoExec(client, $"insert into test values(now, 1)");
+                    DoExec(client, $"create table if not exists stb (ts timestamp, c1 int) tags (t1 int)");
+                    DoExec(client, $"create table if not exists bind_cols (ts timestamp, c1 int)");
 
                     var stmt = client.StmtInit();
                     // not prepare statement
@@ -3493,6 +3494,90 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
 
                     Assert.Equal(1, queryCount);
                     stmt.Dispose();
+
+                    stmt = client.StmtInit();
+                    stmt.Prepare("insert into ? using stb tags(?) values(?,?)");
+                    isInsert = stmt.IsInsert();
+                    Assert.True(isInsert);
+                    // no table name set
+                    Assert.Throws<InvalidOperationException>(() => stmt.AddBatch());
+                    // set empty table name
+                    Assert.Throws<ArgumentException>(() => stmt.SetTableName(""));
+                    Assert.Throws<ArgumentException>(() => stmt.SetTableName(null));
+                    // duplicate set table name
+                    stmt.SetTableName("ctb");
+                    Assert.Throws<InvalidOperationException>(() => stmt.SetTableName("ctb2"));
+                    // no tag set
+                    Assert.Throws<InvalidOperationException>(() => stmt.AddBatch());
+                    // wrong tags length
+                    Assert.Throws<ArgumentException>(() => stmt.SetTags(new object[] { 1, 2 }));
+                    // empty tags
+                    Assert.Throws<ArgumentException>(() => stmt.SetTags(new object[] { }));
+                    // null tags
+                    Assert.Throws<ArgumentException>(() => stmt.SetTags(null));
+                    // duplicate set tags
+                    stmt.SetTags(new object[] { 1 });
+                    stmt.SetTags(new object[] { 2 }); // will be ignored
+                    // no row bound
+                    Assert.Throws<InvalidOperationException>(() => stmt.AddBatch());
+                    // wrong row length
+                    Assert.Throws<ArgumentException>(() => stmt.BindRow(new object[] { now }));
+                    // null row
+                    Assert.Throws<ArgumentException>(() => stmt.BindRow(null));
+                    // empty row
+                    Assert.Throws<ArgumentException>(() => stmt.BindRow(new object[] { }));
+                    // wrong row type
+                    Assert.Throws<ArgumentException>(() => stmt.BindRow(new object[] { new TaosFieldE(), 1 }));
+                    stmt.BindRow(new object[] { now, 100 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    Assert.Equal((long)1, stmt.Affected());
+                    stmt.Dispose();
+                    using (var result = client.Query("select *,tbname from stb"))
+                    {
+                        var count = 0;
+                        while (result.Read())
+                        {
+                            count += 1;
+                            // col
+                            Assert.Equal(100, result.GetInt32(1));
+                            // tag
+                            Assert.Equal(1, result.GetInt32(2));
+                            // tbname
+                            Assert.Equal("ctb", result.GetString(3));
+                        }
+
+                        Assert.Equal(1, count);
+                    }
+                    stmt = client.StmtInit();
+                    stmt.Prepare("insert into bind_cols values(?,?)");
+                    // bind arrow null
+                    Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null));
+                    // wrong columns count
+                    Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1) }));
+                    // wrong row count
+                    Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1), now.AddSeconds(2) }, new int[] { 1 }));
+                    // wrong row type
+                    Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null, new object[] { new TaosFieldE(), new TaosFieldE() }, new int[] { 2 }));
+                    // correct bind column
+                    stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1), now.AddSeconds(2) }, new int[] { 1,2 });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    Assert.Equal((long)2, stmt.Affected());
+                    stmt.Dispose();
+                    using (var result = client.Query("select * from bind_cols"))
+                    {
+                        var count = 0;
+                        while (result.Read())
+                        {
+                            count += 1;
+                            // col
+                            Assert.Equal(count, result.GetInt32(1));
+                        }
+
+                        Assert.Equal(2, count);
+                    }
+                    
                 }
                 catch (Exception e)
                 {

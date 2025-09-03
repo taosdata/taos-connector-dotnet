@@ -42,9 +42,9 @@ namespace TDengine.Driver.Client
         {
             CheckPrepared();
             CheckTableNameSet();
-            if (tags.Length == 0)
+            if (tags == null || tags.Length == 0)
             {
-                return;
+                throw new ArgumentException("Tags cannot be null or empty");
             }
 
             if (_tagFields == null || _tagFields.Length == 0 || !_isInsert)
@@ -54,7 +54,7 @@ namespace TDengine.Driver.Client
 
             if (IsTagsSet)
             {
-                throw new InvalidOperationException("Tags have already been set for current batch");
+                return; 
             }
 
             if (tags.Length != _tagFields.Length)

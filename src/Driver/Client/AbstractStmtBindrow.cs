@@ -154,14 +154,9 @@ namespace TDengine.Driver.Client
         {
             CheckPrepared();
             CheckTableNameSet();
-            if (row.Length == 0)
+            if (row == null || row.Length == 0)
             {
-                return;
-            }
-
-            if (string.IsNullOrEmpty(_sql))
-            {
-                throw new InvalidOperationException("This statement does not prepared.");
+                throw new ArgumentException("Row cannot be null or empty");
             }
 
             if (_isInsert)

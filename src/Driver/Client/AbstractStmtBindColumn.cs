@@ -155,6 +155,10 @@ namespace TDengine.Driver.Client
             CheckTableNameSet();
             if (_isInsert)
             {
+                if (arrays == null || arrays.Length == 0)
+                {
+                    throw new ArgumentException("Bind columns cannot be null or empty");
+                }
                 if (_colFields.Length != arrays.Length)
                 {
                     throw new ArgumentException(
