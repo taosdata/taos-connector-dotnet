@@ -50,7 +50,7 @@ namespace Driver.Test.Client.Query
                         context.Response.Close();
                     }
                 }
-                catch (Exception ex) when (cancellationToken.IsCancellationRequested)
+                catch (Exception) when (cancellationToken.IsCancellationRequested)
                 {
                     break;
                 }
