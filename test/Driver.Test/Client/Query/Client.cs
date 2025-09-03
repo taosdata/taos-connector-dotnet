@@ -3559,6 +3559,8 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1), now.AddSeconds(2) }, new int[] { 1 }));
                     // wrong row type
                     Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null, new object[] { new TaosFieldE(), new TaosFieldE() }, new int[] { 2 }));
+                    // row count zero
+                    Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null, new DateTime[] { }, new int[] { }));
                     // correct bind column
                     stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1), now.AddSeconds(2) }, new int[] { 1,2 });
                     stmt.AddBatch();
@@ -3577,7 +3579,24 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
 
                         Assert.Equal(2, count);
                     }
-                    
+                    stmt = client.StmtInit();
+                    stmt.Prepare("select * from bind_cols where ts = ?");
+                    Assert.Throws<InvalidOperationException>(()=>stmt.BindColumn(null, new []{now.AddSeconds(1)}));
+                    stmt.BindRow(new object[]{now.AddSeconds(2)});
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var result = stmt.Result())
+                    {
+                        var count = 0;
+                        while (result.Read())
+                        {
+                            count += 1;
+                            // col
+                            Assert.Equal(2, result.GetInt32(1));
+                        }
+                        Assert.Equal(1, count);
+                    }
+                    stmt.Dispose();
                 }
                 catch (Exception e)
                 {
