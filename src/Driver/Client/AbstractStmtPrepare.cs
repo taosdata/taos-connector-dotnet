@@ -80,7 +80,7 @@ namespace TDengine.Driver.Client
                     }
                 }
 
-                _currentTableInfo = NewStmt2TableData();
+                _currentTableInfo = GetStmt2TableData();
             }
             catch
             {

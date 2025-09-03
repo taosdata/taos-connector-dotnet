@@ -46,68 +46,47 @@ namespace TDengine.Driver.Client
         private readonly Queue<List<object>> _objectListQueue = new Queue<List<object>>();
         private readonly Queue<Stmt2TableData> _tableInfoQueue = new Queue<Stmt2TableData>();
         
-        private bool TryGetTableInfo(out Stmt2TableData tableInfo)
+        // after prepare or add batch, get a new table info
+        private Stmt2TableData GetStmt2TableData()
         {
-            if (_tableInfoQueue.Count > 0)
-            {
-                tableInfo = _tableInfoQueue.Dequeue();
-                return true;
-            }
+            var colLength = _isInsert ? _colFields.Length : _fieldsCount;
 
-            tableInfo = null;
-            return false;
-        }
-        
-        private void SetObjectList(List<object>[] lists)
-        {
-            for (int i = 0; i < lists.Length; i++)
-            {
-                lists[i] = GetObjectList();
-            }
-        }
-        
-        private List<object> GetObjectList()
-        {
-            return _objectListQueue.Count > 0 ? _objectListQueue.Dequeue() : new List<object>();
-        }
-        
-        private void ReturnObjectLists(List<object>[] lists)
-        {
-            for (int i = 0; i < lists.Length; i++)
-            {
-                ReturnObjectList(lists[i]);
-                lists[i] = null;
-            }
-        }
-        private void ReturnObjectList(List<object> list)
-        {
-            list.Clear();
-            _objectListQueue.Enqueue(list);
-        }
+            var info =
+                // get table info from cache
+                _tableInfoQueue.Count > 0 ? _tableInfoQueue.Dequeue() :
+                // create new table info
+                new Stmt2TableData(new List<object>[colLength]);
 
-        private Stmt2TableData NewStmt2TableData()
-        {
-            if (TryGetTableInfo(out var info))
+            // ensure the array length is correct, if not enough, recreate it
+            if (info.Cols.Length != colLength)
             {
-                SetObjectList(info.Cols);
+                info.Cols = new List<object>[colLength];
             }
-            else
+    
+            // fill the lists
+            for (var i = 0; i < info.Cols.Length; i++)
             {
-                // new one
-                var lists = new List<object>[_isInsert? _colFields.Length: _fieldsCount];
-                SetObjectList(lists);
-                info = new Stmt2TableData(lists);
+                // get from cache or create new
+                info.Cols[i] = _objectListQueue.Count > 0 ? _objectListQueue.Dequeue() : new List<object>();
             }
-
             return info;
         }
         
-        private void ReturnTableInfo(Stmt2TableData info)
+        // after execute, put table info to cache
+        private void PutTableInfo(Stmt2TableData info)
         {
             if (info == null) return;
-            ReturnObjectLists(info.Cols);
+            // clear all column lists and return to cache
+            for (var i = 0; i < info.Cols.Length; i++)
+            {
+                var list = info.Cols[i];
+                list.Clear();
+                _objectListQueue.Enqueue(list);
+                info.Cols[i] = null;
+            }
             info.Tags = null;
             info.TableName = string.Empty;
+            // return to cache
             _tableInfoQueue.Enqueue(info);
         }
         
@@ -116,6 +95,7 @@ namespace TDengine.Driver.Client
             _binaryHeaderLength = binaryHeaderLength;
         }
         
+        // before prepare or prepare failed, clean all cache
         private void CleanCache()
         {
             _sql = string.Empty;
@@ -137,13 +117,15 @@ namespace TDengine.Driver.Client
             _objectListQueue.Clear();
         }
 
+        // after add batch, clean current batch info
         private void CleanBatch()
         {
             _isTableNameSet = false;
             _isTagsSet = false;
-            _currentTableInfo = NewStmt2TableData();
+            _currentTableInfo = GetStmt2TableData();
         }
-
+        
+        // after execute, put all table info to cache
         private void CleanExec()
         {
             if (!_isInsert)
@@ -155,8 +137,8 @@ namespace TDengine.Driver.Client
             _executed = true;
             foreach (var tableInfo in _tableInfos.Values)
             {
-                // return to cache
-                ReturnTableInfo(tableInfo);
+                // return table info to cache
+                PutTableInfo(tableInfo);
             }
             _tableInfos.Clear();
         }
