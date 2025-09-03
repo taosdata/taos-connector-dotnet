@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -3500,6 +3499,9 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     isInsert = stmt.IsInsert();
                     Assert.True(isInsert);
                     // no table name set
+                    Assert.Throws<InvalidOperationException>(() => stmt.SetTags(new object[] { 1 }));
+                    Assert.Throws<InvalidOperationException>(() => stmt.BindRow(new object[] { now, 100 }));
+                    Assert.Throws<InvalidOperationException>(() => stmt.BindColumn(null,new DateTime[] { now },new int[]{100}));
                     Assert.Throws<InvalidOperationException>(() => stmt.AddBatch());
                     // set empty table name
                     Assert.Throws<ArgumentException>(() => stmt.SetTableName(""));
@@ -3549,20 +3551,23 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
 
                         Assert.Equal(1, count);
                     }
+
                     stmt = client.StmtInit();
                     stmt.Prepare("insert into bind_cols values(?,?)");
                     // bind arrow null
-                    Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null));
+                    Assert.Throws<ArgumentException>(() => stmt.BindColumn(null));
                     // wrong columns count
-                    Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1) }));
+                    Assert.Throws<ArgumentException>(() => stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1) }));
                     // wrong row count
-                    Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1), now.AddSeconds(2) }, new int[] { 1 }));
+                    Assert.Throws<ArgumentException>(() => stmt.BindColumn(null,
+                        new DateTime[] { now.AddSeconds(1), now.AddSeconds(2) }, new int[] { 1 }));
                     // wrong row type
-                    Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null, new object[] { new TaosFieldE(), new TaosFieldE() }, new int[] { 2 }));
+                    Assert.Throws<ArgumentException>(() =>
+                        stmt.BindColumn(null, new object[] { new TaosFieldE(), new TaosFieldE() }, new int[] { 2 }));
                     // row count zero
-                    Assert.Throws<ArgumentException>(()=>stmt.BindColumn(null, new DateTime[] { }, new int[] { }));
+                    Assert.Throws<ArgumentException>(() => stmt.BindColumn(null, new DateTime[] { }, new int[] { }));
                     // correct bind column
-                    stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1), now.AddSeconds(2) }, new int[] { 1,2 });
+                    stmt.BindColumn(null, new DateTime[] { now.AddSeconds(1), now.AddSeconds(2) }, new int[] { 1, 2 });
                     stmt.AddBatch();
                     stmt.Exec();
                     Assert.Equal((long)2, stmt.Affected());
@@ -3579,10 +3584,11 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
 
                         Assert.Equal(2, count);
                     }
+
                     stmt = client.StmtInit();
                     stmt.Prepare("select * from bind_cols where ts = ?");
-                    Assert.Throws<InvalidOperationException>(()=>stmt.BindColumn(null, new []{now.AddSeconds(1)}));
-                    stmt.BindRow(new object[]{now.AddSeconds(2)});
+                    Assert.Throws<InvalidOperationException>(() => stmt.BindColumn(null, new[] { now.AddSeconds(1) }));
+                    stmt.BindRow(new object[] { now.AddSeconds(2) });
                     stmt.AddBatch();
                     stmt.Exec();
                     using (var result = stmt.Result())
@@ -3594,8 +3600,10 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             // col
                             Assert.Equal(2, result.GetInt32(1));
                         }
+
                         Assert.Equal(1, count);
                     }
+
                     stmt.Dispose();
                 }
                 catch (Exception e)
@@ -3621,7 +3629,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     DoExec(client, $"drop database if exists {db}", ReqId.GetReqId());
                     DoExec(client, $"create database {db}", ReqId.GetReqId());
                     DoExec(client, $"use {db}", ReqId.GetReqId());
-                    
+
                     DoExec(client,
                         $"create table stb_all(ts timestamp,v int) tags(" +
                         $"t1 bool," +
@@ -3642,7 +3650,8 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         $"t16 timestamp," +
                         $"t17 timestamp," +
                         $"t18 timestamp)");
-                    var now = TDengineConstant.ConvertDateTimeToTimestamp(DateTime.Now, TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
+                    var now = TDengineConstant.ConvertDateTimeToTimestamp(DateTime.Now,
+                        TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
                     var tag1 = new object[]
                     {
                         true,
@@ -3741,30 +3750,32 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         while (result.Read())
                         {
                             Assert.True(result.GetBoolean(2));
-                            Assert.Equal(sbyte.MaxValue,(sbyte)result.GetValue(3));
-                            Assert.Equal(short.MaxValue,(short)result.GetValue(4));
-                            Assert.Equal(int.MaxValue,(int)result.GetValue(5));
-                            Assert.Equal(long.MaxValue,(long)result.GetValue(6));
-                            Assert.Equal(byte.MaxValue,(byte)result.GetValue(7));
-                            Assert.Equal(ushort.MaxValue,(ushort)result.GetValue(8));
-                            Assert.Equal(uint.MaxValue,(uint)result.GetValue(9));
-                            Assert.Equal(ulong.MaxValue,(ulong)result.GetValue(10));
-                            CheckValue(1.23f,(float)result.GetValue(11));
-                            CheckValue(4.56,(double)result.GetValue(12));
-                            Assert.Equal("tag_binary_标签",result.GetString(13));
-                            Assert.Equal("tag_nchar_标签",result.GetString(14));
-                            Assert.Equal("tag_varbinary_标签",Encoding.UTF8.GetString((byte[])result.GetValue(15)));
+                            Assert.Equal(sbyte.MaxValue, (sbyte)result.GetValue(3));
+                            Assert.Equal(short.MaxValue, (short)result.GetValue(4));
+                            Assert.Equal(int.MaxValue, (int)result.GetValue(5));
+                            Assert.Equal(long.MaxValue, (long)result.GetValue(6));
+                            Assert.Equal(byte.MaxValue, (byte)result.GetValue(7));
+                            Assert.Equal(ushort.MaxValue, (ushort)result.GetValue(8));
+                            Assert.Equal(uint.MaxValue, (uint)result.GetValue(9));
+                            Assert.Equal(ulong.MaxValue, (ulong)result.GetValue(10));
+                            CheckValue(1.23f, (float)result.GetValue(11));
+                            CheckValue(4.56, (double)result.GetValue(12));
+                            Assert.Equal("tag_binary_标签", result.GetString(13));
+                            Assert.Equal("tag_nchar_标签", result.GetString(14));
+                            Assert.Equal("tag_varbinary_标签", Encoding.UTF8.GetString((byte[])result.GetValue(15)));
                             Assert.Equal(new byte[]
                             {
-                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00,
+                                0x00,
                                 0x00, 0x00, 0x00, 0x00, 0x59, 0x40
-                            },(byte[])result.GetValue(16));
-                            Assert.Equal(now,result.GetInt64(17));
-                            Assert.Equal(now,result.GetInt64(18));
-                            Assert.Equal(now,result.GetInt64(19));
+                            }, (byte[])result.GetValue(16));
+                            Assert.Equal(now, result.GetInt64(17));
+                            Assert.Equal(now, result.GetInt64(18));
+                            Assert.Equal(now, result.GetInt64(19));
                             hasValue = true;
                         }
                     }
+
                     Assert.True(hasValue);
                     hasValue = false;
                     using (var result = client.Query("select * from stb_all where tbname = 'ctb_2'"))
@@ -3775,9 +3786,11 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             {
                                 Assert.Null(result.GetValue(i));
                             }
+
                             hasValue = true;
                         }
                     }
+
                     Assert.True(hasValue);
                     hasValue = false;
                     using (var result = client.Query("select * from stb_all where tbname = 'ctb_3'"))
@@ -3785,30 +3798,32 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         while (result.Read())
                         {
                             Assert.False(result.GetBoolean(2));
-                            Assert.Equal(sbyte.MinValue,(sbyte)result.GetValue(3));
-                            Assert.Equal(short.MinValue,(short)result.GetValue(4));
-                            Assert.Equal(int.MinValue,(int)result.GetValue(5));
-                            Assert.Equal(long.MinValue,(long)result.GetValue(6));
-                            Assert.Equal(byte.MinValue,(byte)result.GetValue(7));
-                            Assert.Equal(ushort.MinValue,(ushort)result.GetValue(8));
-                            Assert.Equal(uint.MinValue,(uint)result.GetValue(9));
-                            Assert.Equal(ulong.MinValue,(ulong)result.GetValue(10));
-                            CheckValue(1.23f,(float)result.GetValue(11));
-                            CheckValue(4.56,(double)result.GetValue(12));
-                            Assert.Equal("tag_binary_标签",result.GetString(13));
-                            Assert.Equal("tag_nchar_标签",result.GetString(14));
-                            Assert.Equal("tag_varbinary_标签",Encoding.UTF8.GetString((byte[])result.GetValue(15)));
+                            Assert.Equal(sbyte.MinValue, (sbyte)result.GetValue(3));
+                            Assert.Equal(short.MinValue, (short)result.GetValue(4));
+                            Assert.Equal(int.MinValue, (int)result.GetValue(5));
+                            Assert.Equal(long.MinValue, (long)result.GetValue(6));
+                            Assert.Equal(byte.MinValue, (byte)result.GetValue(7));
+                            Assert.Equal(ushort.MinValue, (ushort)result.GetValue(8));
+                            Assert.Equal(uint.MinValue, (uint)result.GetValue(9));
+                            Assert.Equal(ulong.MinValue, (ulong)result.GetValue(10));
+                            CheckValue(1.23f, (float)result.GetValue(11));
+                            CheckValue(4.56, (double)result.GetValue(12));
+                            Assert.Equal("tag_binary_标签", result.GetString(13));
+                            Assert.Equal("tag_nchar_标签", result.GetString(14));
+                            Assert.Equal("tag_varbinary_标签", Encoding.UTF8.GetString((byte[])result.GetValue(15)));
                             Assert.Equal(new byte[]
                             {
-                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00,
+                                0x00,
                                 0x00, 0x00, 0x00, 0x00, 0x59, 0x40
-                            },(byte[])result.GetValue(16));
-                            Assert.Equal(now,result.GetInt64(17));
-                            Assert.Equal(now,result.GetInt64(18));
-                            Assert.Equal(now,result.GetInt64(19));
+                            }, (byte[])result.GetValue(16));
+                            Assert.Equal(now, result.GetInt64(17));
+                            Assert.Equal(now, result.GetInt64(18));
+                            Assert.Equal(now, result.GetInt64(19));
                             hasValue = true;
                         }
                     }
+
                     Assert.True(hasValue);
                     // duplicate table
                     stmt.SetTableName("ctb_4");
@@ -3831,36 +3846,39 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                         while (result.Read())
                         {
                             Assert.True(result.GetBoolean(2));
-                            Assert.Equal(sbyte.MaxValue,(sbyte)result.GetValue(3));
-                            Assert.Equal(short.MaxValue,(short)result.GetValue(4));
-                            Assert.Equal(int.MaxValue,(int)result.GetValue(5));
-                            Assert.Equal(long.MaxValue,(long)result.GetValue(6));
-                            Assert.Equal(byte.MaxValue,(byte)result.GetValue(7));
-                            Assert.Equal(ushort.MaxValue,(ushort)result.GetValue(8));
-                            Assert.Equal(uint.MaxValue,(uint)result.GetValue(9));
-                            Assert.Equal(ulong.MaxValue,(ulong)result.GetValue(10));
-                            CheckValue(1.23f,(float)result.GetValue(11));
-                            CheckValue(4.56,(double)result.GetValue(12));
-                            Assert.Equal("tag_binary_标签",result.GetString(13));
-                            Assert.Equal("tag_nchar_标签",result.GetString(14));
-                            Assert.Equal("tag_varbinary_标签",Encoding.UTF8.GetString((byte[])result.GetValue(15)));
+                            Assert.Equal(sbyte.MaxValue, (sbyte)result.GetValue(3));
+                            Assert.Equal(short.MaxValue, (short)result.GetValue(4));
+                            Assert.Equal(int.MaxValue, (int)result.GetValue(5));
+                            Assert.Equal(long.MaxValue, (long)result.GetValue(6));
+                            Assert.Equal(byte.MaxValue, (byte)result.GetValue(7));
+                            Assert.Equal(ushort.MaxValue, (ushort)result.GetValue(8));
+                            Assert.Equal(uint.MaxValue, (uint)result.GetValue(9));
+                            Assert.Equal(ulong.MaxValue, (ulong)result.GetValue(10));
+                            CheckValue(1.23f, (float)result.GetValue(11));
+                            CheckValue(4.56, (double)result.GetValue(12));
+                            Assert.Equal("tag_binary_标签", result.GetString(13));
+                            Assert.Equal("tag_nchar_标签", result.GetString(14));
+                            Assert.Equal("tag_varbinary_标签", Encoding.UTF8.GetString((byte[])result.GetValue(15)));
                             Assert.Equal(new byte[]
                             {
-                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00, 0x00,
+                                0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x40, 0x00,
+                                0x00,
                                 0x00, 0x00, 0x00, 0x00, 0x59, 0x40
-                            },(byte[])result.GetValue(16));
-                            Assert.Equal(now,result.GetInt64(17));
-                            Assert.Equal(now,result.GetInt64(18));
-                            Assert.Equal(now,result.GetInt64(19));
+                            }, (byte[])result.GetValue(16));
+                            Assert.Equal(now, result.GetInt64(17));
+                            Assert.Equal(now, result.GetInt64(18));
+                            Assert.Equal(now, result.GetInt64(19));
                             hasValue = true;
                         }
                     }
+
                     Assert.True(hasValue);
                     if (_is3360Test)
                     {
                         stmt.Dispose();
                         stmt = client.StmtInit();
                     }
+
                     stmt.Prepare("insert into ? using stb_json tags(?) values(?,?)");
                     isInsert = stmt.IsInsert();
                     Assert.True(isInsert);
@@ -3887,6 +3905,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             hasValue = true;
                         }
                     }
+
                     Assert.True(hasValue);
                     hasValue = false;
                     using (var result = client.Query("select * from stb_json where tbname = 'jtb_2'"))
@@ -3897,6 +3916,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             hasValue = true;
                         }
                     }
+
                     Assert.True(hasValue);
                     hasValue = false;
                     using (var result = client.Query("select * from stb_json where tbname = 'jtb_3'"))
@@ -3907,6 +3927,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             hasValue = true;
                         }
                     }
+
                     Assert.True(hasValue);
                     // duplicate table
                     stmt.SetTableName("jtb_4");
@@ -3932,6 +3953,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                             hasValue = true;
                         }
                     }
+
                     Assert.True(hasValue);
                     stmt.Dispose();
                 }

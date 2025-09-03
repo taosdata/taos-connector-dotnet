@@ -29,7 +29,7 @@ namespace TDengine.Driver.Client
             // check row count
             
             var rowCount = _currentTableInfo.Cols[0].Count;
-            for (var i = 1; i < _currentTableInfo.Cols.Length; i++)
+            for (var i = 0; i < _currentTableInfo.Cols.Length; i++)
             {
                 if (_currentTableInfo.Cols[i].Count == 0)
                 {
