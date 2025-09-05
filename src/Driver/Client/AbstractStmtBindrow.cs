@@ -186,7 +186,7 @@ namespace TDengine.Driver.Client
                     throw new InvalidOperationException("Query parameters have already been set.");
                 }
 
-                var fields = new TaosFieldE[row.Length];
+                var fields = new TaosFieldAll[row.Length];
                 for (var i = 0; i < row.Length; i++)
                 {
                     try
@@ -200,104 +200,115 @@ namespace TDengine.Driver.Client
                         {
                             case DateTime dt:
                                 _currentTableInfo.Cols[i].Add(dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK"));
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case DateTimeOffset dto:
                                 _currentTableInfo.Cols[i].Add(dto.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK"));
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case sbyte _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_TINYINT,
-                                    bytes = 1
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case short _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_SMALLINT,
-                                    bytes = 2
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case int _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_INT,
-                                    bytes = 4
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case long _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BIGINT,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case byte _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UTINYINT,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case ushort _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_USMALLINT,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case uint _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UINT,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case ulong _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_UBIGINT,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case float _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_FLOAT,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case double _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_DOUBLE,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case string _:
                             case byte[] _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             case bool _:
                                 _currentTableInfo.Cols[i].Add(row[i]);
-                                fields[i] = new TaosFieldE
+                                fields[i] = new TaosFieldAll
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BOOL,
+                                    field_type = (byte)TaosFieldType.TAOS_FIELD_COL
                                 };
                                 break;
                             default:
@@ -311,6 +322,7 @@ namespace TDengine.Driver.Client
                         {
                             _currentTableInfo.Cols[j].RemoveAt(_currentTableInfo.Cols[j].Count - 1);
                         }
+
                         throw;
                     }
                 }

@@ -8,6 +8,27 @@ using System.Runtime.InteropServices;
 
 namespace TDengine.Driver.Client
 {
+    class ColInfo
+    {
+        public TaosFieldType FieldType; // 类型 
+        public int FieldIndex; // tag 或列数据索引
+        public bool IsVariable; // 是否变长
+        public int FixedLength; // 定长类型长度
+        public uint BufferLength; // Buffer长度
+        public uint TotalLength; // Bind 结构总长度
+        public int NextBufferOffset; // 下一个写入的 buffer offset，变长需要随时移动
+        public int StartOffset; // start offset 
+        public int IsNullOffset; // is_null offset
+        public int LengthsOffset; // lengths offset
+        public int NextWriteIndex; // 下一个写入的行索引，用来计算 is_null 和 lengths 的写入位置
+        public TaosFieldAll Field;
+
+        public ColInfo(TaosFieldAll field)
+        {
+            Field = field;
+        }
+    }
+
     public abstract partial class AbstractStmt
     {
         public void Exec()
@@ -19,8 +40,8 @@ namespace TDengine.Driver.Client
 
             try
             {
-                var buffer = GenerateBindBinary();
-
+                // var buffer = GenerateBindBinary();
+                var buffer = GenerateAsColumnsBindBinary();
                 // print buffer
                 // StringBuilder sb = new StringBuilder();
                 // for (int i = 0; i < buffer.Length; i++)
@@ -410,12 +431,424 @@ namespace TDengine.Driver.Client
             return startOffset;
         }
 
+        // type Protocol struct {
+        //     TotalLength      uint32 // 4, 当前 TagData 的全部长度,包括 TotalLength 字段长度
+        //     Count            int32  // 4 固定值 1
+        //     TagCount         int32  // 4 固定值 0
+        //     ColCount         int32  // 4 列数
+        //     TableNamesOffset uint32 // 4 固定值 0
+        //     TagsOffset       uint32 // 4 固定值 0
+        //     ColsOffset       uint32 // 4 固定值 28
+        //
+        //
+        //     ColDataLength []uint32 // cols 的长度, 1 个元素
+        //     ColBuffer     []byte   // col 的 buffer 列数个 BindData
+        // }
+        //
+        // type BindData struct {
+        //     TotalLength  uint32  // 4, 当前 TagData 的全部长度,包括 TotalLength 字段长度
+        //     Type         int32   // 4, 数据类型
+        //     Num          int32   // 4, 多少行数据
+        //     IsNull       []byte  // Num * 1 每个 tag 是否为 null, Num 个元素
+        //     haveLength   byte    // 1, 是否有长度，0 为没有，1 为有，当数据类型为变长时必须有长度（binary, nchar, json, varbinary, varchar）
+        //     Length       []int32 // Num * 4 每个 tag 的长度, Num 个元素，当 hasLength 为 0 时，无该字段
+        //     BufferLength uint32  // 4, Buffer 的长度
+        //     Buffer       []byte  // 绑定数据
+        // }
+
+
+        private byte[] GenerateAsColumnsBindBinary()
+        {
+            var colFields = _isInsert ? _fields : _queryFields;
+            var colCount = colFields.Length;
+            const uint fixedHeaderLen = 28;
+
+            // var colsDataLengthLen = (uint)4;
+            var colsBufferLen = (uint)0;
+            // var fieldIndex = new int[colCount];
+            var variableColIndexes = new List<int>();
+            var colIndex = 0;
+            var tagIndex = 0;
+            var colInfos = new ColInfo[colCount];
+            for (var index = 0; index < colCount; index++)
+            {
+                var colField = colFields[index];
+                var colInfo = new ColInfo(colField);
+                switch ((TaosFieldType)colField.field_type)
+                {
+                    case TaosFieldType.TAOS_FIELD_COL:
+                        colInfo.FieldType = TaosFieldType.TAOS_FIELD_COL;
+                        colInfo.FieldIndex = colIndex;
+                        colInfo.IsVariable = TDengineConstant.IsVarDataType((byte)colField.type);
+                        if (colInfo.IsVariable)
+                        {
+                            // variant type
+                            variableColIndexes.Add(index);
+                        }
+                        else
+                        {
+                            var typeLength = TDengineConstant.TypeLengthMap[(TDengineDataType)colField.type];
+                            colInfo.FixedLength = typeLength;
+                        }
+
+                        colIndex++;
+                        break;
+                    case TaosFieldType.TAOS_FIELD_TAG:
+                        colInfo.FieldType = TaosFieldType.TAOS_FIELD_TAG;
+                        colInfo.FieldIndex = tagIndex;
+                        colInfo.IsVariable = TDengineConstant.IsVarDataType((byte)colField.type);
+                        if (colInfo.IsVariable)
+                        {
+                            // variant type
+                            variableColIndexes.Add(index);
+                        }
+                        else
+                        {
+                            var typeLength = TDengineConstant.TypeLengthMap[(TDengineDataType)colField.type];
+                            colInfo.FixedLength = typeLength;
+                        }
+
+                        tagIndex++;
+                        break;
+                    case TaosFieldType.TAOS_FIELD_TBNAME:
+                        colInfo.FieldType = TaosFieldType.TAOS_FIELD_TBNAME;
+                        colInfo.IsVariable = true;
+                        variableColIndexes.Add(index);
+                        break;
+                    default:
+                        throw new NotSupportedException(
+                            $"stmt field type not support: {(TaosFieldType)colFields[index].field_type}");
+                }
+
+                colInfos[index] = colInfo;
+            }
+
+            // 计算总长度
+            var totalRows = 0;
+            foreach (var tableInfo in _tableInfos)
+            {
+                var rows = tableInfo.Value.Rows;
+                // 计算变长类型长度
+                foreach (var variableColIndex in variableColIndexes)
+                {
+                    var bufferLength = (uint)0;
+                    var colInfo = colInfos[variableColIndex];
+                    int bsCount;
+                    switch (colInfo.FieldType)
+                    {
+                        case TaosFieldType.TAOS_FIELD_COL:
+                            var colValues = tableInfo.Value.Cols[colInfo.FieldIndex];
+                            foreach (var colValue in colValues)
+                            {
+                                if (colValue == null || Convert.IsDBNull(colValue))
+                                {
+                                    continue;
+                                }
+
+                                switch (colValue)
+                                {
+                                    case string str:
+                                        bsCount = Encoding.UTF8.GetByteCount(str);
+                                        bufferLength += (uint)bsCount;
+                                        break;
+                                    case byte[] byteArray:
+                                        bufferLength += (uint)byteArray.Length;
+                                        break;
+                                    default:
+                                        throw new NotSupportedException(
+                                            $"col field type not support: {(TDengineDataType)_colFields[colInfo.FieldIndex].type}, value: {colValue}");
+                                }
+                            }
+
+                            break;
+                        case TaosFieldType.TAOS_FIELD_TBNAME:
+                            bsCount = Encoding.UTF8.GetByteCount(tableInfo.Key);
+                            bufferLength += (uint)bsCount * (uint)rows;
+                            break;
+                        case TaosFieldType.TAOS_FIELD_TAG:
+                            var tagValue = tableInfo.Value.Tags[colInfo.FieldIndex];
+                            if (tagValue == null || Convert.IsDBNull(tagValue))
+                            {
+                                continue;
+                            }
+
+                            switch (tagValue)
+                            {
+                                case string str:
+                                    bsCount = Encoding.UTF8.GetByteCount(str);
+                                    bufferLength += (uint)bsCount * (uint)rows;
+                                    break;
+                                case byte[] byteArray:
+                                    bufferLength += (uint)byteArray.Length * (uint)rows;
+                                    break;
+                                default:
+                                    throw new NotSupportedException(
+                                        $"tag field type not support: {(TDengineDataType)_tagFields[colInfo.FieldIndex].type}, value: {tagValue}");
+                            }
+
+                            break;
+                        default:
+                            throw new NotSupportedException(
+                                $"stmt field type not support: {colInfo.FieldType}");
+                    }
+
+                    colInfo.BufferLength += bufferLength;
+                }
+
+                totalRows += rows;
+            }
+
+            var colsOffset = fixedHeaderLen;
+            var colsLengthOffset = _binaryHeaderLength + (int)colsOffset;
+            var colsBufferOffset = colsLengthOffset + 4;
+
+            for (var index = 0; index < colInfos.Length; index++)
+            {
+                var colInfo = colInfos[index];
+                if (colInfo.IsVariable)
+                {
+                    colInfo.TotalLength = 4 + // TotalLength field length
+                                          4 + // DataType field length
+                                          4 + // Num field length
+                                          (uint)(totalRows * 1) + // IsNull field length
+                                          1 + // HaveLength field length
+                                          (uint)(totalRows * 4) + // Length field length, each length is 4 bytes
+                                          4 + // BufferLength field length
+                                          colInfo.BufferLength; // Buffer field length
+                    colInfo.StartOffset = index == 0
+                        ? colsBufferOffset
+                        : (int)colInfos[index - 1].TotalLength + colInfos[index - 1].StartOffset;
+                    colInfo.IsNullOffset = colInfo.StartOffset + 12;
+                    colInfo.LengthsOffset = colInfo.IsNullOffset + totalRows + 1;
+                    colInfo.NextBufferOffset = colInfo.LengthsOffset + totalRows * 4 + 4;
+                }
+                else
+                {
+                    colInfo.BufferLength = (uint)(colInfo.FixedLength * totalRows);
+                    colInfo.TotalLength = 4 + // TotalLength field length
+                                          4 + // DataType field length
+                                          4 + // Num field length
+                                          (uint)(totalRows * 1) + // IsNull field length
+                                          1 + // HaveLength field length
+                                          4 + // BufferLength field length
+                                          colInfo.BufferLength; // Buffer field length
+                    colInfo.StartOffset = index == 0
+                        ? colsBufferOffset
+                        : (int)colInfos[index - 1].TotalLength + colInfos[index - 1].StartOffset;
+                    colInfo.IsNullOffset = colInfo.StartOffset + 12;
+                    colInfo.NextBufferOffset = colInfo.IsNullOffset + totalRows + 1 + 4;
+                }
+
+                colsBufferLen += colInfo.TotalLength;
+            }
+
+
+
+            var totalBufferLen = fixedHeaderLen + 4 + colsBufferLen;
+
+            var buffer = new byte[totalBufferLen + _binaryHeaderLength];
+            WriteU32(buffer, _binaryHeaderLength + 0, totalBufferLen); // TotalLength
+            WriteU32(buffer, _binaryHeaderLength + 4, 1); // Count
+            WriteU32(buffer, _binaryHeaderLength + 8, 0); // TagCount
+            WriteU32(buffer, _binaryHeaderLength + 12, (uint)colCount); // ColCount
+            WriteU32(buffer, _binaryHeaderLength + 16, 0); // TableNamesOffset
+            WriteU32(buffer, _binaryHeaderLength + 20, 0); // TagsOffset
+            WriteU32(buffer, _binaryHeaderLength + 24, colsOffset); // ColsOffset
+            WriteU32(buffer, colsLengthOffset, colsBufferLen);
+            // type BindData struct {
+            //     TotalLength  uint32  // 4, 当前 TagData 的全部长度,包括 TotalLength 字段长度
+            //     Type         int32   // 4, 数据类型
+            //     Num          int32   // 4, 多少行数据
+            //     IsNull       []byte  // Num * 1 每个 tag 是否为 null, Num 个元素
+            //     haveLength   byte    // 1, 是否有长度，0 为没有，1 为有，当数据类型为变长时必须有长度（binary, nchar, json, varbinary, varchar）
+            //     Length       []int32 // Num * 4 每个 tag 的长度, Num 个元素，当 hasLength 为 0 时，无该字段
+            //     BufferLength uint32  // 4, Buffer 的长度
+            //     Buffer       []byte  // 绑定数据
+            // }
+            foreach (var colInfo in colInfos)
+            {
+                WriteU32(buffer,colInfo.StartOffset,colInfo.TotalLength);
+                WriteU32(buffer,colInfo.StartOffset+4,(uint)colInfo.Field.type);
+                WriteU32(buffer,colInfo.StartOffset+8,(uint)totalRows);
+                if (colInfo.IsVariable)
+                {
+                    buffer[colInfo.IsNullOffset + totalRows] = 1;
+                }
+                WriteU32(buffer,colInfo.NextBufferOffset - 4, colInfo.BufferLength);
+            }
+            foreach (var tableData in _tableInfos.Values)
+            {
+                foreach (var colInfo in colInfos)
+                {
+                    switch (colInfo.FieldType)
+                    {
+                        case TaosFieldType.TAOS_FIELD_COL:
+                            var colData = tableData.Cols[colInfo.FieldIndex];
+                            if (colInfo.IsVariable)
+                            {
+                                for (int i = 0; i < colData.Count; i++)
+                                {
+                                    var value = colData[i];
+                                    WriteVariableValue(buffer, colInfo, value);
+                                }
+                            }
+                            else
+                            {
+                                for (int i = 0; i < colData.Count; i++)
+                                {
+                                    var value = colData[i];
+                                    WriteFixedValue(buffer, colInfo, value);
+                                }
+                            }
+
+                            break;
+                        case TaosFieldType.TAOS_FIELD_TAG:
+                            for (int i = 0; i < tableData.Rows; i++)
+                            {
+                                var tagValue = tableData.Tags[colInfo.FieldIndex];
+                                if (colInfo.IsVariable)
+                                {
+                                    WriteVariableValue(buffer, colInfo, tagValue);
+                                }
+                                else
+                                {
+                                    WriteFixedValue(buffer, colInfo, tagValue);
+                                }
+                            }
+
+                            break;
+                        case TaosFieldType.TAOS_FIELD_TBNAME:
+                            for (int i = 0; i < tableData.Rows; i++)
+                            {
+                                WriteVariableValue(buffer, colInfo, tableData.TableName);
+                            }
+                            break;
+                        default:
+                            throw new NotSupportedException(
+                                $"stmt field type not support: {colInfo.FieldType}");
+                    }
+                }
+            }
+
+            return buffer;
+        }
+
+        private void WriteVariableValue(byte[] buffer, ColInfo colInfo, object value)
+        {
+            if (value == null || Convert.IsDBNull(value))
+            {
+                // is null
+                buffer[colInfo.IsNullOffset + colInfo.NextWriteIndex] = 1;
+                // length
+                // WriteU32(buffer, colInfo.CurrentBufferOffset + VariableLengthOffset + i * 4, 0);
+            }
+            else
+            {
+                switch (value)
+                {
+                    case string strVal:
+                    {
+                        var length = Encoding.UTF8.GetByteCount(strVal);
+                        WriteU32(buffer, colInfo.LengthsOffset + colInfo.NextWriteIndex * 4,
+                            (uint)length);
+                        Encoding.UTF8.GetBytes(strVal, 0, strVal.Length, buffer,
+                            colInfo.NextBufferOffset);
+                        colInfo.NextBufferOffset += length;
+                        break;
+                    }
+                    case byte[] binVal:
+                    {
+                        WriteU32(buffer, colInfo.LengthsOffset + colInfo.NextWriteIndex * 4,
+                            (uint)binVal.Length);
+                        Buffer.BlockCopy(binVal, 0, buffer, colInfo.NextBufferOffset,
+                            binVal.Length);
+                        colInfo.NextBufferOffset += binVal.Length;
+                        break;
+                    }
+                    default:
+                        throw new NotSupportedException(
+                            $"col field type not support: {(TDengineDataType)_colFields[colInfo.FieldIndex].type}, value: {value}");
+                }
+            }
+
+            colInfo.NextWriteIndex += 1;
+        }
+
+        private void WriteFixedValue(byte[] buffer, ColInfo colInfo, object value)
+        {
+            if (value == null || Convert.IsDBNull(value))
+            {
+                buffer[colInfo.IsNullOffset + colInfo.NextWriteIndex] = 1;
+            }
+            else
+            {
+                switch (value)
+                {
+                    case DateTimeOffset dto:
+                        var timestamp = TDengineConstant.ConvertDateTimeOffsetToTimestamp(dto,
+                            (TDenginePrecision)colInfo.Field.precision);
+                        WriteU64(buffer, colInfo.NextBufferOffset, (ulong)timestamp);
+                        break;
+                    case DateTime dt:
+                        var ts = TDengineConstant.ConvertDateTimeToTimestamp(dt,
+                            (TDenginePrecision)colInfo.Field.precision);
+                        WriteU64(buffer, colInfo.NextBufferOffset, (ulong)ts);
+                        break;
+                    case bool boolVal:
+                        buffer[colInfo.NextBufferOffset] = boolVal ? (byte)1 : (byte)0;
+                        break;
+                    case sbyte sbyteVal:
+                        buffer[colInfo.NextBufferOffset] = (byte)sbyteVal;
+                        break;
+                    case byte byteVal:
+                        buffer[colInfo.NextBufferOffset] = byteVal;
+                        break;
+                    case short shortVal:
+                        WriteU16(buffer, colInfo.NextBufferOffset, (ushort)shortVal);
+                        break;
+                    case ushort ushortVal:
+                        WriteU16(buffer, colInfo.NextBufferOffset, ushortVal);
+                        break;
+                    case int intVal:
+                        WriteU32(buffer, colInfo.NextBufferOffset, (uint)intVal);
+                        break;
+                    case uint uintVal:
+                        WriteU32(buffer, colInfo.NextBufferOffset, uintVal);
+                        break;
+                    case long longVal:
+                        WriteU64(buffer, colInfo.NextBufferOffset, (ulong)longVal);
+                        break;
+                    case ulong ulongVal:
+                        WriteU64(buffer, colInfo.NextBufferOffset, ulongVal);
+                        break;
+                    case float floatVal:
+#if NETSTANDARD2_1_OR_GREATER ||NET5_0_OR_GREATER||NETCOREAPP2_0_OR_GREATER
+                        var floatInt = BitConverter.SingleToInt32Bits(floatVal);
+                        WriteU32(buffer, colInfo.NextBufferOffset, (uint)floatInt);
+#else
+                        var floatBytes = BitConverter.GetBytes(floatVal);
+                        Buffer.BlockCopy(floatBytes, 0, buffer, colInfo.NextBufferOffset, 4);
+#endif
+                        break;
+                    case double doubleVal:
+                        var doubleInt = BitConverter.DoubleToInt64Bits(doubleVal);
+                        WriteU64(buffer, colInfo.NextBufferOffset, (ulong)doubleInt);
+                        break;
+                    default:
+                        throw new NotSupportedException(
+                            $"col field type not support: {(TDengineDataType)colInfo.Field.type}");
+                }
+            }
+
+            colInfo.NextWriteIndex += 1;
+            colInfo.NextBufferOffset += colInfo.FixedLength;
+        }
 
         private byte[] GenerateBindBinary()
         {
             var tableCount = _tableInfos.Count;
             var colCount = _isInsert ? _colFields.Length : _fieldsCount;
-            var colFields = _isInsert ? _colFields : _queryFields;
+            var colFields = _isInsert ? _colFields : _queryFieldEs;
             const uint fixedHeaderLen = 28;
             var tableNameLengthLen = (uint)0;
             var tableNameBufferLen = (uint)0;

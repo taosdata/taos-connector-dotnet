@@ -41,8 +41,28 @@ namespace TDengine.Driver.Client
         private bool _executed;
         private int _affectedRows;
         private bool _schemaChanged;
-        private TaosFieldE[] _queryFields;
-        
+        private TaosFieldAll[] _queryFields;
+        private TaosFieldE[] _queryFieldEs
+        {
+            get
+            {
+                if (_queryFields == null || _queryFields.Length == 0) return null;
+                var queryFieldEs = new TaosFieldE[_queryFields.Length];
+                for (var i = 0; i < _queryFields.Length; i++)
+                {
+                    queryFieldEs[i] = new TaosFieldE
+                    {
+                        name = _queryFields[i].name,
+                        type = _queryFields[i].type,
+                        precision = _queryFields[i].precision,
+                        scale = _queryFields[i].scale,
+                        bytes = _queryFields[i].bytes
+                    };
+                }
+                return queryFieldEs;
+            }
+        }
+
         private readonly Queue<List<object>> _objectListQueue = new Queue<List<object>>();
         private readonly Queue<Stmt2TableData> _tableInfoQueue = new Queue<Stmt2TableData>();
         
