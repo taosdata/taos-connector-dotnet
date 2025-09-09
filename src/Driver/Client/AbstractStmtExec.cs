@@ -40,8 +40,16 @@ namespace TDengine.Driver.Client
 
             try
             {
-                // var buffer = GenerateBindBinary();
-                var buffer = GenerateAsColumnsBindBinary();
+                byte[] buffer;
+                if (!_isV2)
+                {
+                    buffer = GenerateBindBinary();
+                }
+                else
+                {
+                    buffer = GenerateAsColumnsBindBinary();
+                }
+
                 // print buffer
                 // StringBuilder sb = new StringBuilder();
                 // for (int i = 0; i < buffer.Length; i++)
@@ -562,7 +570,7 @@ namespace TDengine.Driver.Client
 
                             break;
                         case TaosFieldType.TAOS_FIELD_TBNAME:
-                            bsCount = Encoding.UTF8.GetByteCount(tableInfo.Key);
+                            bsCount = Encoding.UTF8.GetByteCount(tableInfo.Key) + 1;
                             bufferLength += (uint)bsCount * (uint)rows;
                             break;
                         case TaosFieldType.TAOS_FIELD_TAG:
@@ -643,7 +651,6 @@ namespace TDengine.Driver.Client
             }
 
 
-
             var totalBufferLen = fixedHeaderLen + 4 + colsBufferLen;
 
             var buffer = new byte[totalBufferLen + _binaryHeaderLength];
@@ -667,15 +674,17 @@ namespace TDengine.Driver.Client
             // }
             foreach (var colInfo in colInfos)
             {
-                WriteU32(buffer,colInfo.StartOffset,colInfo.TotalLength);
-                WriteU32(buffer,colInfo.StartOffset+4,(uint)colInfo.Field.type);
-                WriteU32(buffer,colInfo.StartOffset+8,(uint)totalRows);
+                WriteU32(buffer, colInfo.StartOffset, colInfo.TotalLength);
+                WriteU32(buffer, colInfo.StartOffset + 4, (uint)colInfo.Field.type);
+                WriteU32(buffer, colInfo.StartOffset + 8, (uint)totalRows);
                 if (colInfo.IsVariable)
                 {
                     buffer[colInfo.IsNullOffset + totalRows] = 1;
                 }
-                WriteU32(buffer,colInfo.NextBufferOffset - 4, colInfo.BufferLength);
+
+                WriteU32(buffer, colInfo.NextBufferOffset - 4, colInfo.BufferLength);
             }
+
             foreach (var tableData in _tableInfos.Values)
             {
                 foreach (var colInfo in colInfos)
@@ -720,8 +729,9 @@ namespace TDengine.Driver.Client
                         case TaosFieldType.TAOS_FIELD_TBNAME:
                             for (int i = 0; i < tableData.Rows; i++)
                             {
-                                WriteVariableValue(buffer, colInfo, tableData.TableName);
+                                WriteVariableValue(buffer, colInfo, tableData.TableName, true);
                             }
+
                             break;
                         default:
                             throw new NotSupportedException(
@@ -733,7 +743,7 @@ namespace TDengine.Driver.Client
             return buffer;
         }
 
-        private void WriteVariableValue(byte[] buffer, ColInfo colInfo, object value)
+        private void WriteVariableValue(byte[] buffer, ColInfo colInfo, object value, bool tableName = false)
         {
             if (value == null || Convert.IsDBNull(value))
             {
@@ -749,10 +759,15 @@ namespace TDengine.Driver.Client
                     case string strVal:
                     {
                         var length = Encoding.UTF8.GetByteCount(strVal);
-                        WriteU32(buffer, colInfo.LengthsOffset + colInfo.NextWriteIndex * 4,
-                            (uint)length);
                         Encoding.UTF8.GetBytes(strVal, 0, strVal.Length, buffer,
                             colInfo.NextBufferOffset);
+                        if (tableName)
+                        {
+                            length += 1; // table name need '\0' end
+                        }
+
+                        WriteU32(buffer, colInfo.LengthsOffset + colInfo.NextWriteIndex * 4,
+                            (uint)length);
                         colInfo.NextBufferOffset += length;
                         break;
                     }

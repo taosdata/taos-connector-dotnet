@@ -10,13 +10,15 @@ namespace TDengine.Driver.Client.Websocket
         private Connection _connection;
         private ulong _stmt;
         private bool _closed;
+        private ushort _version;
 
-        public WSStmt(WSClient client, ulong stmt, TimeZoneInfo tz, Connection connection) : base(30)
+        public WSStmt(WSClient client, ulong stmt, TimeZoneInfo tz, Connection connection, ushort version = 1) : base(30,version == 2)
         {
             _client = client;
             _stmt = stmt;
             _tz = tz;
             _connection = connection;
+            _version = version;
         }
 
         public override void Dispose()
@@ -68,7 +70,7 @@ namespace TDengine.Driver.Client.Websocket
 
         protected override void BindBinaryInternal(byte[] data, out int affectedRows)
         {
-            _connection.Stmt2Bind(_stmt, data);
+            _connection.Stmt2Bind(_stmt, data,_version);
             var resp = _connection.Stmt2Exec(_stmt);
             affectedRows = resp.Affected;
         }

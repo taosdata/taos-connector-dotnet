@@ -63,6 +63,8 @@ namespace TDengine.Driver.Client
             }
         }
 
+        private bool _isV2;
+
         private readonly Queue<List<object>> _objectListQueue = new Queue<List<object>>();
         private readonly Queue<Stmt2TableData> _tableInfoQueue = new Queue<Stmt2TableData>();
         
@@ -110,9 +112,10 @@ namespace TDengine.Driver.Client
             _tableInfoQueue.Enqueue(info);
         }
         
-        protected AbstractStmt(int binaryHeaderLength = 0)
+        protected AbstractStmt(int binaryHeaderLength = 0,bool isV2 = false)
         {
             _binaryHeaderLength = binaryHeaderLength;
+            _isV2 = isV2;
         }
         
         // before prepare or prepare failed, clean all cache

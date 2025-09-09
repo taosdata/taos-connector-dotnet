@@ -28,7 +28,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             },reqId);
         }
         
-        public WSStmt2BindResp Stmt2Bind(ulong stmtId, byte[]req)
+        public WSStmt2BindResp Stmt2Bind(ulong stmtId, byte[]req, ushort version)
         {
             //p0 uin64  req_id
             //p0+8 uint64  stmt_id
@@ -40,7 +40,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             WriteUInt64ToBytes(req, reqId,0);
             WriteUInt64ToBytes(req, stmtId,8);
             WriteUInt64ToBytes(req,WSActionBinary.Stmt2BindMessage,16);
-            WriteUInt16ToBytes(req, 1, 24);
+            WriteUInt16ToBytes(req, version, 24);
             WriteUInt32ToBytes(req, 0xffffffff, 26); //col_index(-1)
             return SendBinaryBackJson<WSStmt2BindResp>(req,reqId);
         }

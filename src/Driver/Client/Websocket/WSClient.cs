@@ -151,6 +151,13 @@ namespace TDengine.Driver.Client.Websocket
             var resp = connection.Stmt2Init((ulong)reqId);
             return new WSStmt(this, resp.StmtId, _tz, connection);
         }
+        
+        public IStmt StmtInit(long reqId, ushort version)
+        {
+            var connection = _connection;
+            var resp = connection.Stmt2Init((ulong)reqId);
+            return new WSStmt(this, resp.StmtId, _tz, connection,version);
+        }
 
         public IRows Query(string query)
         {

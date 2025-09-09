@@ -6,6 +6,8 @@ namespace TDengine.Driver
     {
         IStmt StmtInit();
         IStmt StmtInit(long reqId);
+        
+        IStmt StmtInit(long reqId, ushort version);
         IRows Query(string query);
         IRows Query(string query, long reqId);
         long Exec(string query);

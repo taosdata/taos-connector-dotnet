@@ -47,6 +47,11 @@ namespace TDengine.Driver.Client.Native
             return new NativeStmt(stmt, _tz);
         }
 
+        public IStmt StmtInit(long reqId, ushort version)
+        {
+            throw new NotImplementedException();
+        }
+
         public IRows Query(string query)
         {
             return Query(query, ReqId.GetReqId());
