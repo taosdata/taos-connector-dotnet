@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 
 namespace Driver.Test.Client.Query
 {
-    public partial class Client:IDisposable
+    public partial class Client : IDisposable
     {
         private readonly ITestOutputHelper _output;
         private readonly string _nativeConnectString;
@@ -40,7 +40,8 @@ namespace Driver.Test.Client.Query
 
             if (!_isEnterpriseTest) return;
             var token = CreateTestToken();
-            _wsTokenConnectString = $"protocol=WebSocket;host=localhost;port=6041;useSSL=false;bearerToken={token};enableCompression=true";
+            _wsTokenConnectString =
+                $"protocol=WebSocket;host=localhost;port=6041;useSSL=false;bearerToken={token};enableCompression=true";
             _nativeTokenConnectString = $"host=localhost;port=6030;bearerToken={token}";
         }
 
@@ -59,12 +60,44 @@ namespace Driver.Test.Client.Query
             var builder = new ConnectionStringBuilder(_wsConnectString);
             using (var client = DbDriver.Open(builder))
             {
+                string token;
                 using (var rows = client.Query($"create token test_token_root from user {builder.Username}"))
                 {
                     rows.Read();
-                    return rows.GetString(0);
+                    token = rows.GetString(0);
                 }
+
+                for (int i = 0; i < 100; i++)
+                {
+                    var count = 0;
+                    using (var rows = client.Query(
+                               "select * from performance_schema.perf_trans where oper = 'create-token'"))
+                    {
+                        while (rows.Read())
+                        {
+                            count = rows.GetInt32(0);
+                        }
+                    }
+
+                    if (count != 0)
+                    {
+                        Thread.Sleep(500);
+                        continue;
+                    }
+
+                    using (var rows = client.Query(
+                               "select count(*) from information_schema.ins_tokens where name = 'test_token_root'"))
+                    {
+                        rows.Read();
+                        count = rows.GetInt32(0);
+                    }
+
+                    if (count == 1) return token;
+                    Thread.Sleep(500);
+                }
+
             }
+            throw new Exception("Create test token timeout");
         }
 
         private static string GetCloudConnectString(string host, string token)
@@ -3534,7 +3567,8 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     // no table name set
                     Assert.Throws<InvalidOperationException>(() => stmt.SetTags(new object[] { 1 }));
                     Assert.Throws<InvalidOperationException>(() => stmt.BindRow(new object[] { now, 100 }));
-                    Assert.Throws<InvalidOperationException>(() => stmt.BindColumn(null,new DateTime[] { now },new int[]{100}));
+                    Assert.Throws<InvalidOperationException>(() =>
+                        stmt.BindColumn(null, new DateTime[] { now }, new int[] { 100 }));
                     Assert.Throws<InvalidOperationException>(() => stmt.AddBatch());
                     // set empty table name
                     Assert.Throws<ArgumentException>(() => stmt.SetTableName(""));
