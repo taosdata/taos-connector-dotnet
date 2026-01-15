@@ -232,5 +232,11 @@ namespace Driver.Test.Client.Query
             const string db = "stmt_bind_tags_test";
             this.StmtBindTagsTest(this._nativeConnectString, db);
         }
+
+        [Fact]
+        public void NativeConnectionAvailable()
+        {
+            this.ConnectionAvailable(this._nativeConnectString);
+        }
     }
 }

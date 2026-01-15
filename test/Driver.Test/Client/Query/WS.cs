@@ -387,5 +387,11 @@ namespace Driver.Test.Client.Query
             const string db = "ws_stmt_bind_tags_test";
             this.StmtBindTagsTest(this._wsConnectString, db);
         }
+        
+        [Fact]
+        public void WebSocketConnectionAvailable()
+        {
+            this.ConnectionAvailable(this._wsConnectString);
+        }
     }
 }

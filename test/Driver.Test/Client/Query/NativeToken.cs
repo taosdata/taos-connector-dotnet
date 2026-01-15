@@ -397,5 +397,16 @@ namespace Driver.Test.Client.Query
             const string db = "stmt_bind_tags_test_token";
             this.StmtBindTagsTest(this._nativeTokenConnectString, db);
         }
+        
+        [Fact]
+        public void NativeTokenConnectionAvailable()
+        {
+            if (!_isEnterpriseTest)
+            {
+                _output.WriteLine("Enterprise edition is required for token-based authentication. Skipping.");
+                return;
+            }
+            this.ConnectionAvailable(this._nativeTokenConnectString);
+        }
     }
 }

@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 
 namespace Driver.Test.Client.Query
 {
-    public partial class Client
+    public partial class Client:IDisposable
     {
         private readonly ITestOutputHelper _output;
         private readonly string _nativeConnectString;
@@ -39,17 +39,27 @@ namespace Driver.Test.Client.Query
             }
 
             if (!_isEnterpriseTest) return;
-            var token = CreateTestToken(_wsConnectString, "test_token_root");
+            var token = CreateTestToken();
             _wsTokenConnectString = $"protocol=WebSocket;host=localhost;port=6041;useSSL=false;bearerToken={token};enableCompression=true";
             _nativeTokenConnectString = $"host=localhost;port=6030;bearerToken={token}";
         }
 
-        private string CreateTestToken(string connectString,string tokenName)
+        public void Dispose()
         {
-            var builder = new ConnectionStringBuilder(connectString);
+            if (!_isEnterpriseTest) return;
+            var builder = new ConnectionStringBuilder(_wsConnectString);
             using (var client = DbDriver.Open(builder))
             {
-                using (var rows = client.Query($"create token {tokenName} from user {builder.Username}"))
+                DoExec(client, "drop token if exists test_token_root");
+            }
+        }
+
+        private string CreateTestToken()
+        {
+            var builder = new ConnectionStringBuilder(_wsConnectString);
+            using (var client = DbDriver.Open(builder))
+            {
+                using (var rows = client.Query($"create token test_token_root from user {builder.Username}"))
                 {
                     rows.Read();
                     return rows.GetString(0);
@@ -3989,6 +3999,15 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                 {
                     DoExec(client, $"drop database if exists {db}");
                 }
+            }
+        }
+
+        private void ConnectionAvailable(string connectString)
+        {
+            var builder = new ConnectionStringBuilder(connectString);
+            using (var client = DbDriver.Open(builder))
+            {
+                Assert.True(client.ConnectionAvailable());
             }
         }
 

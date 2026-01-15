@@ -397,5 +397,15 @@ namespace Driver.Test.Client.Query
             const string db = "ws_stmt_bind_tags_test_token";
             this.StmtBindTagsTest(this._wsTokenConnectString, db);
         }
+        [Fact]
+        public void WebSocketTokenConnectionAvailable()
+        {
+            if (!_isEnterpriseTest)
+            {
+                _output.WriteLine("Enterprise edition is required for token-based authentication. Skipping.");
+                return;
+            }
+            this.ConnectionAvailable(this._wsTokenConnectString);
+        }
     }
 }
