@@ -34,29 +34,32 @@ namespace TDengine.Driver.Client.Native
             _tz = builder.GetTimeZone();
             // set app name
             SetConnectOptions((int)TSDB_OPTION_CONNECTION.TSDB_OPTION_CONNECTION_USER_APP,
-                TDengineConstant.ProcessName,"user_app");
+                TDengineConstant.ProcessName, "user_app");
             // set connector info
             SetConnectOptions((int)TSDB_OPTION_CONNECTION.TSDB_OPTION_CONNECTION_CONNECTOR_INFO,
-                TDengineConstant.NativeConnectorInfo,"connector_info");
+                TDengineConstant.NativeConnectorInfo, "connector_info");
             if (builder.ConnectionTimezone != null)
             {
                 // set timezone
                 SetConnectOptions((int)TSDB_OPTION_CONNECTION.TSDB_OPTION_CONNECTION_TIMEZONE,
-                builder.ConnectionTimezone.Id,"timezone");
+                    builder.ConnectionTimezone.Id, "timezone");
             }
         }
 
         private const int TSDB_CODE_INVALID_PARA = 0x0118;
+
         private void SetConnectOptions(int option, string value, string optionName)
         {
-            var errNo = NativeMethods.OptionsConnection(_conn,option,value);
+            var errNo = NativeMethods.OptionsConnection(_conn, option, value);
             if (errNo == 0) return;
             if ((errNo & 0xffff) == TSDB_CODE_INVALID_PARA)
             {
                 // ignore invalid parameter error, because some old version TDengine may not support some options
                 return;
             }
-            throw new TDengineError(errNo, NativeMethods.Error(IntPtr.Zero),$"set connection option {optionName} failed");
+
+            throw new TDengineError(errNo, NativeMethods.Error(IntPtr.Zero),
+                $"set connection option {optionName} failed");
         }
 
         public void Dispose()

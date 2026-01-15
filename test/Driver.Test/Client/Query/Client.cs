@@ -17,16 +17,15 @@ namespace Driver.Test.Client.Query
         private readonly string _wsConnectString;
         private readonly string _cloudConnectString;
         private readonly bool _is3360Test;
-        private readonly bool _isEnterpriseTest;
         private readonly string _nativeTokenConnectString;
         private readonly string _wsTokenConnectString;
 
+        public static bool IsEnterpriseTest => Environment.GetEnvironmentVariable("TDENGINE_ENTERPRISE_TEST")== "true";
+        // public static bool IsEnterpriseTest => true;
         public Client(ITestOutputHelper output)
         {
             _is3360Test = Environment.GetEnvironmentVariable("TD_3360_TEST") == "true";
-            _isEnterpriseTest = Environment.GetEnvironmentVariable("TDENGINE_ENTERPRISE_TEST") == "true";
             // _is3360Test = true;
-            // _isEnterpriseTest = true;
             _output = output;
             _nativeConnectString = "host=localhost;port=6030;username=root;password=taosdata";
             _wsConnectString =
@@ -38,7 +37,7 @@ namespace Driver.Test.Client.Query
                 _cloudConnectString = GetCloudConnectString(cloudHost, cloudToken);
             }
 
-            if (!_isEnterpriseTest) return;
+            if (!IsEnterpriseTest) return;
             var token = CreateTestToken();
             _wsTokenConnectString =
                 $"protocol=WebSocket;host=localhost;port=6041;useSSL=false;bearerToken={token};enableCompression=true";
@@ -47,7 +46,7 @@ namespace Driver.Test.Client.Query
 
         public void Dispose()
         {
-            if (!_isEnterpriseTest) return;
+            if (!IsEnterpriseTest) return;
             var builder = new ConnectionStringBuilder(_wsConnectString);
             using (var client = DbDriver.Open(builder))
             {
