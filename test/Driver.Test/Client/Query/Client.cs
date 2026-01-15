@@ -17,20 +17,43 @@ namespace Driver.Test.Client.Query
         private readonly string _wsConnectString;
         private readonly string _cloudConnectString;
         private readonly bool _is3360Test;
+        private readonly bool _isEnterpriseTest;
+        private readonly string _nativeTokenConnectString;
+        private readonly string _wsTokenConnectString;
 
         public Client(ITestOutputHelper output)
         {
-            this._is3360Test = Environment.GetEnvironmentVariable("TD_3360_TEST") == "true";
+            _is3360Test = Environment.GetEnvironmentVariable("TD_3360_TEST") == "true";
+            _isEnterpriseTest = Environment.GetEnvironmentVariable("TDENGINE_ENTERPRISE_TEST") == "true";
             // _is3360Test = true;
-            this._output = output;
-            this._nativeConnectString = "host=localhost;port=6030;username=root;password=taosdata";
-            this._wsConnectString =
+            // _isEnterpriseTest = true;
+            _output = output;
+            _nativeConnectString = "host=localhost;port=6030;username=root;password=taosdata";
+            _wsConnectString =
                 "protocol=WebSocket;host=localhost;port=6041;useSSL=false;username=root;password=taosdata;enableCompression=true";
             var cloudHost = Environment.GetEnvironmentVariable("TDENGINE_CLOUD_ENDPOINT");
             var cloudToken = Environment.GetEnvironmentVariable("TDENGINE_CLOUD_TOKEN");
             if (!string.IsNullOrEmpty(cloudHost) && !string.IsNullOrEmpty(cloudToken))
             {
-                this._cloudConnectString = GetCloudConnectString(cloudHost, cloudToken);
+                _cloudConnectString = GetCloudConnectString(cloudHost, cloudToken);
+            }
+
+            if (!_isEnterpriseTest) return;
+            var token = CreateTestToken(_wsConnectString, "test_token_root");
+            _wsTokenConnectString = $"protocol=WebSocket;host=localhost;port=6041;useSSL=false;bearerToken={token};enableCompression=true";
+            _nativeTokenConnectString = $"host=localhost;port=6030;bearerToken={token}";
+        }
+
+        private string CreateTestToken(string connectString,string tokenName)
+        {
+            var builder = new ConnectionStringBuilder(connectString);
+            using (var client = DbDriver.Open(builder))
+            {
+                using (var rows = client.Query($"create token {tokenName} from user {builder.Username}"))
+                {
+                    rows.Read();
+                    return rows.GetString(0);
+                }
             }
         }
 
