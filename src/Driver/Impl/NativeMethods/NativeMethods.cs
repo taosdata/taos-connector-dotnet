@@ -379,7 +379,7 @@ namespace TDengine.Driver.Impl.NativeMethods
             catch (EntryPointNotFoundException)
             {
                 // taos_connect_is_alive not found, return success by default
-                return 0;
+                return 1;
             }
         }
     }

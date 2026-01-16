@@ -135,7 +135,7 @@ namespace TDengine.Driver.Client.Native
         {
             if (_conn == IntPtr.Zero) return false;
             var code = NativeMethods.IsConnectionAlive(_conn);
-            return code == 0 || code == 1;
+            return code == 1;
         }
     }
 }
