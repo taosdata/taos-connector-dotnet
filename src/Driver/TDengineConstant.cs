@@ -432,6 +432,8 @@ namespace TDengine.Driver
                     return typeof(byte[]);
                 case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
                     return typeof(byte[]);
+                case TDengineDataType.TSDB_DATA_TYPE_BLOB:
+                    return typeof(byte[]);
                 case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
                     return typeof(byte[]);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
@@ -477,6 +479,7 @@ namespace TDengine.Driver
                     return typeof(string);
                 case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
                 case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
+                case TDengineDataType.TSDB_DATA_TYPE_BLOB:
                 case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
                     return typeof(byte[]);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
@@ -523,6 +526,8 @@ namespace TDengine.Driver
                     return "JSON";
                 case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
                     return "VARBINARY";
+                case TDengineDataType.TSDB_DATA_TYPE_BLOB:
+                    return "BLOB";
                 case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
                     return "GEOMETRY";
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:

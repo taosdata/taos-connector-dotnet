@@ -179,6 +179,8 @@ namespace TDengine.Driver
                     return ConvertJson(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
                     return ConvertBinary(row, col);
+                case TDengineDataType.TSDB_DATA_TYPE_BLOB:
+                    return ConvertBinary(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
                     return ConvertBinary(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
@@ -799,6 +801,8 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
                     return Encoding.UTF8.GetString(ConvertJson(row, col));
                 case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
+                    return Encoding.UTF8.GetString(ConvertBinary(row, col));
+                case TDengineDataType.TSDB_DATA_TYPE_BLOB:
                     return Encoding.UTF8.GetString(ConvertBinary(row, col));
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
                     return ConvertDecimal64Str(row, col);

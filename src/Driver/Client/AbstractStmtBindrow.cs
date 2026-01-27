@@ -121,6 +121,7 @@ namespace TDengine.Driver.Client
                             if (fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_BINARY &&
                                 fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_JSONTAG &&
                                 fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_VARBINARY &&
+                                fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_BLOB &&
                                 fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_GEOMETRY
                                )
                             {
@@ -134,6 +135,7 @@ namespace TDengine.Driver.Client
                                 fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_BINARY &&
                                 fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_JSONTAG &&
                                 fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_VARBINARY &&
+                                fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_BLOB &&
                                 fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_NCHAR
                             )
                             {
