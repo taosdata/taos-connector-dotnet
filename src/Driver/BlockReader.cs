@@ -180,7 +180,7 @@ namespace TDengine.Driver
                 case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
                     return ConvertBinary(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_BLOB:
-                    return ConvertBinary(row, col);
+                    return ConvertBinaryBLOB(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_GEOMETRY:
                     return ConvertBinary(row, col);
                 case TDengineDataType.TSDB_DATA_TYPE_DECIMAL64:
@@ -359,6 +359,23 @@ namespace TDengine.Driver
             var currentRow = start + offset;
             var clen = BitConverter.ToUInt16(_block, currentRow);
             currentRow += 2;
+            byte[] subarray = new byte[clen];
+            Array.Copy(_block, currentRow, subarray, 0, clen);
+            return subarray;
+        }
+
+        private byte[] ConvertBinaryBLOB(int row, int col)
+        {
+            var offset = BitConverter.ToInt32(_block, _colHeadOffset[col] + row * 4);
+            if (offset == -1)
+            {
+                return null;
+            }
+
+            var start = _colHeadOffset[col] + TDengineConstant.Int32Size * _rows;
+            var currentRow = start + offset;
+            var clen = BitConverter.ToUInt32(_block, currentRow);
+            currentRow += 4;
             byte[] subarray = new byte[clen];
             Array.Copy(_block, currentRow, subarray, 0, clen);
             return subarray;
