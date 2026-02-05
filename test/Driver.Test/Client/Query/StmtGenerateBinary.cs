@@ -213,6 +213,11 @@ namespace Driver.Test.Client.Query
                             type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_VARBINARY,
                             field_type = (byte)TaosFieldType.TAOS_FIELD_COL,
                         },
+                        new TaosFieldAll
+                        {
+                            type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BLOB,
+                            field_type = (byte)TaosFieldType.TAOS_FIELD_COL,
+                        },
                     },
                     FieldCount = 0,
                     BindData = new BindData[]

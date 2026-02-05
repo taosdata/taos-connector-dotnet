@@ -158,7 +158,6 @@ namespace TDengine.Driver
                     case TDengineDataType.TSDB_DATA_TYPE_BINARY:
                     case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
                     case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
-                    case TDengineDataType.TSDB_DATA_TYPE_BLOB:
                     {
                         if (elementType == typeof(byte[]))
                         {
@@ -174,6 +173,27 @@ namespace TDengine.Driver
                         {
                             throw new ArgumentException(
                                 $"BindIndex: {colIndex}, field name: {fields[colIndex].name}, {(TDengineDataType)fields[colIndex].type} database type requires byte[] or string, but got {elementType.Name}");
+                        }
+
+                        break;
+                    }
+                    // blob (uses 4-byte length instead of 2-byte)
+                    case TDengineDataType.TSDB_DATA_TYPE_BLOB:
+                    {
+                        if (elementType == typeof(byte[]))
+                        {
+                            WriteVarBinaryBlob(data, colInfoData, lengthData, rows, (byte[][])array,
+                                (TDengineDataType)fields[colIndex].type);
+                        }
+                        else if (elementType == typeof(string))
+                        {
+                            WriteVarBinaryBlob(data, colInfoData, lengthData, rows, (string[])array,
+                                (TDengineDataType)fields[colIndex].type);
+                        }
+                        else
+                        {
+                            throw new ArgumentException(
+                                $"BindIndex: {colIndex}, field name: {fields[colIndex].name}, BLOB database type requires byte[] or string, but got {elementType.Name}");
                         }
 
                         break;
@@ -570,6 +590,54 @@ namespace TDengine.Driver
                     AppendUint16(dataTmp, (ushort)v.Length);
                     dataTmp.AddRange(v);
                     length += v.Length + TDengineConstant.Int16Size;
+                }
+            }
+
+            AppendUint32(lengthData, (uint)(length));
+            bytes.AddRange(dataTmp);
+        }
+
+        private static void WriteVarBinaryBlob(List<byte> bytes, List<byte> colInfoData, List<byte> lengthData, int rows,
+            string[] value, TDengineDataType type)
+        {
+            WriteVarBinaryBlob(bytes, colInfoData, lengthData, rows, value, type, v => Encoding.UTF8.GetBytes(v));
+        }
+
+        private static void WriteVarBinaryBlob(List<byte> bytes, List<byte> colInfoData, List<byte> lengthData, int rows,
+            byte[][] value, TDengineDataType type)
+        {
+            WriteVarBinaryBlob(bytes, colInfoData, lengthData, rows, value, type, v => v);
+        }
+
+        private static void WriteVarBinaryBlob<T>(List<byte> bytes, List<byte> colInfoData, List<byte> lengthData, int rows,
+            T[] value, TDengineDataType type, Func<T, byte[]> stringToBytes)
+        {
+            colInfoData.Add((byte)type);
+            AppendUint32(colInfoData, 0);
+            var length = 0;
+            var dataTmp = new List<byte>(TDengineConstant.Int32Size * rows);
+            dataTmp.AddRange(new byte[TDengineConstant.Int32Size * rows]);
+            for (int rowIndex = 0; rowIndex < rows; rowIndex++)
+            {
+                var offset = TDengineConstant.Int32Size * rowIndex;
+                if (value[rowIndex] == null)
+                {
+                    for (int i = 0; i < TDengineConstant.Int32Size; i++)
+                    {
+                        dataTmp[offset + i] = 255;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < TDengineConstant.Int32Size; i++)
+                    {
+                        dataTmp[offset + i] = (byte)(length >> (8 * i));
+                    }
+
+                    var v = stringToBytes(value[rowIndex]);
+                    AppendUint32(dataTmp, (uint)v.Length);  // 4-byte length instead of 2-byte
+                    dataTmp.AddRange(v);
+                    length += v.Length + TDengineConstant.Int32Size;  // 4 bytes for length
                 }
             }
 

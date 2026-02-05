@@ -789,6 +789,8 @@ namespace Driver.Test.Client.Query
                     DoExec(client, $"create table if not exists test_nchar (ts timestamp, c1 nchar(100))");
                     // varbinary
                     DoExec(client, $"create table if not exists test_varbinary (ts timestamp, c1 varbinary(100))");
+                    // blob
+                    DoExec(client, $"create table if not exists test_blob (ts timestamp, c1 blob)");
                     // geometry
                     DoExec(client, $"create table if not exists test_geometry (ts timestamp, c1 geometry(100))");
                     // json
@@ -972,6 +974,17 @@ namespace Driver.Test.Client.Query
                     _output.WriteLine($"{sql}");
                     DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_VARBINARY);
                     using (var rows = client.Query("select count(*) from test_varbinary"))
+                    {
+                        Assert.True(rows.Read());
+                        // null + byte[] * 3 + string * 3
+                        Assert.Equal(7, rows.GetInt32(0));
+                    }
+
+                    // blob
+                    sql = $"insert into test_varbinary values(?,?)";
+                    _output.WriteLine($"{sql}");
+                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BLOB);
+                    using (var rows = client.Query("select count(*) from test_blob"))
                     {
                         Assert.True(rows.Read());
                         // null + byte[] * 3 + string * 3
@@ -1794,6 +1807,7 @@ namespace Driver.Test.Client.Query
             };
             if (dataType == TDengineDataType.TSDB_DATA_TYPE_BINARY ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_NCHAR ||
+                dataType == TDengineDataType.TSDB_DATA_TYPE_BLOB ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_VARBINARY)
             {
                 stmt.BindRow(rowData.ToArray());
@@ -1814,6 +1828,7 @@ namespace Driver.Test.Client.Query
             };
             if (dataType == TDengineDataType.TSDB_DATA_TYPE_BINARY ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_NCHAR ||
+                dataType == TDengineDataType.TSDB_DATA_TYPE_BLOB ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_VARBINARY)
             {
                 stmt.BindColumn(colFields, colData);
@@ -1833,6 +1848,7 @@ namespace Driver.Test.Client.Query
                 new string[] { null },
             };
             if (dataType == TDengineDataType.TSDB_DATA_TYPE_BINARY ||
+                dataType == TDengineDataType.TSDB_DATA_TYPE_BLOB ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_NCHAR ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_VARBINARY)
             {
@@ -1859,6 +1875,7 @@ namespace Driver.Test.Client.Query
             };
             if (dataType == TDengineDataType.TSDB_DATA_TYPE_BINARY ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_GEOMETRY ||
+                dataType == TDengineDataType.TSDB_DATA_TYPE_BLOB ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_VARBINARY)
             {
                 stmt.BindRow(rowData.ToArray());
@@ -1886,6 +1903,7 @@ namespace Driver.Test.Client.Query
             };
             if (dataType == TDengineDataType.TSDB_DATA_TYPE_BINARY ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_GEOMETRY ||
+                dataType == TDengineDataType.TSDB_DATA_TYPE_BLOB ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_VARBINARY)
             {
                 stmt.BindColumn(colFields, colData);
@@ -1909,6 +1927,7 @@ namespace Driver.Test.Client.Query
             };
             if (dataType == TDengineDataType.TSDB_DATA_TYPE_BINARY ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_GEOMETRY ||
+                dataType == TDengineDataType.TSDB_DATA_TYPE_BLOB ||
                 dataType == TDengineDataType.TSDB_DATA_TYPE_VARBINARY)
             {
                 stmt.BindColumn(colFields, colData);
