@@ -39,3 +39,4 @@ jobs:
               ignore-unfixed: 'true'
               vuln-type: 'library'
               scanners: 'vuln,license'
+              version: 'latest'
