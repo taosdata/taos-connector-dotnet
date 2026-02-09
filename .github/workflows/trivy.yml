@@ -26,7 +26,7 @@ jobs:
 
       - name: Generate SBOM
         run: |
-          dotnet-CycloneDX csharpTaos.sln -j -fn taos-connector-dotnet.cdx.json
+          dotnet-CycloneDX csharpTaos.sln --output-format json -fn taos-connector-dotnet.cdx.json
 
       - name: Run Trivy Scan
         uses: aquasecurity/trivy-action@0.33.1
