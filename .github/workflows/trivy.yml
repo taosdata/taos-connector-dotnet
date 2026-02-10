@@ -42,7 +42,7 @@ jobs:
           version: 'latest'
           
       - name: feishu_report
-        if: failure() && github.event_name == 'schedule'
+#        if: failure() && github.event_name == 'schedule'
         env:
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
         run: |
