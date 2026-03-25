@@ -21,7 +21,7 @@ namespace Driver.Test.Client.Tools
                 exec = "taosadapter";
             }
 
-            ProcessStartInfo startInfo = new ProcessStartInfo(exec, $"--port {port}");
+            ProcessStartInfo startInfo = new ProcessStartInfo(exec, $"--port {port} --instanceId {port}");
             Process process = new Process { StartInfo = startInfo };
             return process;
         }
@@ -29,21 +29,34 @@ namespace Driver.Test.Client.Tools
         public static async Task StartTaosAdapter(Process process, string port)
         {
             process.Start();
-            await WaitForStart(port);
+            await WaitForStart(port).ConfigureAwait(false);
         }
 
         public static void StopTaosAdapter(Process process)
         {
-            if (process == null || process.Id == 0 || process.HasExited) return;
-            process.Kill();
-            process.WaitForExit(5000); // 等待进程退出
-            process.Close();
+            if (process == null) return;
+            try
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                    process.WaitForExit(5000); // 等待进程退出
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // process may have never started
+            }
+            finally
+            {
+                process.Close();
+            }
         }
 
         private static async Task WaitForStart(string port)
         {
             string url = $"http://127.0.0.1:{port}/-/ping";
-            bool success = await WaitForPingSuccess(_httpClient, url);
+            bool success = await WaitForPingSuccess(_httpClient, url).ConfigureAwait(false);
             if (!success)
             {
                 throw new Exception("Failed to start taosadapter");
@@ -60,7 +73,7 @@ namespace Driver.Test.Client.Tools
             {
                 try
                 {
-                    HttpResponseMessage response = await client.GetAsync(url);
+                    HttpResponseMessage response = await client.GetAsync(url).ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
                         success = true;
@@ -72,7 +85,7 @@ namespace Driver.Test.Client.Tools
                     // ignored
                 }
 
-                await Task.Delay(retryDelayMs);
+                await Task.Delay(retryDelayMs).ConfigureAwait(false);
             }
 
             return success;

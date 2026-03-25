@@ -347,6 +347,44 @@ namespace Driver.Test.Client.Query
             Assert.Throws<NullReferenceException>(() => WSClient.GetUrl(builder));
         }
 
+        [Theory]
+        [InlineData(false, 0, "localhost:6042,localhost:6043", "", "ws://localhost:6042/ws")]
+        [InlineData(false, 6050, "localhost,localhost:6043", "", "ws://localhost:6050/ws")]
+        [InlineData(true, 0, "example.com,backup.example.com", "token-1", "wss://example.com:443/ws?token=token-1")]
+        [InlineData(false, 0, "[2001:db8::1]:6049,localhost:6041", "", "ws://[2001:db8::1]:6049/ws")]
+        public void GetUrl_ShouldUseFirstAddressFromHostList(bool useSsl, int port, string host, string token,
+            string expectedUrl)
+        {
+            var builder = new ConnectionStringBuilder("")
+            {
+                UseSSL = useSsl,
+                Port = port,
+                Host = host,
+                Token = token
+            };
+
+            var actualUrl = WSClient.GetUrl(builder);
+
+            Assert.Equal(expectedUrl, actualUrl);
+        }
+
+        [Theory]
+        [InlineData("localhost:,localhost:6041")]
+        [InlineData("[2001:db8::1]x:6041,localhost:6041")]
+        [InlineData("localhost:70000,localhost:6041")]
+        public void GetUrl_InvalidHostListShouldThrowArgumentException(string host)
+        {
+            var builder = new ConnectionStringBuilder("")
+            {
+                UseSSL = false,
+                Port = 0,
+                Host = host,
+                Token = ""
+            };
+
+            Assert.Throws<ArgumentException>(() => WSClient.GetUrl(builder));
+        }
+
         [Fact]
         public void WebSocketStmtTestWrongTypeMSTest()
         {
