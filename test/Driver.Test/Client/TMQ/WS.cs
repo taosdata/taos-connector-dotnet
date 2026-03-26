@@ -60,13 +60,22 @@ namespace Driver.Test.Client.TMQ
         [InlineData("false", "8080", "127.0.0.1", "abc", "ws://127.0.0.1:8080/rest/tmq?token=abc")]
         [InlineData("true", "8443", "api.test", "", "wss://api.test:8443/rest/tmq")]
 
-        // Test IPv6 addresses
+        // Test IPv6 addresses (bare and bracketed)
         [InlineData("false", "", "2001:db8::1", "a&b", "ws://[2001:db8::1]:6041/rest/tmq?token=a&b")]
         [InlineData("true", "443", "2001:db8::1", "", "wss://[2001:db8::1]:443/rest/tmq")]
+        [InlineData("false", "", "[2001:db8::1]", "a&b", "ws://[2001:db8::1]:6041/rest/tmq?token=a&b")]
+        [InlineData("true", "443", "[2001:db8::1]", "", "wss://[2001:db8::1]:443/rest/tmq")]
+        [InlineData("false", "6049", "[2001:db8::1]:6049", "", "ws://[2001:db8::1]:6049/rest/tmq")]
 
         // Test edge cases
         [InlineData("false", "6041", "localhost", null, "ws://localhost:6041/rest/tmq")]
         [InlineData("true", "443", "localhost", " ", "wss://localhost:443/rest/tmq?token= ")]
+
+        // Test multi-host failover (should use first address)
+        [InlineData("false", "", "[2001:db8::1],localhost:6041", "", "ws://[2001:db8::1]:6041/rest/tmq")]
+        [InlineData("false", "", "[2001:db8::1]:6049,localhost:6041", "", "ws://[2001:db8::1]:6049/rest/tmq")]
+        [InlineData("false", "", "localhost:6042,localhost:6043", "", "ws://localhost:6042/rest/tmq")]
+        [InlineData("true", "", "[2001:db8::1],localhost", "", "wss://[2001:db8::1]:443/rest/tmq")]
         public void GetUrl_ShouldReturnCorrectUrl(string useSsl, string port, string host, string token,
             string expectedUrl)
         {
@@ -109,6 +118,21 @@ namespace Driver.Test.Client.TMQ
             var options = new TMQOptions(cfg);
             var ex = Assert.Throws<ArgumentException>(() => TMQConnection.GetUrl(options));
             Assert.Equal("td.connect.ip", ex.ParamName);
+        }
+
+        [Theory]
+        [InlineData("2001:db8::1,localhost:6041")]
+        [InlineData("2001:db8::1:6049,localhost:6041")]
+        public void GetUrl_InvalidMultiHostBareIpv6ShouldThrowArgumentException(string host)
+        {
+            var cfg = new Dictionary<string, string>
+            {
+                { "useSSL", "false" },
+                { "td.connect.ip", host }
+            };
+
+            var options = new TMQOptions(cfg);
+            Assert.Throws<ArgumentException>(() => TMQConnection.GetUrl(options));
         }
 
         [Fact]

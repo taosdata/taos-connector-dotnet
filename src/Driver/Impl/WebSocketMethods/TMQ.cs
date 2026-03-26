@@ -361,10 +361,11 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 return endpoints;
             }
 
+            var isMultiHost = hostSegments.Length > 1;
             for (var i = 0; i < hostSegments.Length; i++)
             {
                 HostEndpointParser.ParseHostEndpoint(hostSegments[i], TdConnectIpKey, out var endpointHost,
-                    out var endpointPort, "td.connect.ip");
+                    out var endpointPort, "td.connect.ip", allowBareIpv6: !isMultiHost);
                 var resolvedPort = ResolvePort(endpointPort);
                 var cacheKey = HostEndpointParser.BuildFailoverCacheKey(TDengineConstant.ProtocolWebSocket,
                     TDUseSSL == "true", endpointHost, resolvedPort);

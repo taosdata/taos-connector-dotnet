@@ -569,9 +569,11 @@ namespace TDengine.Driver
                 return endpoints;
             }
 
+            var isMultiHost = hostSegments.Length > 1;
             for (var i = 0; i < hostSegments.Length; i++)
             {
-                HostEndpointParser.ParseHostEndpoint(hostSegments[i], HostKey, out var endpointHost, out var endpointPort);
+                HostEndpointParser.ParseHostEndpoint(hostSegments[i], HostKey, out var endpointHost,
+                    out var endpointPort, allowBareIpv6: !isMultiHost);
                 var resolvedPort = ResolvePort(endpointPort);
                 var cacheKey = HostEndpointParser.BuildFailoverCacheKey(Protocol, UseSSL, endpointHost, resolvedPort);
                 if (!deduplicatedCacheKeys.Add(cacheKey))

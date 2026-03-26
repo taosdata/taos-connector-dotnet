@@ -312,9 +312,12 @@ namespace Driver.Test.Client.Query
         [InlineData(false, 8080, "127.0.0.1", "abc", "ws://127.0.0.1:8080/ws?token=abc")]
         [InlineData(true, 8443, "api.test", "", "wss://api.test:8443/ws")]
 
-        // Test IPv6 addresses
+        // Test IPv6 addresses (bare and bracketed)
         [InlineData(false, 0, "2001:db8::1", "a&b", "ws://[2001:db8::1]:6041/ws?token=a&b")]
         [InlineData(true, 443, "2001:db8::1", "", "wss://[2001:db8::1]:443/ws")]
+        [InlineData(false, 0, "[2001:db8::1]", "a&b", "ws://[2001:db8::1]:6041/ws?token=a&b")]
+        [InlineData(true, 443, "[2001:db8::1]", "", "wss://[2001:db8::1]:443/ws")]
+        [InlineData(false, 6049, "[2001:db8::1]:6049", "", "ws://[2001:db8::1]:6049/ws")]
 
         // Test edge cases
         [InlineData(false, 6041, "localhost", null, "ws://localhost:6041/ws")]
@@ -352,6 +355,8 @@ namespace Driver.Test.Client.Query
         [InlineData(false, 6050, "localhost,localhost:6043", "", "ws://localhost:6050/ws")]
         [InlineData(true, 0, "example.com,backup.example.com", "token-1", "wss://example.com:443/ws?token=token-1")]
         [InlineData(false, 0, "[2001:db8::1]:6049,localhost:6041", "", "ws://[2001:db8::1]:6049/ws")]
+        [InlineData(false, 0, "[2001:db8::1],localhost:6041", "", "ws://[2001:db8::1]:6041/ws")]
+        [InlineData(true, 0, "[2001:db8::1],localhost", "", "wss://[2001:db8::1]:443/ws")]
         public void GetUrl_ShouldUseFirstAddressFromHostList(bool useSsl, int port, string host, string token,
             string expectedUrl)
         {
@@ -372,6 +377,8 @@ namespace Driver.Test.Client.Query
         [InlineData("localhost:,localhost:6041")]
         [InlineData("[2001:db8::1]x:6041,localhost:6041")]
         [InlineData("localhost:70000,localhost:6041")]
+        [InlineData("2001:db8::1,localhost:6041")]
+        [InlineData("2001:db8::1:6049,localhost:6041")]
         public void GetUrl_InvalidHostListShouldThrowArgumentException(string host)
         {
             var builder = new ConnectionStringBuilder("")

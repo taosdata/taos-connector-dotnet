@@ -8,7 +8,7 @@ namespace TDengine.Driver
         private const string DefaultPrefix = "host";
 
         internal static void ParseHostEndpoint(string endpoint, string paramName, out string host, out int port,
-            string errorPrefix = DefaultPrefix)
+            string errorPrefix = DefaultPrefix, bool allowBareIpv6 = true)
         {
             if (string.IsNullOrWhiteSpace(endpoint))
             {
@@ -29,11 +29,24 @@ namespace TDengine.Driver
 
             var firstColon = value.IndexOf(':');
             var lastColon = value.LastIndexOf(':');
+
             if (firstColon >= 0 && firstColon != lastColon)
             {
-                throw new ArgumentException(
-                    $"invalid {errorPrefix} endpoint value, IPv6 addresses must be in \"[addr]:port\" form",
-                    paramName);
+                if (!allowBareIpv6)
+                {
+                    throw new ArgumentException(
+                        $"invalid {errorPrefix} endpoint value, IPv6 addresses in multi-host lists must use \"[addr]:port\" form",
+                        paramName);
+                }
+
+                host = NormalizeHost(value);
+                if (string.IsNullOrWhiteSpace(host))
+                {
+                    throw new ArgumentException($"invalid {errorPrefix} endpoint value", paramName);
+                }
+
+                port = 0;
+                return;
             }
 
             if (firstColon > 0 && firstColon == lastColon)
