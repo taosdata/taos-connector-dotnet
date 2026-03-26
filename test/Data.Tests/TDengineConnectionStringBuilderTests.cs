@@ -202,10 +202,8 @@ namespace Data.Tests
         }
 
         [Theory]
-        [InlineData("host=;protocol=Native;username=root;password=taosdata")]
-        [InlineData("host= ;protocol=Native;username=root;password=taosdata")]
         [InlineData("host=  ;protocol=WebSocket;username=root;password=taosdata")]
-        public void EmptyHostShouldThrowWhenOpen(string connectionString)
+        public void WebSocketEmptyHostShouldThrowWhenOpen(string connectionString)
         {
             var builder = new TDengineConnectionStringBuilder(connectionString);
             Assert.Throws<ArgumentException>(() =>
@@ -216,17 +214,35 @@ namespace Data.Tests
             });
         }
 
-        [Fact]
-        public void NullHostShouldThrowWhenOpen()
+        [Theory]
+        [InlineData("host=;protocol=Native;username=root;password=taosdata")]
+        [InlineData("host= ;protocol=Native;username=root;password=taosdata")]
+        public void NativeEmptyHostShouldNotThrowArgumentExceptionWhenOpen(string connectionString)
         {
-            var builder = new TDengineConnectionStringBuilder("protocol=Native;username=root;password=taosdata");
-            builder.Host = null;
-            Assert.Throws<ArgumentException>(() =>
+            var builder = new TDengineConnectionStringBuilder(connectionString);
+            var ex = Record.Exception(() =>
             {
                 using (var client = DbDriver.Open(builder))
                 {
                 }
             });
+
+            Assert.False(ex is ArgumentException, ex?.ToString());
+        }
+
+        [Fact]
+        public void NullNativeHostShouldNotThrowArgumentExceptionWhenOpen()
+        {
+            var builder = new TDengineConnectionStringBuilder("protocol=Native;username=root;password=taosdata");
+            builder.Host = null;
+            var ex = Record.Exception(() =>
+            {
+                using (var client = DbDriver.Open(builder))
+                {
+                }
+            });
+
+            Assert.False(ex is ArgumentException, ex?.ToString());
         }
     }
 }

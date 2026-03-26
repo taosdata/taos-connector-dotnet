@@ -22,13 +22,20 @@ namespace TDengine.Driver.Client.Native
                 throw new ArgumentException("native protocol does not support multiple host addresses", "host");
             }
 
-            var failoverAddresses = builder.GetFailoverAddresses();
-            if (failoverAddresses.Count > 1)
+            var selectedHost = hostValue;
+            var selectedPort = builder.Port;
+            if (hostSegments.Length > 0)
             {
-                throw new ArgumentException("native protocol does not support multiple host addresses", "host");
-            }
+                var failoverAddresses = builder.GetFailoverAddresses();
+                if (failoverAddresses.Count > 1)
+                {
+                    throw new ArgumentException("native protocol does not support multiple host addresses", "host");
+                }
 
-            var selectedAddress = failoverAddresses[0];
+                var selectedAddress = failoverAddresses[0];
+                selectedHost = selectedAddress.Host;
+                selectedPort = selectedAddress.Port;
+            }
             var conn = IntPtr.Zero;
 
             try
@@ -36,14 +43,14 @@ namespace TDengine.Driver.Client.Native
                 if (!string.IsNullOrEmpty(builder.BearerToken))
                 {
                     // Use bearer token to connect
-                    conn = NativeMethods.ConnectToken(selectedAddress.Host, builder.BearerToken, builder.Database,
-                        (ushort)selectedAddress.Port);
+                    conn = NativeMethods.ConnectToken(selectedHost, builder.BearerToken, builder.Database,
+                        (ushort)selectedPort);
                 }
                 else
                 {
                     // Use username and password to connect
-                    conn = NativeMethods.Connect(selectedAddress.Host, builder.Username, builder.Password,
-                        builder.Database, (ushort)selectedAddress.Port);
+                    conn = NativeMethods.Connect(selectedHost, builder.Username, builder.Password,
+                        builder.Database, (ushort)selectedPort);
                 }
 
                 if (conn == IntPtr.Zero)
