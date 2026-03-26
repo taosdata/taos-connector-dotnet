@@ -41,12 +41,12 @@ namespace Driver.Test.Client.Query
                 secondServer.Start();
 
                 var connStr = "protocol=WebSocket;" +
-                              $"host=localhost:{firstPort},localhost:{secondPort};" +
+                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
                               "enableCompression=true;" +
-                              "connTimeout=00:00:02;";
+                              "connTimeout=00:00:05;";
 
                 using (var firstClient = DbDriver.Open(new ConnectionStringBuilder(connStr)))
                 {
@@ -102,7 +102,7 @@ namespace Driver.Test.Client.Query
                     servers[i].Start();
                 }
 
-                var hostList = string.Join(",", ports.Select(p => $"localhost:{p}"));
+                var hostList = string.Join(",", ports.Select(p => $"127.0.0.1:{p}"));
                 var connStr = "protocol=WebSocket;" +
                               $"host={hostList};" +
                               "useSSL=false;" +
@@ -202,7 +202,7 @@ namespace Driver.Test.Client.Query
                     servers[i].Start();
                 }
 
-                var hostList = string.Join(",", ports.Select(p => $"localhost:{p}"));
+                var hostList = string.Join(",", ports.Select(p => $"127.0.0.1:{p}"));
                 var connStr = "protocol=WebSocket;" +
                               $"host={hostList};" +
                               "useSSL=false;" +
@@ -273,7 +273,7 @@ namespace Driver.Test.Client.Query
                 servedServer.Start();
 
                 var servedConnStr = "protocol=WebSocket;" +
-                                    $"host=localhost:{servedPort};" +
+                                    $"host=127.0.0.1:{servedPort};" +
                                     "useSSL=false;" +
                                     "username=root;" +
                                     "password=taosdata;" +
@@ -282,7 +282,7 @@ namespace Driver.Test.Client.Query
                 using (var servedClient = DbDriver.Open(new ConnectionStringBuilder(servedConnStr)))
                 {
                     var unavailableConnStr = "protocol=WebSocket;" +
-                                             $"host=localhost:{unavailablePort};" +
+                                             $"host=127.0.0.1:{unavailablePort};" +
                                              "useSSL=false;" +
                                              "username=root;" +
                                              "password=taosdata;" +
@@ -439,7 +439,7 @@ namespace Driver.Test.Client.Query
                 secondServer.Start();
 
                 var connStr = "protocol=WebSocket;" +
-                              $"host=localhost:{firstPort},localhost:{secondPort};" +
+                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
@@ -607,7 +607,7 @@ namespace Driver.Test.Client.Query
                 secondServer.Start();
 
                 var connStr = "protocol=WebSocket;" +
-                              $"host=localhost:{firstPort},localhost:{secondPort};" +
+                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
@@ -784,7 +784,7 @@ namespace Driver.Test.Client.Query
                 secondServer.Start();
 
                 var connStr = "protocol=WebSocket;" +
-                              $"host=localhost:{firstPort},localhost:{secondPort};" +
+                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
@@ -871,12 +871,12 @@ namespace Driver.Test.Client.Query
                 secondServer.Start();
 
                 var connStr = "protocol=WebSocket;" +
-                              $"host=localhost:{firstPort},localhost:{secondPort};" +
+                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
                               "enableCompression=true;" +
-                              "connTimeout=00:00:02;";
+                              "connTimeout=00:00:05;";
 
                 using (var firstClient = DbDriver.Open(new ConnectionStringBuilder(connStr)))
                 {
@@ -962,7 +962,7 @@ namespace Driver.Test.Client.Query
 
         private static string BuildWsCacheKey(int port)
         {
-            return $"ws://localhost:{port}";
+            return $"ws://127.0.0.1:{port}";
         }
 
         private static int GetFailoverCacheConnectionCount(string cacheKey)

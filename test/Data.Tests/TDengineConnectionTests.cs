@@ -234,7 +234,7 @@ namespace Data.Tests
             var mockServer = new MockWSServer(port, MessageHandler);
             mockServer.Start();
             var connStr =
-                $"protocol=WebSocket;host=localhost;port={port};useSSL=false;username=root;password=taosdata;";
+                $"protocol=WebSocket;host=127.0.0.1;port={port};useSSL=false;username=root;password=taosdata;";
             var connection = new TDengineConnection(connStr);
             Assert.Equal(ConnectionState.Closed, connection.State);
             connection.Open();

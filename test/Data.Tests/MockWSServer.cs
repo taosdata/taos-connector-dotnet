@@ -14,7 +14,7 @@ namespace Driver.Test.Client.Query
         private Task _serverTask;
 
         private readonly int _port;
-        private string Url => $"http://localhost:{_port}/";
+        private string Url => $"http://127.0.0.1:{_port}/";
 
         private Action<WebSocket, WebSocketMessageType,byte[]> _onMessage;
         public MockWSServer(int port, Action<WebSocket, WebSocketMessageType, byte[]> onMessage)

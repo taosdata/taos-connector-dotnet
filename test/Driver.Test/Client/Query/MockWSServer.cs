@@ -15,7 +15,7 @@ namespace Driver.Test.Client.Query
         private Task _serverTask;
 
         private readonly int _port;
-        private string Url => $"http://localhost:{_port}/";
+        private string Url => $"http://127.0.0.1:{_port}/";
 
         private Action<WebSocket, WebSocketMessageType, byte[]> _onMessage;
 
@@ -25,8 +25,23 @@ namespace Driver.Test.Client.Query
             _onMessage = onMessage;
             _httpListener = new HttpListener();
             _httpListener.Prefixes.Add(Url);
+            TryAddPrefix($"http://localhost:{_port}/");
             _cts = new CancellationTokenSource();
             _ready = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        private void TryAddPrefix(string prefix)
+        {
+            try
+            {
+                _httpListener.Prefixes.Add(prefix);
+            }
+            catch (HttpListenerException)
+            {
+            }
+            catch (PlatformNotSupportedException)
+            {
+            }
         }
 
         public void Start()
