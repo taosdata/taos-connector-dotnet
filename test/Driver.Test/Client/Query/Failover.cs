@@ -87,6 +87,7 @@ namespace Driver.Test.Client.Query
             var servers = new List<MockWSServer>(addressCount);
             for (var i = 0; i < addressCount; i++)
             {
+                ResetFailoverCacheConnectionCount(BuildWsCacheKey(ports[i]));
                 var index = i;
                 servers.Add(new MockWSServer(ports[i],
                     CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref connCounts[index]); })));
@@ -187,6 +188,7 @@ namespace Driver.Test.Client.Query
             var servers = new List<MockWSServer>(addressCount);
             for (var i = 0; i < addressCount; i++)
             {
+                ResetFailoverCacheConnectionCount(BuildWsCacheKey(ports[i]));
                 var index = i;
                 servers.Add(new MockWSServer(ports[i],
                     CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref connCounts[index]); })));
