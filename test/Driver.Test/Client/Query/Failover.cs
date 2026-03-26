@@ -18,11 +18,6 @@ namespace Driver.Test.Client.Query
 {
     public class Failover
     {
-        public Failover()
-        {
-            global::Driver.Test.NoProxyInitializer.EnsureLoopbackAddressesBypassProxy();
-        }
-
         [Fact]
         public void MultiAddressConnectShouldSelectLeastConnectionAddress()
         {

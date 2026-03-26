@@ -72,7 +72,6 @@ namespace Driver.Test.Client.TMQ
 
         public Consumer(ITestOutputHelper output)
         {
-            global::Driver.Test.NoProxyInitializer.EnsureLoopbackAddressesBypassProxy();
             this._output = output;
             this._nativeConnectString = "host=127.0.0.1;port=6030;username=root;password=taosdata";
             this._wsConnectString =

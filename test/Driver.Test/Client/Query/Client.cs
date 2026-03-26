@@ -24,7 +24,6 @@ namespace Driver.Test.Client.Query
         // public static bool IsEnterpriseTest => true;
         public Client(ITestOutputHelper output)
         {
-            global::Driver.Test.NoProxyInitializer.EnsureLoopbackAddressesBypassProxy();
             _is3360Test = Environment.GetEnvironmentVariable("TD_3360_TEST") == "true";
             // _is3360Test = true;
             _output = output;

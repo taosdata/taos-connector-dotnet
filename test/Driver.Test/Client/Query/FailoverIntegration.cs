@@ -70,6 +70,11 @@ namespace Driver.Test.Client.Query
             {
                 availableProcess = Tools.TaosAdapterTools.NewTaosAdapter(availablePort.ToString());
                 Tools.TaosAdapterTools.StartTaosAdapter(availableProcess, availablePort.ToString()).Wait();
+                var canReachIpv6Loopback = Tools.TaosAdapterTools.CanPingHost("::1", availablePort.ToString())
+                    .GetAwaiter()
+                    .GetResult();
+                Assert.True(canReachIpv6Loopback,
+                    $"taosadapter on port {availablePort} should be reachable via IPv6 loopback.");
 
                 var connStr = "protocol=WebSocket;" +
                               $"host=[::1]:{unavailablePort},[::1]:{availablePort};" +

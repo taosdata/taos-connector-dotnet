@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -32,6 +33,11 @@ namespace Driver.Test.Client.Tools
             await WaitForStart(port).ConfigureAwait(false);
         }
 
+        public static Task<bool> CanPingHost(string host, string port)
+        {
+            return WaitForPingSuccess(_httpClient, BuildPingUrl(host, port));
+        }
+
         public static void StopTaosAdapter(Process process)
         {
             if (process == null) return;
@@ -55,12 +61,19 @@ namespace Driver.Test.Client.Tools
 
         private static async Task WaitForStart(string port)
         {
-            string url = $"http://127.0.0.1:{port}/-/ping";
+            string url = BuildPingUrl("127.0.0.1", port);
             bool success = await WaitForPingSuccess(_httpClient, url).ConfigureAwait(false);
             if (!success)
             {
                 throw new Exception("Failed to start taosadapter");
             }
+        }
+
+        private static string BuildPingUrl(string host, string port)
+        {
+            return new UriBuilder(Uri.UriSchemeHttp, host, int.Parse(port, CultureInfo.InvariantCulture), "/-/ping")
+                .Uri
+                .ToString();
         }
 
         static async Task<bool> WaitForPingSuccess(HttpClient client, string url)
