@@ -58,6 +58,12 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void MultiAddressIpv6ConnectShouldFailoverToSecondRealAdapterWhenFirstUnavailable()
         {
+            if (_is3360Test)
+            {
+                _output.WriteLine("Skipping IPv6 failover integration on 3.3.6.0 because taosadapter 3.3.6.0 only supports IPv4.");
+                return;
+            }
+
             var unavailablePort = GetFreePort();
             var availablePort = GetFreePort();
             while (availablePort == unavailablePort)

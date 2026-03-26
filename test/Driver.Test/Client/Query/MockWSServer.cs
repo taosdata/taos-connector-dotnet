@@ -11,6 +11,7 @@ namespace Driver.Test.Client.Query
     {
         private readonly HttpListener _httpListener;
         private readonly CancellationTokenSource _cts;
+        private readonly TaskCompletionSource<bool> _ready;
         private Task _serverTask;
 
         private readonly int _port;
@@ -25,16 +26,23 @@ namespace Driver.Test.Client.Query
             _httpListener = new HttpListener();
             _httpListener.Prefixes.Add(Url);
             _cts = new CancellationTokenSource();
+            _ready = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         public void Start()
         {
             _httpListener.Start();
-            _serverTask = Task.Run(() => RunServer(_cts.Token));
+            _serverTask = Task.Factory.StartNew(() => RunServer(_cts.Token), _cts.Token, TaskCreationOptions.LongRunning,
+                TaskScheduler.Default).Unwrap();
+            if (!_ready.Task.Wait(TimeSpan.FromSeconds(2)))
+            {
+                throw new TimeoutException("mock websocket server failed to start listening in time");
+            }
         }
 
         private async Task RunServer(CancellationToken cancellationToken)
         {
+            _ready.TrySetResult(true);
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
