@@ -415,6 +415,102 @@ namespace Driver.Test.Client.TMQ
         }
 
         [Fact]
+        public void ConsumeShouldReconnectAfterAutoCommitDisconnect()
+        {
+            var port = GetFreePort();
+            var versionCount = 0;
+            var pollCount = 0;
+            var disconnectedOnCommit = 0;
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var payload = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
+                if (baseReq == null)
+                {
+                    throw new Exception("invalid websocket request");
+                }
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                    {
+                        Interlocked.Increment(ref versionCount);
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0,
+                            Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    case WSTMQAction.TMQCommit:
+                    {
+                        if (Interlocked.CompareExchange(ref disconnectedOnCommit, 1, 0) == 0)
+                        {
+                            webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "force commit disconnect",
+                                    CancellationToken.None)
+                                .GetAwaiter().GetResult();
+                            break;
+                        }
+
+                        var req = JsonConvert.DeserializeObject<WSActionReq<WSTMQCommitReq>>(payload);
+                        SendResponse(webSocket, messageType, new WSTMQCommitResp
+                        {
+                            Code = 0,
+                            Action = baseReq.Action,
+                            ReqId = req?.Args == null ? 0 : req.Args.ReqId
+                        });
+                        break;
+                    }
+                    case WSTMQAction.TMQPoll:
+                    {
+                        var req = JsonConvert.DeserializeObject<WSActionReq<WSTMQPollReq>>(payload);
+                        Interlocked.Increment(ref pollCount);
+                        SendResponse(webSocket, messageType, new WSTMQPollResp
+                        {
+                            Code = 0,
+                            Action = baseReq.Action,
+                            ReqId = req?.Args == null ? 0 : req.Args.ReqId,
+                            HaveMessage = false
+                        });
+                        break;
+                    }
+                    default:
+                        throw new Exception($"unexpected websocket action: {baseReq.Action}");
+                }
+            });
+
+            IConsumer<Dictionary<string, object>> consumer = null;
+            try
+            {
+                server.Start();
+                var config = BuildMockWsConfig(port, enableAutoCommit: true, enableReconnect: true);
+                config["auto.commit.interval.ms"] = "0";
+                consumer = new ConsumerBuilder<Dictionary<string, object>>(config).Build();
+
+                var result = consumer.Consume(0);
+                Assert.Null(result);
+                Assert.Equal(1, Volatile.Read(ref disconnectedOnCommit));
+                Assert.Equal(1, Volatile.Read(ref pollCount));
+                Assert.True(Volatile.Read(ref versionCount) >= 2,
+                    "consume should reconnect after commit-side disconnect");
+            }
+            finally
+            {
+                try
+                {
+                    consumer?.Close();
+                }
+                catch
+                {
+                }
+
+                server.Dispose();
+            }
+        }
+
+        [Fact]
         public void SubscribeReconnectShouldPersistTopicsForFutureReconnects()
         {
             var port = GetFreePort();

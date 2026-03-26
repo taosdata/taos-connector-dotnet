@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -312,10 +313,15 @@ namespace Driver.Test.Client.Query
             {
                 secondPort = GetFreePort();
             }
+            var firstCacheKey = BuildWsCacheKey(firstPort);
+            var secondCacheKey = BuildWsCacheKey(secondPort);
+            ResetFailoverCacheConnectionCount(firstCacheKey);
+            ResetFailoverCacheConnectionCount(secondCacheKey);
 
             var firstConnCount = 0;
             var secondConnCount = 0;
             var firstStmtInitClosed = 0;
+            var connAttemptOrder = new ConcurrentQueue<string>();
             ulong stmtId = 0;
 
             Action<WebSocket, WebSocketMessageType, byte[]> firstHandler = (webSocket, messageType, message) =>
@@ -342,6 +348,7 @@ namespace Driver.Test.Client.Query
                     }
                     case WSAction.Conn:
                     {
+                        connAttemptOrder.Enqueue("first");
                         Interlocked.Increment(ref firstConnCount);
                         var resp = new WSConnResp
                         {
@@ -398,6 +405,7 @@ namespace Driver.Test.Client.Query
                     }
                     case WSAction.Conn:
                     {
+                        connAttemptOrder.Enqueue("second");
                         Interlocked.Increment(ref secondConnCount);
                         var resp = new WSConnResp
                         {
@@ -456,8 +464,388 @@ namespace Driver.Test.Client.Query
                 secondServer.Dispose();
             }
 
+            var attempts = connAttemptOrder.ToArray();
+            Assert.True(attempts.Length >= 2, $"expected at least two connection attempts, actual: [{string.Join(",", attempts)}]");
+            Assert.Equal("first", attempts[0]);
+            Assert.Equal("first", attempts[1]);
             Assert.Equal(2, Volatile.Read(ref firstConnCount));
             Assert.Equal(0, Volatile.Read(ref secondConnCount));
+        }
+
+        [Fact]
+        public void ReconnectShouldReleaseOldLeaseAfterFailoverSuccess()
+        {
+            var firstPort = GetFreePort();
+            var secondPort = GetFreePort();
+            while (secondPort == firstPort)
+            {
+                secondPort = GetFreePort();
+            }
+
+            var firstConnCount = 0;
+            var secondConnCount = 0;
+            var firstUnavailable = 0;
+            ulong stmtId = 0;
+
+            Action<WebSocket, WebSocketMessageType, byte[]> firstHandler = (webSocket, messageType, message) =>
+            {
+                var req = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(Encoding.UTF8.GetString(message));
+                if (req == null)
+                {
+                    throw new Exception("invalid websocket request");
+                }
+
+                switch (req.Action)
+                {
+                    case WSAction.Version:
+                    case WSAction.Conn:
+                    {
+                        if (Volatile.Read(ref firstUnavailable) == 1)
+                        {
+                            webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "first address unavailable",
+                                    CancellationToken.None)
+                                .GetAwaiter().GetResult();
+                            return;
+                        }
+
+                        if (req.Action == WSAction.Conn)
+                        {
+                            Interlocked.Increment(ref firstConnCount);
+                            SendResponse(webSocket, messageType, new WSConnResp
+                            {
+                                Code = 0,
+                                Action = req.Action,
+                                ReqId = req.Args == null ? 0 : req.Args.ReqId
+                            });
+                            break;
+                        }
+
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    case "stmt2_init":
+                    {
+                        if (Interlocked.CompareExchange(ref firstUnavailable, 1, 0) == 0)
+                        {
+                            webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "force first reconnect fail",
+                                    CancellationToken.None)
+                                .GetAwaiter().GetResult();
+                            return;
+                        }
+
+                        SendResponse(webSocket, messageType, new WSStmt2InitResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            StmtId = ++stmtId
+                        });
+                        break;
+                    }
+                }
+            };
+
+            Action<WebSocket, WebSocketMessageType, byte[]> secondHandler = (webSocket, messageType, message) =>
+            {
+                var req = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(Encoding.UTF8.GetString(message));
+                if (req == null)
+                {
+                    throw new Exception("invalid websocket request");
+                }
+
+                switch (req.Action)
+                {
+                    case WSAction.Version:
+                    {
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    case WSAction.Conn:
+                    {
+                        Interlocked.Increment(ref secondConnCount);
+                        SendResponse(webSocket, messageType, new WSConnResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId
+                        });
+                        break;
+                    }
+                    case "stmt2_init":
+                    {
+                        SendResponse(webSocket, messageType, new WSStmt2InitResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            StmtId = ++stmtId
+                        });
+                        break;
+                    }
+                }
+            };
+
+            var firstServer = new MockWSServer(firstPort, firstHandler);
+            var secondServer = new MockWSServer(secondPort, secondHandler);
+            var firstCacheKey = BuildWsCacheKey(firstPort);
+            var secondCacheKey = BuildWsCacheKey(secondPort);
+            try
+            {
+                firstServer.Start();
+                secondServer.Start();
+
+                var connStr = "protocol=WebSocket;" +
+                              $"host=localhost:{firstPort},localhost:{secondPort};" +
+                              "useSSL=false;" +
+                              "username=root;" +
+                              "password=taosdata;" +
+                              "enableCompression=true;" +
+                              "autoReconnect=true;" +
+                              "reconnectRetryCount=5;" +
+                              "reconnectIntervalMs=30;" +
+                              "connTimeout=00:00:05;";
+
+                using (var client = DbDriver.Open(new ConnectionStringBuilder(connStr)))
+                {
+                    Assert.Equal(1, Volatile.Read(ref firstConnCount));
+                    using (var stmt = client.StmtInit())
+                    {
+                        Assert.NotNull(stmt);
+                    }
+
+                    Assert.True(client.ConnectionAvailable());
+                    Assert.Equal(0, GetFailoverCacheConnectionCount(firstCacheKey));
+                    Assert.Equal(1, GetFailoverCacheConnectionCount(secondCacheKey));
+                }
+            }
+            finally
+            {
+                firstServer.Dispose();
+                secondServer.Dispose();
+            }
+
+            Assert.Equal(0, GetFailoverCacheConnectionCount(firstCacheKey));
+            Assert.Equal(0, GetFailoverCacheConnectionCount(secondCacheKey));
+            Assert.Equal(1, Volatile.Read(ref firstConnCount));
+            Assert.Equal(1, Volatile.Read(ref secondConnCount));
+        }
+
+        [Fact]
+        public void DisposeAndReconnectRaceShouldReleaseBothLeases()
+        {
+            var firstPort = GetFreePort();
+            var secondPort = GetFreePort();
+            while (secondPort == firstPort)
+            {
+                secondPort = GetFreePort();
+            }
+
+            var firstUnavailable = 0;
+            var secondConnEntered = new ManualResetEventSlim(false);
+            var releaseSecondConn = new ManualResetEventSlim(false);
+            ulong stmtId = 0;
+
+            Action<WebSocket, WebSocketMessageType, byte[]> firstHandler = (webSocket, messageType, message) =>
+            {
+                var req = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(Encoding.UTF8.GetString(message));
+                if (req == null)
+                {
+                    throw new Exception("invalid websocket request");
+                }
+
+                switch (req.Action)
+                {
+                    case WSAction.Version:
+                    case WSAction.Conn:
+                    {
+                        if (Volatile.Read(ref firstUnavailable) == 1)
+                        {
+                            webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "first address unavailable",
+                                    CancellationToken.None)
+                                .GetAwaiter().GetResult();
+                            return;
+                        }
+
+                        if (req.Action == WSAction.Conn)
+                        {
+                            SendResponse(webSocket, messageType, new WSConnResp
+                            {
+                                Code = 0,
+                                Action = req.Action,
+                                ReqId = req.Args == null ? 0 : req.Args.ReqId
+                            });
+                            break;
+                        }
+
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    case "stmt2_init":
+                    {
+                        if (Interlocked.CompareExchange(ref firstUnavailable, 1, 0) == 0)
+                        {
+                            webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "force reconnect",
+                                    CancellationToken.None)
+                                .GetAwaiter().GetResult();
+                            return;
+                        }
+
+                        SendResponse(webSocket, messageType, new WSStmt2InitResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            StmtId = ++stmtId
+                        });
+                        break;
+                    }
+                }
+            };
+
+            Action<WebSocket, WebSocketMessageType, byte[]> secondHandler = (webSocket, messageType, message) =>
+            {
+                var req = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(Encoding.UTF8.GetString(message));
+                if (req == null)
+                {
+                    throw new Exception("invalid websocket request");
+                }
+
+                switch (req.Action)
+                {
+                    case WSAction.Version:
+                    {
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    case WSAction.Conn:
+                    {
+                        secondConnEntered.Set();
+                        if (!releaseSecondConn.Wait(TimeSpan.FromSeconds(5)))
+                        {
+                            throw new TimeoutException("timed out waiting to release second reconnect connection");
+                        }
+
+                        SendResponse(webSocket, messageType, new WSConnResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId
+                        });
+                        break;
+                    }
+                    case "stmt2_init":
+                    {
+                        SendResponse(webSocket, messageType, new WSStmt2InitResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            StmtId = ++stmtId
+                        });
+                        break;
+                    }
+                }
+            };
+
+            var firstServer = new MockWSServer(firstPort, firstHandler);
+            var secondServer = new MockWSServer(secondPort, secondHandler);
+            var firstCacheKey = BuildWsCacheKey(firstPort);
+            var secondCacheKey = BuildWsCacheKey(secondPort);
+
+            ITDengineClient client = null;
+            Exception stmtException = null;
+            try
+            {
+                firstServer.Start();
+                secondServer.Start();
+
+                var connStr = "protocol=WebSocket;" +
+                              $"host=localhost:{firstPort},localhost:{secondPort};" +
+                              "useSSL=false;" +
+                              "username=root;" +
+                              "password=taosdata;" +
+                              "enableCompression=true;" +
+                              "autoReconnect=true;" +
+                              "reconnectRetryCount=5;" +
+                              "reconnectIntervalMs=30;" +
+                              "connTimeout=00:00:05;" +
+                              "readTimeout=00:00:10;";
+
+                client = DbDriver.Open(new ConnectionStringBuilder(connStr));
+                var stmtTask = Task.Run(() =>
+                {
+                    try
+                    {
+                        using (var stmt = client.StmtInit())
+                        {
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        stmtException = ex;
+                    }
+                });
+
+                Assert.True(secondConnEntered.Wait(TimeSpan.FromSeconds(5)),
+                    "reconnect should reach second address before dispose");
+
+                var disposeTask = Task.Run(() => client.Dispose());
+                Assert.True(disposeTask.Wait(TimeSpan.FromSeconds(2)),
+                    "dispose should not block while reconnect is in flight");
+
+                releaseSecondConn.Set();
+                Assert.True(stmtTask.Wait(TimeSpan.FromSeconds(5)),
+                    "stmt operation should complete after dispose");
+
+                if (stmtException != null)
+                {
+                    Assert.True(stmtException is ObjectDisposedException || stmtException is TDengineError,
+                        $"unexpected exception type during dispose/reconnect race: {stmtException.GetType().Name}");
+                }
+            }
+            finally
+            {
+                releaseSecondConn.Set();
+                try
+                {
+                    client?.Dispose();
+                }
+                catch
+                {
+                }
+
+                firstServer.Dispose();
+                secondServer.Dispose();
+                secondConnEntered.Dispose();
+                releaseSecondConn.Dispose();
+            }
+
+            Assert.Equal(0, GetFailoverCacheConnectionCount(firstCacheKey));
+            Assert.Equal(0, GetFailoverCacheConnectionCount(secondCacheKey));
         }
 
         [Fact]
@@ -570,6 +958,60 @@ namespace Driver.Test.Client.Query
             var endpoint = (IPEndPoint)listener.LocalEndpoint;
             listener.Stop();
             return endpoint.Port;
+        }
+
+        private static string BuildWsCacheKey(int port)
+        {
+            return $"ws://localhost:{port}";
+        }
+
+        private static int GetFailoverCacheConnectionCount(string cacheKey)
+        {
+            var cacheType = typeof(FailoverAddress).Assembly.GetType("TDengine.Driver.FailoverAddressCache");
+            Assert.NotNull(cacheType);
+
+            var syncLockField = cacheType.GetField("SyncLock", BindingFlags.Static | BindingFlags.NonPublic);
+            var countsField = cacheType.GetField("ConnectionCountByAddress",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.NotNull(syncLockField);
+            Assert.NotNull(countsField);
+
+            var syncLock = syncLockField.GetValue(null);
+            var counts = countsField.GetValue(null) as Dictionary<string, int>;
+            Assert.NotNull(syncLock);
+            Assert.NotNull(counts);
+
+            lock (syncLock)
+            {
+                if (counts.TryGetValue(cacheKey, out var count))
+                {
+                    return count;
+                }
+
+                return 0;
+            }
+        }
+
+        private static void ResetFailoverCacheConnectionCount(string cacheKey)
+        {
+            var cacheType = typeof(FailoverAddress).Assembly.GetType("TDengine.Driver.FailoverAddressCache");
+            Assert.NotNull(cacheType);
+
+            var syncLockField = cacheType.GetField("SyncLock", BindingFlags.Static | BindingFlags.NonPublic);
+            var countsField = cacheType.GetField("ConnectionCountByAddress",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.NotNull(syncLockField);
+            Assert.NotNull(countsField);
+
+            var syncLock = syncLockField.GetValue(null);
+            var counts = countsField.GetValue(null) as Dictionary<string, int>;
+            Assert.NotNull(syncLock);
+            Assert.NotNull(counts);
+
+            lock (syncLock)
+            {
+                counts.Remove(cacheKey);
+            }
         }
 
         private class TestBaseReq
