@@ -135,6 +135,36 @@ namespace Driver.Test.Client.TMQ
             Assert.Throws<ArgumentException>(() => TMQConnection.GetUrl(options));
         }
 
+        [Theory]
+        [InlineData(",,")]
+        [InlineData(",")]
+        public void GetUrl_OnlyDelimiterHostShouldThrowArgumentException(string host)
+        {
+            var cfg = new Dictionary<string, string>
+            {
+                { "useSSL", "false" },
+                { "td.connect.ip", host }
+            };
+
+            var options = new TMQOptions(cfg);
+            Assert.Throws<ArgumentException>(() => TMQConnection.GetUrl(options));
+        }
+
+        [Theory]
+        [InlineData(":6041")]
+        [InlineData(":")]
+        public void GetUrl_LeadingColonHostShouldThrowArgumentException(string host)
+        {
+            var cfg = new Dictionary<string, string>
+            {
+                { "useSSL", "false" },
+                { "td.connect.ip", host }
+            };
+
+            var options = new TMQOptions(cfg);
+            Assert.Throws<ArgumentException>(() => TMQConnection.GetUrl(options));
+        }
+
         [Fact]
         public void WSConsumerTimezoneTest()
         {

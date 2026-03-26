@@ -49,7 +49,7 @@ namespace TDengine.Driver
                 return;
             }
 
-            if (firstColon > 0 && firstColon == lastColon)
+            if (firstColon >= 0 && firstColon == lastColon)
             {
                 host = value.Substring(0, firstColon).Trim();
                 var portPart = value.Substring(firstColon + 1).Trim();

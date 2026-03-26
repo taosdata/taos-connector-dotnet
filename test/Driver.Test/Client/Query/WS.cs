@@ -379,7 +379,25 @@ namespace Driver.Test.Client.Query
         [InlineData("localhost:70000,localhost:6041")]
         [InlineData("2001:db8::1,localhost:6041")]
         [InlineData("2001:db8::1:6049,localhost:6041")]
+        [InlineData(",,")]
+        [InlineData(",")]
         public void GetUrl_InvalidHostListShouldThrowArgumentException(string host)
+        {
+            var builder = new ConnectionStringBuilder("")
+            {
+                UseSSL = false,
+                Port = 0,
+                Host = host,
+                Token = ""
+            };
+
+            Assert.Throws<ArgumentException>(() => WSClient.GetUrl(builder));
+        }
+
+        [Theory]
+        [InlineData(":6041")]
+        [InlineData(":")]
+        public void GetUrl_LeadingColonHostShouldThrowArgumentException(string host)
         {
             var builder = new ConnectionStringBuilder("")
             {

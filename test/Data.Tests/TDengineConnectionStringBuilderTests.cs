@@ -203,6 +203,8 @@ namespace Data.Tests
 
         [Theory]
         [InlineData("host=  ;protocol=WebSocket;username=root;password=taosdata")]
+        [InlineData("host=,,;protocol=WebSocket;username=root;password=taosdata")]
+        [InlineData("host=,;protocol=WebSocket;username=root;password=taosdata")]
         public void WebSocketEmptyHostShouldThrowWhenOpen(string connectionString)
         {
             var builder = new TDengineConnectionStringBuilder(connectionString);

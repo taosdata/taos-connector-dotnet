@@ -557,16 +557,7 @@ namespace TDengine.Driver
 
             if (hostSegments.Length == 0)
             {
-                var fallbackHost = HostEndpointParser.NormalizeHost(hostValue);
-                if (string.IsNullOrWhiteSpace(fallbackHost))
-                {
-                    throw new ArgumentException("host value cannot be empty", HostKey);
-                }
-
-                var fallbackPort = ResolvePort(0);
-                var fallbackCacheKey = HostEndpointParser.BuildFailoverCacheKey(Protocol, UseSSL, fallbackHost, fallbackPort);
-                endpoints.Add(new FailoverAddress(fallbackHost, fallbackPort, fallbackCacheKey));
-                return endpoints;
+                throw new ArgumentException("host value cannot be empty", HostKey);
             }
 
             var isMultiHost = hostSegments.Length > 1;
