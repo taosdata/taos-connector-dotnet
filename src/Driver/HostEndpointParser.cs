@@ -29,6 +29,13 @@ namespace TDengine.Driver
 
             var firstColon = value.IndexOf(':');
             var lastColon = value.LastIndexOf(':');
+            if (firstColon >= 0 && firstColon != lastColon)
+            {
+                throw new ArgumentException(
+                    $"invalid {errorPrefix} endpoint value, IPv6 addresses must be in \"[addr]:port\" form",
+                    paramName);
+            }
+
             if (firstColon > 0 && firstColon == lastColon)
             {
                 host = value.Substring(0, firstColon).Trim();

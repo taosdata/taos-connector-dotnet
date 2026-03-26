@@ -133,7 +133,7 @@ namespace TDengine.Driver
                     string[] keyValue = query.Split(new char[] { '=' }, 2);
                     if (keyValue.Length != 2)
                     {
-                        throw new ArgumentException($"invalid connection param ${query}");
+                        throw new ArgumentException($"invalid connection param {query}");
                     }
 
                     var keyword = keyValue[0].Trim();
