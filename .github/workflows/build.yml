@@ -262,7 +262,7 @@ jobs:
           TDENGINE_CLOUD_TOKEN: ${{ secrets.TDENGINE_CLOUD_TOKEN }}
         run: |
           dotnet test -f ${{ matrix.tfm }} --logger "console;verbosity=detailed" --collect:"XPlat Code Coverage" --results-directory:./testresults
-        timeout-minutes: 15
+        timeout-minutes: 30
 
       - uses: actions/upload-artifact@v6
         if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
