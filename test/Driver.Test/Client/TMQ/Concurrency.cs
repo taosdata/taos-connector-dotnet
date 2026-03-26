@@ -243,6 +243,178 @@ namespace Driver.Test.Client.TMQ
         }
 
         [Fact]
+        public void ConsumeShouldIgnoreAutoCommitFailuresAndAvoidTightRetry()
+        {
+            var port = GetFreePort();
+            var commitCount = 0;
+            var pollCount = 0;
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var payload = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
+                if (baseReq == null)
+                {
+                    throw new Exception("invalid websocket request");
+                }
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                    {
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0,
+                            Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    case WSTMQAction.TMQCommit:
+                    {
+                        var req = JsonConvert.DeserializeObject<WSActionReq<WSTMQCommitReq>>(payload);
+                        Interlocked.Increment(ref commitCount);
+                        SendResponse(webSocket, messageType, new WSTMQCommitResp
+                        {
+                            Code = 1,
+                            Message = "mock commit failure",
+                            Action = baseReq.Action,
+                            ReqId = req?.Args == null ? 0 : req.Args.ReqId
+                        });
+                        break;
+                    }
+                    case WSTMQAction.TMQPoll:
+                    {
+                        var req = JsonConvert.DeserializeObject<WSActionReq<WSTMQPollReq>>(payload);
+                        Interlocked.Increment(ref pollCount);
+                        SendResponse(webSocket, messageType, new WSTMQPollResp
+                        {
+                            Code = 0,
+                            Action = baseReq.Action,
+                            ReqId = req?.Args == null ? 0 : req.Args.ReqId,
+                            HaveMessage = false
+                        });
+                        break;
+                    }
+                    default:
+                        throw new Exception($"unexpected websocket action: {baseReq.Action}");
+                }
+            });
+
+            IConsumer<Dictionary<string, object>> consumer = null;
+            try
+            {
+                server.Start();
+                var config = BuildMockWsConfig(port, enableAutoCommit: true);
+                config["auto.commit.interval.ms"] = "1000";
+                consumer = new ConsumerBuilder<Dictionary<string, object>>(config).Build();
+
+                var first = consumer.Consume(0);
+                var second = consumer.Consume(0);
+
+                Assert.Null(first);
+                Assert.Null(second);
+                Assert.Equal(1, Volatile.Read(ref commitCount));
+                Assert.Equal(2, Volatile.Read(ref pollCount));
+            }
+            finally
+            {
+                try
+                {
+                    consumer?.Close();
+                }
+                catch
+                {
+                }
+
+                server.Dispose();
+            }
+        }
+
+        [Fact]
+        public void AutoCommitShouldScheduleFromCompletionTime()
+        {
+            var port = GetFreePort();
+            var commitCount = 0;
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var payload = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
+                if (baseReq == null)
+                {
+                    throw new Exception("invalid websocket request");
+                }
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                    {
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0,
+                            Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    case WSTMQAction.TMQCommit:
+                    {
+                        var req = JsonConvert.DeserializeObject<WSActionReq<WSTMQCommitReq>>(payload);
+                        if (Interlocked.Increment(ref commitCount) == 1)
+                        {
+                            Thread.Sleep(250);
+                        }
+
+                        SendResponse(webSocket, messageType, new WSTMQCommitResp
+                        {
+                            Code = 0,
+                            Action = baseReq.Action,
+                            ReqId = req?.Args == null ? 0 : req.Args.ReqId
+                        });
+                        break;
+                    }
+                    default:
+                        throw new Exception($"unexpected websocket action: {baseReq.Action}");
+                }
+            });
+
+            TDengine.TMQ.WebSocket.Consumer<Dictionary<string, object>> consumer = null;
+            try
+            {
+                server.Start();
+                var config = BuildMockWsConfig(port, enableAutoCommit: true);
+                config["auto.commit.interval.ms"] = "100";
+                consumer = Assert.IsType<TDengine.TMQ.WebSocket.Consumer<Dictionary<string, object>>>(
+                    new ConsumerBuilder<Dictionary<string, object>>(config).Build());
+
+                var autoCommitMethod = consumer.GetType()
+                    .GetMethod("AutoCommitIfNeeded", BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.NotNull(autoCommitMethod);
+
+                autoCommitMethod.Invoke(consumer, null);
+                autoCommitMethod.Invoke(consumer, null);
+                Assert.Equal(1, Volatile.Read(ref commitCount));
+
+                Thread.Sleep(150);
+                autoCommitMethod.Invoke(consumer, null);
+                Assert.Equal(2, Volatile.Read(ref commitCount));
+            }
+            finally
+            {
+                try
+                {
+                    consumer?.Close();
+                }
+                catch
+                {
+                }
+
+                server.Dispose();
+            }
+        }
+
+        [Fact]
         public void SubscribeReconnectShouldPersistTopicsForFutureReconnects()
         {
             var port = GetFreePort();

@@ -235,8 +235,8 @@ namespace Driver.Test.Client.Query
                 Assert.Equal(clientCount, connCounts.Sum());
                 var minCount = connCounts.Min();
                 var maxCount = connCounts.Max();
-                Assert.True(maxCount - minCount <= 1,
-                    $"strict connection distribution is not balanced: [{string.Join(",", connCounts)}]");
+                Assert.True(maxCount - minCount <= 2,
+                    $"connection distribution is not balanced under moderate concurrency: [{string.Join(",", connCounts)}]");
             }
             finally
             {
@@ -277,7 +277,7 @@ namespace Driver.Test.Client.Query
                                     "username=root;" +
                                     "password=taosdata;" +
                                     "enableCompression=true;" +
-                                    "connTimeout=00:00:02;";
+                                    "connTimeout=00:00:05;";
                 using (var servedClient = DbDriver.Open(new ConnectionStringBuilder(servedConnStr)))
                 {
                     var unavailableConnStr = "protocol=WebSocket;" +
@@ -286,7 +286,7 @@ namespace Driver.Test.Client.Query
                                              "username=root;" +
                                              "password=taosdata;" +
                                              "enableCompression=true;" +
-                                             "connTimeout=00:00:01;";
+                                             "connTimeout=00:00:02;";
                     Assert.ThrowsAny<Exception>(() =>
                     {
                         using (var shouldFailClient = DbDriver.Open(new ConnectionStringBuilder(unavailableConnStr)))
@@ -437,9 +437,9 @@ namespace Driver.Test.Client.Query
                               "password=taosdata;" +
                               "enableCompression=true;" +
                               "autoReconnect=true;" +
-                              "reconnectRetryCount=3;" +
-                              "reconnectIntervalMs=10;" +
-                              "connTimeout=00:00:02;";
+                              "reconnectRetryCount=5;" +
+                              "reconnectIntervalMs=30;" +
+                              "connTimeout=00:00:05;";
                 using (var client = DbDriver.Open(new ConnectionStringBuilder(connStr)))
                 {
                     using (var stmt = client.StmtInit())

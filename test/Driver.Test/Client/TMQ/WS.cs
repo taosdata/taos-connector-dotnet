@@ -98,6 +98,20 @@ namespace Driver.Test.Client.TMQ
         }
 
         [Fact]
+        public void GetUrl_ShouldThrowArgumentException_WhenTdConnectIpIsEmpty()
+        {
+            var cfg = new Dictionary<string, string>
+            {
+                { "useSSL", "false" },
+                { "td.connect.ip", string.Empty }
+            };
+
+            var options = new TMQOptions(cfg);
+            var ex = Assert.Throws<ArgumentException>(() => TMQConnection.GetUrl(options));
+            Assert.Equal("td.connect.ip", ex.ParamName);
+        }
+
+        [Fact]
         public void WSConsumerTimezoneTest()
         {
             var db = "ws_tmq_timezone_test";

@@ -298,19 +298,25 @@ namespace TDengine.TMQ.WebSocket
                 commitConnection = GetConnectionOrThrowClosed();
             }
 
-            var commitSucceeded = false;
             try
             {
                 commitConnection.Commit();
-                commitSucceeded = true;
+            }
+            catch (Exception)
+            {
+                // Auto commit is best-effort and should not fail consume calls.
             }
             finally
             {
                 lock (_reconnectLock)
                 {
-                    if (commitSucceeded && !IsClosed() && now >= _nextCommitTime)
+                    if (!IsClosed())
                     {
-                        _nextCommitTime = now.AddMilliseconds(_autoCommitInterval);
+                        var completionTime = DateTime.Now;
+                        if (completionTime >= _nextCommitTime)
+                        {
+                            _nextCommitTime = completionTime.AddMilliseconds(_autoCommitInterval);
+                        }
                     }
 
                     _autoCommitInProgress = false;

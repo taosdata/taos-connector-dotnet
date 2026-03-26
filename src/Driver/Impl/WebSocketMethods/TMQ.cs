@@ -349,6 +349,11 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             if (hostSegments.Length == 0)
             {
                 var fallbackHost = HostEndpointParser.NormalizeHost(hostValue);
+                if (string.IsNullOrWhiteSpace(fallbackHost))
+                {
+                    throw new ArgumentException("invalid td.connect.ip value", TdConnectIpKey);
+                }
+
                 var fallbackPort = ResolvePort(0);
                 var fallbackCacheKey = HostEndpointParser.BuildFailoverCacheKey(TDengineConstant.ProtocolWebSocket,
                     TDUseSSL == "true", fallbackHost, fallbackPort);
