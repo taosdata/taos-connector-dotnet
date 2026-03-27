@@ -30,6 +30,11 @@ namespace TDengine.Driver
                 throw new ArgumentException("retryCount must not be negative", nameof(retryCount));
             }
 
+            if (retryIntervalMs < 0)
+            {
+                throw new ArgumentException("retryIntervalMs must not be negative", nameof(retryIntervalMs));
+            }
+
             if (retryCount == 0)
             {
                 return false;
@@ -100,6 +105,14 @@ namespace TDengine.Driver
             try
             {
                 connection = openConnection(currentLease.Address);
+                if (connection == null)
+                {
+                    exception = new InvalidOperationException(
+                        $"openConnection returned null for address {currentLease.Address?.CacheKey ?? "<null>"}");
+                    currentLease.Dispose();
+                    return false;
+                }
+
                 return true;
             }
             catch (Exception ex)

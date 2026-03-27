@@ -79,6 +79,24 @@ namespace Driver.Test.Driver
         }
 
         [Fact]
+        public void TryOpenShouldThrowWhenRetryIntervalMsIsNegative()
+        {
+            var addresses = new[] { new FailoverAddress("host", 6030, Guid.NewGuid().ToString("N")) };
+            var ex = Assert.Throws<ArgumentException>(() => FailoverConnector.TryOpen<string>(
+                addresses,
+                1,
+                -1,
+                false,
+                null,
+                _ => "ok",
+                out _,
+                out _,
+                out _));
+
+            Assert.Equal("retryIntervalMs", ex.ParamName);
+        }
+
+        [Fact]
         public void TryOpenShouldReturnFalseWhenRetryCountIsZeroWithoutInvokingOpenConnection()
         {
             var addresses = new[] { new FailoverAddress("host", 6030, Guid.NewGuid().ToString("N")) };
@@ -104,6 +122,48 @@ namespace Driver.Test.Driver
             Assert.Null(connection);
             Assert.Null(lease);
             Assert.Null(lastException);
+        }
+
+        [Fact]
+        public void TryOpenShouldTreatNullConnectionAsFailureAndContinueToNextAddress()
+        {
+            var first = new FailoverAddress("first", 6030, Guid.NewGuid().ToString("N"));
+            var second = new FailoverAddress("second", 6031, Guid.NewGuid().ToString("N"));
+            var attempts = new List<string>();
+            FailoverAddressLease lease = null;
+
+            try
+            {
+                var opened = FailoverConnector.TryOpen(
+                    new[] { first, second },
+                    1,
+                    0,
+                    false,
+                    null,
+                    address =>
+                    {
+                        attempts.Add(address.CacheKey);
+                        if (ReferenceEquals(address, first))
+                        {
+                            return null;
+                        }
+
+                        return address.Host;
+                    },
+                    out var connection,
+                    out lease,
+                    out var lastException);
+
+                Assert.True(opened);
+                Assert.Equal("second", connection);
+                Assert.Same(second, lease.Address);
+                Assert.IsType<InvalidOperationException>(lastException);
+                Assert.Equal(new[] { first.CacheKey, second.CacheKey }, attempts);
+            }
+            finally
+            {
+                lease?.Dispose();
+            }
         }
 
         [Fact]
