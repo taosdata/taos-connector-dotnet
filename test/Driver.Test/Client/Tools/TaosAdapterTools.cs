@@ -86,11 +86,13 @@ namespace Driver.Test.Client.Tools
             {
                 try
                 {
-                    using HttpResponseMessage response = await client.GetAsync(url).ConfigureAwait(false);
-                    if (response.IsSuccessStatusCode)
+                    using (HttpResponseMessage response = await client.GetAsync(url).ConfigureAwait(false))
                     {
-                        success = true;
-                        break;
+                        if (response.IsSuccessStatusCode)
+                        {
+                            success = true;
+                            break;
+                        }
                     }
                 }
                 catch (Exception)

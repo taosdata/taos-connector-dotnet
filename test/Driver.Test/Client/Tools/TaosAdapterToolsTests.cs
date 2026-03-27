@@ -11,23 +11,27 @@ namespace Driver.Test.Client.Tools
         [Fact]
         public async Task CanPingHostShouldReturnTrueWhenEndpointRespondsSuccess()
         {
-            using var listener = new LocalHttpListener();
-            listener.Start(HttpStatusCode.OK);
+            using (var listener = new LocalHttpListener())
+            {
+                listener.Start(HttpStatusCode.OK);
 
-            var success = await TaosAdapterTools.CanPingHost("127.0.0.1", listener.Port.ToString());
+                var success = await TaosAdapterTools.CanPingHost("127.0.0.1", listener.Port.ToString());
 
-            Assert.True(success);
+                Assert.True(success);
+            }
         }
 
         [Fact]
         public async Task CanPingHostShouldReturnFalseWhenEndpointAlwaysFails()
         {
-            using var listener = new LocalHttpListener();
-            listener.Start(HttpStatusCode.InternalServerError);
+            using (var listener = new LocalHttpListener())
+            {
+                listener.Start(HttpStatusCode.InternalServerError);
 
-            var success = await TaosAdapterTools.CanPingHost("127.0.0.1", listener.Port.ToString());
+                var success = await TaosAdapterTools.CanPingHost("127.0.0.1", listener.Port.ToString());
 
-            Assert.False(success);
+                Assert.False(success);
+            }
         }
 
         private sealed class LocalHttpListener : System.IDisposable
