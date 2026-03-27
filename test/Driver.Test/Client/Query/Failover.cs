@@ -906,6 +906,90 @@ namespace Driver.Test.Client.Query
             Assert.Equal(1, Volatile.Read(ref secondConnCount));
         }
 
+        [Fact]
+        public void MethodsShouldThrowObjectDisposedExceptionAfterDispose()
+        {
+            var port = GetFreePort();
+            var connected = 0;
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var req = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(Encoding.UTF8.GetString(message));
+                if (req == null)
+                {
+                    throw new Exception("invalid websocket request");
+                }
+
+                switch (req.Action)
+                {
+                    case WSAction.Version:
+                    {
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    case WSAction.Conn:
+                    {
+                        Interlocked.Increment(ref connected);
+                        SendResponse(webSocket, messageType, new WSConnResp
+                        {
+                            Code = 0,
+                            Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId
+                        });
+                        break;
+                    }
+                    default:
+                        throw new Exception($"unexpected websocket action: {req.Action}");
+                }
+            });
+
+            ITDengineClient client = null;
+            try
+            {
+                server.Start();
+                var connStr = "protocol=WebSocket;" +
+                              $"host=127.0.0.1:{port};" +
+                              "useSSL=false;" +
+                              "username=root;" +
+                              "password=taosdata;" +
+                              "enableCompression=true;" +
+                              "autoReconnect=true;" +
+                              "reconnectRetryCount=3;" +
+                              "reconnectIntervalMs=10;";
+
+                client = DbDriver.Open(new ConnectionStringBuilder(connStr));
+                Assert.Equal(1, Volatile.Read(ref connected));
+                client.Dispose();
+
+                Assert.Throws<ObjectDisposedException>(() => client.Query("select server_version()"));
+                Assert.Throws<ObjectDisposedException>(() => client.Exec("select server_version()"));
+                Assert.Throws<ObjectDisposedException>(() => client.StmtInit());
+                Assert.Throws<ObjectDisposedException>(() => client.SchemalessInsert(
+                    new[] { "m1,t1=1 f1=1i64 1" },
+                    TDengineSchemalessProtocol.TSDB_SML_LINE_PROTOCOL,
+                    TDengineSchemalessPrecision.TSDB_SML_TIMESTAMP_NANO_SECONDS,
+                    0,
+                    ReqId.GetReqId()));
+            }
+            finally
+            {
+                try
+                {
+                    client?.Dispose();
+                }
+                catch
+                {
+                }
+
+                server.Dispose();
+            }
+        }
+
         private static Action<WebSocket, WebSocketMessageType, byte[]> CreateHandshakeMessageHandler(Action onConnected)
         {
             return (webSocket, messageType, message) =>

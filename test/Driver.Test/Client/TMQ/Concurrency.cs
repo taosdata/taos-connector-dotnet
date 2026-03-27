@@ -620,6 +620,66 @@ namespace Driver.Test.Client.TMQ
             }
         }
 
+        [Fact]
+        public void MethodsShouldThrowObjectDisposedExceptionAfterClose()
+        {
+            var port = GetFreePort();
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var payload = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
+                if (baseReq == null)
+                {
+                    throw new Exception("invalid websocket request");
+                }
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                    {
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0,
+                            Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    default:
+                        throw new Exception($"unexpected websocket action: {baseReq.Action}");
+                }
+            });
+
+            IConsumer<Dictionary<string, object>> consumer = null;
+            try
+            {
+                server.Start();
+                var config = BuildMockWsConfig(port);
+                consumer = new ConsumerBuilder<Dictionary<string, object>>(config).Build();
+                consumer.Close();
+
+                Assert.Throws<ObjectDisposedException>(() => consumer.Consume(0));
+                Assert.Throws<ObjectDisposedException>(() => consumer.Subscription());
+                Assert.Throws<ObjectDisposedException>(() => consumer.Subscribe("topic_after_close"));
+                Assert.Throws<ObjectDisposedException>(() => consumer.Commit());
+                Assert.Throws<ObjectDisposedException>(() =>
+                    consumer.Seek(new TopicPartitionOffset("topic_after_close", 0, 0)));
+            }
+            finally
+            {
+                try
+                {
+                    consumer?.Close();
+                }
+                catch
+                {
+                }
+
+                server.Dispose();
+            }
+        }
+
         private static Dictionary<string, string> BuildMockWsConfig(int port, bool enableAutoCommit = false,
             bool enableReconnect = false)
         {

@@ -165,6 +165,39 @@ namespace Driver.Test.Client.TMQ
             Assert.Throws<ArgumentException>(() => TMQConnection.GetUrl(options));
         }
 
+        [Theory]
+        [InlineData("abc")]
+        [InlineData("-1")]
+        [InlineData("65536")]
+        public void GetUrl_InvalidTdConnectPortShouldThrowArgumentException(string port)
+        {
+            var cfg = new Dictionary<string, string>
+            {
+                { "useSSL", "false" },
+                { "td.connect.ip", "localhost" },
+                { "td.connect.port", port }
+            };
+
+            var options = new TMQOptions(cfg);
+            var ex = Assert.Throws<ArgumentException>(() => TMQConnection.GetUrl(options));
+            Assert.Equal("td.connect.port", ex.ParamName);
+        }
+
+        [Fact]
+        public void GetUrl_EndpointPortShouldTakePrecedenceOverInvalidTdConnectPort()
+        {
+            var cfg = new Dictionary<string, string>
+            {
+                { "useSSL", "false" },
+                { "td.connect.ip", "localhost:6050" },
+                { "td.connect.port", "invalid-port" }
+            };
+
+            var options = new TMQOptions(cfg);
+            var url = TMQConnection.GetUrl(options);
+            Assert.Equal("ws://localhost:6050/rest/tmq", url);
+        }
+
         [Fact]
         public void WSConsumerTimezoneTest()
         {
