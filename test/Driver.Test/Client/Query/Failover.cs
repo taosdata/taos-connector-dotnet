@@ -1100,6 +1100,165 @@ namespace Driver.Test.Client.Query
             }
         }
 
+        [Fact]
+        public void SendAsyncShouldBeCancelledQuicklyWhenConnectionCloses()
+        {
+            var firstPort = GetFreePort();
+            var secondPort = GetFreePort();
+            while (secondPort == firstPort)
+            {
+                secondPort = GetFreePort();
+            }
+
+            var firstCacheKey = BuildWsCacheKey(firstPort);
+            var secondCacheKey = BuildWsCacheKey(secondPort);
+            ResetFailoverCacheConnectionCount(firstCacheKey);
+            ResetFailoverCacheConnectionCount(secondCacheKey);
+
+            var firstConnCount = 0;
+            var secondConnCount = 0;
+            ulong stmtId = 0;
+            var firstUnavailable = 0;
+
+            Action<WebSocket, WebSocketMessageType, byte[]> firstHandler = (webSocket, messageType, message) =>
+            {
+                var req = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(Encoding.UTF8.GetString(message));
+                if (req == null) throw new Exception("invalid websocket request");
+
+                switch (req.Action)
+                {
+                    case WSAction.Version:
+                    case WSAction.Conn:
+                    {
+                        if (Volatile.Read(ref firstUnavailable) == 1)
+                        {
+                            webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError,
+                                    "first address unavailable", CancellationToken.None)
+                                .GetAwaiter().GetResult();
+                            return;
+                        }
+
+                        if (req.Action == WSAction.Conn)
+                        {
+                            Interlocked.Increment(ref firstConnCount);
+                            SendResponse(webSocket, messageType, new WSConnResp
+                            {
+                                Code = 0, Action = req.Action,
+                                ReqId = req.Args == null ? 0 : req.Args.ReqId
+                            });
+                            break;
+                        }
+
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    case "stmt2_init":
+                    {
+                        // Mark first server as permanently unavailable, then close.
+                        Interlocked.Exchange(ref firstUnavailable, 1);
+                        Thread.Sleep(200);
+                        webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "",
+                            CancellationToken.None).GetAwaiter().GetResult();
+                        break;
+                    }
+                }
+            };
+
+            Action<WebSocket, WebSocketMessageType, byte[]> secondHandler = (webSocket, messageType, message) =>
+            {
+                var req = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(Encoding.UTF8.GetString(message));
+                if (req == null) throw new Exception("invalid websocket request");
+
+                switch (req.Action)
+                {
+                    case WSAction.Version:
+                    {
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    }
+                    case WSAction.Conn:
+                    {
+                        Interlocked.Increment(ref secondConnCount);
+                        SendResponse(webSocket, messageType, new WSConnResp
+                        {
+                            Code = 0, Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId
+                        });
+                        break;
+                    }
+                    case "stmt2_init":
+                    {
+                        SendResponse(webSocket, messageType, new WSStmt2InitResp
+                        {
+                            Code = 0, Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            StmtId = ++stmtId
+                        });
+                        break;
+                    }
+                }
+            };
+
+            var firstServer = new MockWSServer(firstPort, firstHandler);
+            var secondServer = new MockWSServer(secondPort, secondHandler);
+            try
+            {
+                firstServer.Start();
+                secondServer.Start();
+
+                // Use a long writeTimeout (30s) to make the test meaningful —
+                // before the fix, a blocked SendAsync would wait the full writeTimeout.
+                var connStr = "protocol=WebSocket;" +
+                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
+                              "useSSL=false;" +
+                              "username=root;" +
+                              "password=taosdata;" +
+                              "enableCompression=true;" +
+                              "autoReconnect=true;" +
+                              "reconnectRetryCount=5;" +
+                              "reconnectIntervalMs=30;" +
+                              "connTimeout=00:00:05;" +
+                              "writeTimeout=00:00:30;";
+
+                using (var client = DbDriver.Open(new ConnectionStringBuilder(connStr)))
+                {
+                    Assert.Equal(1, Volatile.Read(ref firstConnCount));
+
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    using (var stmt = client.StmtInit())
+                    {
+                        Assert.NotNull(stmt);
+                    }
+
+                    sw.Stop();
+
+                    // The operation should complete well under the 30s writeTimeout.
+                    // Allow up to 10s for CI environments, but the typical time is < 3s.
+                    Assert.True(sw.Elapsed.TotalSeconds < 10,
+                        $"failover took {sw.Elapsed.TotalSeconds:F1}s, expected < 10s (writeTimeout=30s)");
+
+                    Assert.True(client.ConnectionAvailable());
+                    Assert.True(Volatile.Read(ref secondConnCount) >= 1,
+                        "should have reconnected to second server");
+                }
+            }
+            finally
+            {
+                firstServer.Dispose();
+                secondServer.Dispose();
+            }
+        }
+
         private class TestBaseReq
         {
             [JsonProperty("req_id")] public ulong ReqId { get; set; }

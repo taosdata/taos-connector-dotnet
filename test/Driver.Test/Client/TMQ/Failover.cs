@@ -132,7 +132,6 @@ namespace Driver.Test.Client.TMQ
                     Tools.TaosAdapterTools.StartTaosAdapter(secondProcess, secondPort.ToString()).Wait();
                     Thread.Sleep(300);
                     Tools.TaosAdapterTools.StopTaosAdapter(firstProcess);
-                    firstProcess = null;
                     Thread.Sleep(300);
 
                     var secondConnStr = BuildWsConnectionString(secondPort);
@@ -315,7 +314,6 @@ namespace Driver.Test.Client.TMQ
                     Tools.TaosAdapterTools.StartTaosAdapter(secondProcess, secondPort.ToString()).Wait();
                     Thread.Sleep(300);
                     Tools.TaosAdapterTools.StopTaosAdapter(firstProcess);
-                    firstProcess = null;
                     Thread.Sleep(300);
 
                     var secondConnStr = BuildWsConnectionString(secondPort);

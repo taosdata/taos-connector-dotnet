@@ -16,7 +16,7 @@ namespace Driver.Test.Client.TMQ
     public partial class Consumer
     {
         [Fact]
-        public void CommitBatchShouldFinishBeforeCloseTakesEffect()
+        public void CommitBatchShouldNotBlockCloseAndShouldStillFinish()
         {
             var port = GetFreePort();
             var firstCommitStarted = new ManualResetEventSlim(false);
@@ -107,8 +107,8 @@ namespace Driver.Test.Client.TMQ
                     "first batch commit should reach the server");
 
                 var closeTask = Task.Run(() => consumer.Close());
-                Assert.False(closeTask.Wait(TimeSpan.FromMilliseconds(200)),
-                    "close should wait until the batch commit finishes");
+                Assert.True(closeTask.Wait(TimeSpan.FromSeconds(1)),
+                    "close should not wait for the in-flight batch commit");
 
                 releaseFirstCommit.Set();
 

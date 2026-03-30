@@ -33,6 +33,11 @@ namespace TDengine.TMQ.WebSocket
         };
 
         private readonly object _reconnectLock = new object();
+        private readonly object _batchCommitLock = new object();
+        private int _batchCommitInProgress;
+        private TMQConnection _batchCommitConnection;
+        private readonly List<Tuple<TMQConnection, FailoverAddressLease>> _deferredCloseResources =
+            new List<Tuple<TMQConnection, FailoverAddressLease>>();
 
         public Consumer(ConsumerBuilder<TValue> builder)
         {
@@ -155,6 +160,85 @@ namespace TDengine.TMQ.WebSocket
             return connection;
         }
 
+        private static void CloseConnectionAndLease(TMQConnection connection, FailoverAddressLease lease)
+        {
+            if (connection != null)
+            {
+                connection.Close();
+            }
+
+            if (lease != null)
+            {
+                lease.Dispose();
+            }
+        }
+
+        private void CloseOrDeferConnectionAndLease(TMQConnection connection, FailoverAddressLease lease)
+        {
+            if (connection == null && lease == null)
+            {
+                return;
+            }
+
+            var deferred = false;
+            lock (_reconnectLock)
+            {
+                if (_batchCommitInProgress > 0 && ReferenceEquals(connection, _batchCommitConnection))
+                {
+                    for (var i = 0; i < _deferredCloseResources.Count; i++)
+                    {
+                        var pending = _deferredCloseResources[i];
+                        if (ReferenceEquals(pending.Item1, connection) && ReferenceEquals(pending.Item2, lease))
+                        {
+                            deferred = true;
+                            break;
+                        }
+                    }
+
+                    if (!deferred)
+                    {
+                        _deferredCloseResources.Add(Tuple.Create(connection, lease));
+                        deferred = true;
+                    }
+                }
+            }
+
+            if (!deferred)
+            {
+                CloseConnectionAndLease(connection, lease);
+            }
+        }
+
+        private void EndBatchCommit()
+        {
+            List<Tuple<TMQConnection, FailoverAddressLease>> deferredResources = null;
+            lock (_reconnectLock)
+            {
+                _batchCommitInProgress--;
+                if (_batchCommitInProgress == 0)
+                {
+                    _batchCommitConnection = null;
+                    if (_deferredCloseResources.Count > 0)
+                    {
+                        deferredResources =
+                            new List<Tuple<TMQConnection, FailoverAddressLease>>(_deferredCloseResources);
+                        _deferredCloseResources.Clear();
+                    }
+                }
+            }
+
+            if (deferredResources == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < deferredResources.Count; i++)
+            {
+                var resource = deferredResources[i];
+                CloseConnectionAndLease(resource.Item1, resource.Item2);
+            }
+        }
+
         private void Reconnect()
         {
             if (!_reconnect)
@@ -236,12 +320,7 @@ namespace TDengine.TMQ.WebSocket
 
                 if (oldConnection != null)
                 {
-                    oldConnection.Close();
-                }
-
-                if (oldLease != null)
-                {
-                    oldLease.Dispose();
+                    CloseOrDeferConnectionAndLease(oldConnection, oldLease);
                 }
 
                 return;
@@ -437,13 +516,27 @@ namespace TDengine.TMQ.WebSocket
                 offsets.Add(tpo);
             }
 
-            lock (_reconnectLock)
+            lock (_batchCommitLock)
             {
-                var connection = GetConnectionOrThrowClosed();
-                for (var i = 0; i < offsets.Count; i++)
+                TMQConnection connection;
+                lock (_reconnectLock)
                 {
-                    var tpo = offsets[i];
-                    connection.CommitOffset(tpo.Topic, tpo.Partition, tpo.Offset);
+                    connection = GetConnectionOrThrowClosed();
+                    _batchCommitInProgress++;
+                    _batchCommitConnection = connection;
+                }
+
+                try
+                {
+                    for (var i = 0; i < offsets.Count; i++)
+                    {
+                        var tpo = offsets[i];
+                        connection.CommitOffset(tpo.Topic, tpo.Partition, tpo.Offset);
+                    }
+                }
+                finally
+                {
+                    EndBatchCommit();
                 }
             }
         }
@@ -534,15 +627,7 @@ namespace TDengine.TMQ.WebSocket
                 _addressLease = null;
             }
 
-            if (oldConnection != null)
-            {
-                oldConnection.Close();
-            }
-
-            if (oldLease != null)
-            {
-                oldLease.Dispose();
-            }
+            CloseOrDeferConnectionAndLease(oldConnection, oldLease);
         }
 
         private bool NeedGetData(TMQ_RES type)
