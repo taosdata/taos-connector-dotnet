@@ -52,7 +52,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 if (port <= 0)
                 {
                     if (!int.TryParse(options.TDConnectPort, NumberStyles.Integer, CultureInfo.InvariantCulture,
-                            out port))
+                            out port) || port <= 0)
                     {
                         port = 443;
                     }
@@ -63,7 +63,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 if (port <= 0)
                 {
                     if (!int.TryParse(options.TDConnectPort, NumberStyles.Integer, CultureInfo.InvariantCulture,
-                            out port))
+                            out port) || port <= 0)
                     {
                         port = 6041;
                     }
@@ -390,7 +390,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     throw new ArgumentException("invalid td.connect.port value", TdConnectPortKey);
                 }
 
-                if (port < 0 || port > ushort.MaxValue)
+                if (port <= 0 || port > ushort.MaxValue)
                 {
                     throw new ArgumentException("invalid td.connect.port value", TdConnectPortKey);
                 }
