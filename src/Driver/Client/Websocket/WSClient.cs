@@ -43,6 +43,7 @@ namespace TDengine.Driver.Client.Websocket
 
         public static string GetUrl(ConnectionStringBuilder builder)
         {
+            if (builder == null) throw new ArgumentNullException(nameof(builder));
             var addresses = builder.GetFailoverAddresses();
             if (addresses.Count == 0)
             {

@@ -62,6 +62,43 @@ namespace Driver.Test.Driver
             Assert.Equal("host", ex.ParamName);
         }
 
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-1)]
+        public void ValidateEndpointPortShouldRejectZeroAndNegative(int port)
+        {
+            var ex = Assert.Throws<ArgumentException>(() =>
+                HostEndpointParser.ValidateEndpointPort(port, "host"));
+
+            Assert.Equal("host", ex.ParamName);
+        }
+
+        [Theory]
+        [InlineData("localhost:0")]
+        [InlineData("127.0.0.1:0")]
+        public void ParseHostEndpointShouldRejectExplicitPortZero(string endpoint)
+        {
+            var ex = Assert.Throws<ArgumentException>(() => HostEndpointParser.ParseHostEndpoint(
+                endpoint,
+                "host",
+                out _,
+                out _));
+
+            Assert.Equal("host", ex.ParamName);
+        }
+
+        [Fact]
+        public void ParseHostEndpointShouldRejectBracketedIpv6WithPortZero()
+        {
+            var ex = Assert.Throws<ArgumentException>(() => HostEndpointParser.ParseHostEndpoint(
+                "[2001:db8::1]:0",
+                "host",
+                out _,
+                out _));
+
+            Assert.Equal("host", ex.ParamName);
+        }
+
         [Fact]
         public void TryParseAbsoluteUriShouldReturnFalseForNonUriInput()
         {

@@ -347,7 +347,7 @@ namespace Driver.Test.Client.Query
             ConnectionStringBuilder builder = null;
 
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => WSClient.GetUrl(builder));
+            Assert.Throws<ArgumentNullException>(() => WSClient.GetUrl(builder));
         }
 
         [Theory]
@@ -382,6 +382,23 @@ namespace Driver.Test.Client.Query
         [InlineData(",,")]
         [InlineData(",")]
         public void GetUrl_InvalidHostListShouldThrowArgumentException(string host)
+        {
+            var builder = new ConnectionStringBuilder("")
+            {
+                UseSSL = false,
+                Port = 0,
+                Host = host,
+                Token = ""
+            };
+
+            Assert.Throws<ArgumentException>(() => WSClient.GetUrl(builder));
+        }
+
+        [Theory]
+        [InlineData("localhost:0")]
+        [InlineData("localhost:0,localhost:6041")]
+        [InlineData("[2001:db8::1]:0")]
+        public void GetUrl_ExplicitPortZeroShouldThrowArgumentException(string host)
         {
             var builder = new ConnectionStringBuilder("")
             {

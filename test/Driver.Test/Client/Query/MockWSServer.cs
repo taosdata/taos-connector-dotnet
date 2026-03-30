@@ -24,7 +24,7 @@ namespace Driver.Test.Client.Query
             _port = port;
             _onMessage = onMessage;
             _httpListener = new HttpListener();
-            _httpListener.Prefixes.Add(Url);
+            TryAddPrefix(Url);
             TryAddPrefix($"http://localhost:{_port}/");
             _cts = new CancellationTokenSource();
             _ready = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

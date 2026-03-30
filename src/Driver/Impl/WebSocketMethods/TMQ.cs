@@ -22,6 +22,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         public static string GetUrl(TMQOptions options)
         {
+            if (options == null) throw new ArgumentNullException(nameof(options));
             var addresses = options.GetFailoverAddresses();
             if (addresses.Count == 0)
             {

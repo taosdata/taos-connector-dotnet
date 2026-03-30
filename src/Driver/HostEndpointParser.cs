@@ -143,7 +143,7 @@ namespace TDengine.Driver
 
         internal static void ValidateEndpointPort(int port, string paramName, string errorPrefix = DefaultPrefix)
         {
-            if (port < 0 || port > ushort.MaxValue)
+            if (port <= 0 || port > ushort.MaxValue)
             {
                 throw new ArgumentException($"invalid {errorPrefix} endpoint port value", paramName);
             }
