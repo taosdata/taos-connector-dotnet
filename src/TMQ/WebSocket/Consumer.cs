@@ -104,7 +104,7 @@ namespace TDengine.TMQ.WebSocket
                     throw lastException;
                 }
 
-                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_CONNEC_FAILED,
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_CONNECT_FAILED,
                     "websocket connection failed");
             }
 

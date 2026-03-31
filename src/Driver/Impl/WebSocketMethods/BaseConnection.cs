@@ -106,7 +106,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
             if (_client.State != WebSocketState.Open)
             {
-                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_CONNEC_FAILED,
+                throw new TDengineError((int)TDengineError.InternalErrorCode.WS_CONNECT_FAILED,
                     $"connect to {addr} fail");
             }
 
