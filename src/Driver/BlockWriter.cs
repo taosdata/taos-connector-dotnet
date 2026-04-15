@@ -154,10 +154,11 @@ namespace TDengine.Driver
 
                         break;
                     }
-                    // binary, json, varbinary
+                    // binary, json, varbinary, blob
                     case TDengineDataType.TSDB_DATA_TYPE_BINARY:
                     case TDengineDataType.TSDB_DATA_TYPE_JSONTAG:
                     case TDengineDataType.TSDB_DATA_TYPE_VARBINARY:
+                    case TDengineDataType.TSDB_DATA_TYPE_BLOB:
                     {
                         if (elementType == typeof(byte[]))
                         {

@@ -190,12 +190,12 @@ namespace Driver.Test.Function.Test
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
-                0x40, //float 
+                0x40, //float
                 0x1D, 0x30, 0xC9, 0x3E,
                 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x80, 0x3F,
 
-                0x40, // double 
+                0x40, // double
                 0x68, 0x04, 0xE0, 0xB6, 0x05, 0x02, 0xDD, 0x3F,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F,
@@ -808,6 +808,33 @@ namespace Driver.Test.Function.Test
             Assert.Throws<ArgumentException>(() => BlockWriter.Serialize(1, new[] { geometryType }, new int[] { 1 }));
             Assert.Throws<ArgumentException>(() =>
                 BlockWriter.Serialize(1, new[] { geometryType }, new String[] { "abc" }));
+
+            // blob
+            var blobType = new TaosFieldE { type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BLOB };
+            data = new Array[]
+            {
+                new byte[][] { Encoding.UTF8.GetBytes("abc") }
+            };
+            var blobData = BlockWriter.Serialize(1, new[] { blobType }, data);
+            var expectedBlobData = new byte[]
+            {
+                0x01, 0x00, 0x00, 0x00,
+                0x2e, 0x00, 0x00, 0x00,
+                0x01, 0x00, 0x00, 0x00,
+                0x01, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+                0x12, 0x00, 0x00, 0x00, 0x00,
+                0x05, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x03, 0x00,
+                0x61, 0x62, 0x63
+            };
+            Assert.Equal(expectedBlobData, blobData);
+            Assert.Throws<ArgumentException>(() => BlockWriter.Serialize(1, new[] { blobType }, new int[] { 1 }));
+            blobData = BlockWriter.Serialize(1, new[] { blobType }, new String[] { "abc" });
+            Assert.Equal(expectedBlobData, blobData);
         }
     }
 }
