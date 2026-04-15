@@ -19,13 +19,15 @@ namespace Driver.Test.Function.Test
         public void TestBlobReadUsesUInt32LengthHeader()
         {
             var payload = Encoding.UTF8.GetBytes(new string('a', 300));
-            var colLength = TDengineConstant.Int32Size + TDengineConstant.Int32Size + payload.Length;
-            var data = new byte[28 + 5 + 4 + colLength];
+            var rows = 1;
+            var offsetArrayLength = TDengineConstant.Int32Size * rows;
+            var colLength = TDengineConstant.Int32Size + payload.Length;
+            var data = new byte[28 + 5 + 4 + offsetArrayLength + colLength];
 
             WriteInt32(data, 0, 1);
             WriteInt32(data, 4, data.Length);
             WriteInt32(data, 8, 1);
-            WriteInt32(data, 12, 1);
+            WriteInt32(data, 12, rows);
             WriteInt32(data, 16, 0);
             WriteUInt64(data, 20, 0UL);
 
@@ -34,8 +36,9 @@ namespace Driver.Test.Function.Test
             WriteInt32(data, 33, colLength);
 
             WriteInt32(data, 37, 0);
-            WriteUInt32(data, 41, (uint)payload.Length);
-            Array.Copy(payload, 0, data, 45, payload.Length);
+            var dataStart = 37 + offsetArrayLength;
+            WriteUInt32(data, dataStart, (uint)payload.Length);
+            Array.Copy(payload, 0, data, dataStart + TDengineConstant.Int32Size, payload.Length);
 
             var colTypes = new[] { (byte)TDengineDataType.TSDB_DATA_TYPE_BLOB };
             var scales = new byte[] { 0 };
