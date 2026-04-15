@@ -53,6 +53,39 @@ namespace Driver.Test.Function.Test
             Assert.False(parser.IsDBNull(0, 0));
         }
 
+        [Fact]
+        public void TestBlobReadReturnsNullWhenOffsetIsMinusOne()
+        {
+            var rows = 1;
+            var colLength = 0;
+            var data = new byte[28 + 5 + 4 + TDengineConstant.Int32Size * rows + colLength];
+
+            WriteInt32(data, 0, 1);
+            WriteInt32(data, 4, data.Length);
+            WriteInt32(data, 8, rows);
+            WriteInt32(data, 12, 1);
+            WriteInt32(data, 16, 0);
+            WriteUInt64(data, 20, 0UL);
+
+            data[28] = (byte)TDengineDataType.TSDB_DATA_TYPE_BLOB;
+            WriteInt32(data, 29, 0);
+            WriteInt32(data, 33, colLength);
+
+            WriteInt32(data, 37, -1);
+
+            var colTypes = new[] { (byte)TDengineDataType.TSDB_DATA_TYPE_BLOB };
+            var scales = new byte[] { 0 };
+            var parser = new BlockReader(0, 1, (int)TDenginePrecision.TSDB_TIME_PRECISION_MILLI, colTypes, scales);
+            parser.SetBlock(data);
+
+            var values = new object[1];
+            var cols = parser.GetValues(0, values);
+            Assert.Equal(1, cols);
+            Assert.Null(values[0]);
+            Assert.True(parser.IsDBNull(0, 0));
+            Assert.Throws<InvalidCastException>(() => parser.GetString(0, 0));
+        }
+
         private static void WriteInt32(byte[] data, int offset, int value)
         {
             data[offset + 0] = (byte)value;
