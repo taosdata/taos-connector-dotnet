@@ -857,8 +857,11 @@ namespace Driver.Test.Client.Query
                     DoExec(client, $"create table if not exists test_varbinary (ts timestamp, c1 varbinary(100))");
                     // geometry
                     DoExec(client, $"create table if not exists test_geometry (ts timestamp, c1 geometry(100))");
-                    // blob
-                    DoExec(client, $"create table if not exists test_blob (ts timestamp, c1 blob)");
+                    if (!_is3360Test)
+                    {
+                        // blob
+                        DoExec(client, $"create table if not exists test_blob (ts timestamp, c1 blob)");
+                    }
                     // json
                     DoExec(client, $"create table if not exists test_json_stb (ts timestamp, c1 int) tags(t json)");
                     var stmt = client.StmtInit();
@@ -1057,15 +1060,18 @@ namespace Driver.Test.Client.Query
                         Assert.Equal(4, rows.GetInt32(0));
                     }
 
-                    // blob
-                    sql = $"insert into test_blob values(?,?)";
-                    _output.WriteLine($"{sql}");
-                    DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BLOB);
-                    using (var rows = client.Query("select count(*) from test_blob"))
+                    if (!_is3360Test)
                     {
-                        Assert.True(rows.Read());
-                        // null + byte[] * 3 + string * 3
-                        Assert.Equal(7, rows.GetInt32(0));
+                        // blob
+                        sql = $"insert into test_blob values(?,?)";
+                        _output.WriteLine($"{sql}");
+                        DoStmtTest(client, stmt, sql, TDengineDataType.TSDB_DATA_TYPE_BLOB);
+                        using (var rows = client.Query("select count(*) from test_blob"))
+                        {
+                            Assert.True(rows.Read());
+                            // null + byte[] * 3 + string * 3
+                            Assert.Equal(7, rows.GetInt32(0));
+                        }
                     }
                 }
                 catch (Exception e)
@@ -2266,6 +2272,12 @@ namespace Driver.Test.Client.Query
 
         private void BlobTest(string connectString, string db)
         {
+            if (_is3360Test)
+            {
+                _output.WriteLine("Skipping BlobTest on 3.3.6.0 because BLOB data type is not supported.");
+                return;
+            }
+
             DateTime dateTime = DateTime.Now;
             var ts = (dateTime.ToUniversalTime().Ticks - TDengineConstant.TimeZero.Ticks) / 10000;
             var now = TDengineConstant.ConvertTimestampToDateTime(ts, TDenginePrecision.TSDB_TIME_PRECISION_MILLI);
