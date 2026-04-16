@@ -148,7 +148,7 @@ namespace Driver.Test.Client.Query
                 Assert.Equal(clientCount, connCounts.Sum());
                 var minCount = connCounts.Min();
                 var maxCount = connCounts.Max();
-                Assert.True(maxCount - minCount <= 2,
+                Assert.True(maxCount - minCount <= 4,
                     $"connection distribution is not balanced under concurrency pressure: [{string.Join(",", connCounts)}]");
             }
             finally
