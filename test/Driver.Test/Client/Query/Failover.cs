@@ -103,6 +103,8 @@ namespace Driver.Test.Client.Query
                     servers[i].Start();
                 }
 
+                Thread.Sleep(200);
+
                 var hostList = string.Join(",", ports.Select(p => $"127.0.0.1:{p}"));
                 var connStr = "protocol=WebSocket;" +
                               $"host={hostList};" +
@@ -203,6 +205,8 @@ namespace Driver.Test.Client.Query
                 {
                     servers[i].Start();
                 }
+
+                Thread.Sleep(200);
 
                 var hostList = string.Join(",", ports.Select(p => $"127.0.0.1:{p}"));
                 var connStr = "protocol=WebSocket;" +

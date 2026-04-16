@@ -129,7 +129,7 @@ namespace Driver.Test.Client.Query
                 }
             }
 
-            return decimal.Parse(sb.ToString());
+            return decimal.Parse(sb.ToString(), System.Globalization.CultureInfo.InvariantCulture);
         }
 
         private object[][] GenerateValue(TDenginePrecision precision, bool withDecimal, out string sql,
@@ -161,8 +161,8 @@ namespace Driver.Test.Client.Query
             ulong v9_3 = ulong.MaxValue;
             float v10_3 = (float)rand.NextDouble();
             double v11_3 = rand.NextDouble();
-            decimal v16_3 = decimal.Parse("9999999999999999.9999");
-            decimal v17_3 = decimal.Parse("9999.9999");
+            decimal v16_3 = 9999999999999999.9999m;
+            decimal v17_3 = 9999.9999m;
 
             bool v1_4 = true;
             sbyte v2_4 = sbyte.MaxValue;
@@ -175,8 +175,8 @@ namespace Driver.Test.Client.Query
             ulong v9_4 = ulong.MaxValue;
             float v10_4 = (float)rand.NextDouble();
             double v11_4 = rand.NextDouble();
-            decimal v16_4 = decimal.Parse("0.9999");
-            decimal v17_4 = decimal.Parse("0.9999");
+            decimal v16_4 = 0.9999m;
+            decimal v17_4 = 0.9999m;
 
             var rowCount = 5;
             var dateTime = DateTime.Now;
@@ -1084,8 +1084,8 @@ namespace Driver.Test.Client.Query
                         using (var rows = client.Query("select count(*) from test_decimal"))
                         {
                             Assert.True(rows.Read());
-                            // null + string * 3
-                            Assert.Equal(4, rows.GetInt32(0));
+                            // null + string * 3 + decimal * 1
+                            Assert.Equal(5, rows.GetInt32(0));
                         }
 
                         // decimal64
@@ -1095,8 +1095,8 @@ namespace Driver.Test.Client.Query
                         using (var rows = client.Query("select count(*) from test_decimal64"))
                         {
                             Assert.True(rows.Read());
-                            // null + string * 3
-                            Assert.Equal(4, rows.GetInt32(0));
+                            // null + string * 3 + decimal * 1
+                            Assert.Equal(5, rows.GetInt32(0));
                         }
                     }
                 }
@@ -1287,7 +1287,7 @@ namespace Driver.Test.Client.Query
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
 
-            // bool 
+            // bool
             now = now.AddSeconds(1);
             rowData = new List<object>
             {
@@ -2044,6 +2044,26 @@ namespace Driver.Test.Client.Query
                 Assert.Throws<ArgumentException>(() => stmt.BindColumn(colFields, colData));
             }
 
+            // decimal (C# type)
+            now = now.AddSeconds(1);
+            rowData = new List<object>
+            {
+                now,
+                1.23m,
+            };
+            if (dataType == TDengineDataType.TSDB_DATA_TYPE_DECIMAL ||
+                dataType == TDengineDataType.TSDB_DATA_TYPE_DECIMAL64)
+            {
+                stmt.BindRow(rowData.ToArray());
+                stmt.AddBatch();
+                stmt.Exec();
+                Assert.Equal((long)1, stmt.Affected());
+            }
+            else
+            {
+                Assert.Throws<ArgumentException>(() => stmt.BindRow(rowData.ToArray()));
+            }
+
             if (_is3360Test)
             {
                 stmt.Dispose();
@@ -2485,13 +2505,13 @@ namespace Driver.Test.Client.Query
                         Assert.True(rows.Read());
                         Assert.Equal(now, rows.GetValue(0));
                         var decVal = rows.GetDecimal(1);
-                        Assert.Equal(decimal.Parse("12345.6789"), decVal);
+                        Assert.Equal(12345.6789m, decVal);
                         var decStr = rows.GetString(1);
                         Assert.Equal("12345.6789", decStr);
 
                         // second row - negative
                         Assert.True(rows.Read());
-                        Assert.Equal(decimal.Parse("-9999.9999"), rows.GetDecimal(1));
+                        Assert.Equal(-9999.9999m, rows.GetDecimal(1));
 
                         Assert.False(rows.Read());
                     }
@@ -2529,10 +2549,10 @@ namespace Driver.Test.Client.Query
                     using (var rows = client.Query($"select * from {tableName64} order by ts asc"))
                     {
                         Assert.True(rows.Read());
-                        Assert.Equal(decimal.Parse("1234.5678"), rows.GetDecimal(1));
+                        Assert.Equal(1234.5678m, rows.GetDecimal(1));
 
                         Assert.True(rows.Read());
-                        Assert.Equal(decimal.Parse("-5678.1234"), rows.GetDecimal(1));
+                        Assert.Equal(-5678.1234m, rows.GetDecimal(1));
 
                         Assert.False(rows.Read());
                     }
@@ -2543,7 +2563,7 @@ namespace Driver.Test.Client.Query
                     using (var rows = client.Query($"select * from {tableName} where ts = {ts5}"))
                     {
                         Assert.True(rows.Read());
-                        Assert.Equal(decimal.Parse("0.9999"), rows.GetDecimal(1));
+                        Assert.Equal(0.9999m, rows.GetDecimal(1));
                     }
 
                     // --- C# decimal type binding ---
@@ -2614,7 +2634,7 @@ namespace Driver.Test.Client.Query
                         Assert.Equal(55.6789m, rows.GetDecimal(1));
                     }
 
-                    // --- stmt2 parameterized query for decimal ---
+                    // --- stmt2 parameterized query for decimal (string binding) ---
                     stmt = client.StmtInit(ReqId.GetReqId());
                     stmt.Prepare($"select * from {tableName} where c1 = ?");
                     stmt.BindRow(new object[] { "12345.6789" });
@@ -2629,10 +2649,39 @@ namespace Driver.Test.Client.Query
                     }
                     stmt.Dispose();
 
-                    // stmt2 parameterized query for decimal64
+                    // --- stmt2 parameterized query for decimal (C# decimal binding) ---
+                    stmt = client.StmtInit(ReqId.GetReqId());
+                    stmt.Prepare($"select * from {tableName} where c1 = ?");
+                    stmt.BindRow(new object[] { 12345.6789m });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var rows = stmt.Result())
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(now, rows.GetValue(0));
+                        Assert.Equal(12345.6789m, rows.GetDecimal(1));
+                        Assert.False(rows.Read());
+                    }
+                    stmt.Dispose();
+
+                    // stmt2 parameterized query for decimal64 (string binding)
                     stmt = client.StmtInit(ReqId.GetReqId());
                     stmt.Prepare($"select * from {tableName64} where c1 = ?");
                     stmt.BindRow(new object[] { "1234.5678" });
+                    stmt.AddBatch();
+                    stmt.Exec();
+                    using (var rows = stmt.Result())
+                    {
+                        Assert.True(rows.Read());
+                        Assert.Equal(1234.5678m, rows.GetDecimal(1));
+                        Assert.False(rows.Read());
+                    }
+                    stmt.Dispose();
+
+                    // stmt2 parameterized query for decimal64 (C# decimal binding)
+                    stmt = client.StmtInit(ReqId.GetReqId());
+                    stmt.Prepare($"select * from {tableName64} where c1 = ?");
+                    stmt.BindRow(new object[] { 1234.5678m });
                     stmt.AddBatch();
                     stmt.Exec();
                     using (var rows = stmt.Result())
@@ -2682,7 +2731,7 @@ namespace Driver.Test.Client.Query
 request_histogram_latency_seconds_max,aaa=bb,api_range=all,host=host161,url=http://192.168.17.148:8080/actuator/prometheus gauge=0 1648090640000000000
 process_files_max_files,host=host161,url=http://192.168.17.148:8080/actuator/prometheus gauge=10240 1648090640000000000
 request_timer_seconds,host=host161,quantile=0.5,url=http://192.168.17.148:8080/actuator/prometheus count=0,sum=0 1648090640000000000
-request_timer_seconds,host=host161,quantile=0.9,url=http://192.168.17.148:8080/actuator/prometheus count=0,sum=0 1648090640000000000 
+request_timer_seconds,host=host161,quantile=0.9,url=http://192.168.17.148:8080/actuator/prometheus count=0,sum=0 1648090640000000000
 request_timer_seconds,host=host161,quantile=0.95,url=http://192.168.17.148:8080/actuator/prometheus count=0,sum=0 1648090640000000000
 request_timer_seconds,host=host161,quantile=0.99,url=http://192.168.17.148:8080/actuator/prometheus count=0,sum=0 1648090640000000000
 request_timer_seconds,host=host161,url=http://192.168.17.148:8080/actuator/prometheus 0.223696211=0,0.016777216=0,0.178956969=0,0.156587348=0,0.2=0,0.626349396=0,0.015379112=0,5=0,0.089478485=0,0.357913941=0,5.726623061=0,0.008388607=0,0.894784851=0,0.006990506=0,3.937053352=0,0.001=0,0.061516456=0,0.134217727=0,1.431655765=0,0.005592405=0,0.984263336=0,0.001398101=0,3.22122547=0,0.033554431=0,0.805306366=0,0.002446676=0,0.003844776=0,0.20132659=0,1.073741824=0,0.022369621=0,1=0,0.002796201=0,1.789569706=0,0.001048576=0,0.246065832=0,0.050331646=0,4.294967296=0,8.589934591=0,0.536870911=0,0.447392426=0,2.505397588=0,10=0,0.013981011=0,0.003495251=0,0.044739241=0,2.863311529=0,0.039146836=0,0.268435456=0,sum=0,3.579139411=0,7.158278826=0,0.011184809=0,0.01258291=0,0.1=0,0.003145726=0,0.055924051=0,0.067108864=0,0.004194304=0,0.001747626=0,0.002097151=0,2.147483647=0,count=0,0.715827881=0,0.009786708=0,0.111848106=0,0.027962026=0,+Inf=0 1648090640000000000
@@ -3554,7 +3603,7 @@ jvm_gc_pause_seconds_max,action=end\ of\ minor\ GC,cause=Allocation\ Failure,hos
                     }
 
                     stmt.Prepare("select * from test_multi where c1 = ? and c2 = ?");
-                    // wrong length 
+                    // wrong length
                     Assert.Throws<ArgumentException>(() => stmt.BindRow(new object[] { 'a', 'a', 'a' }));
                     // bind twice
                     stmt.BindRow(new object[] { 123, "abc" });

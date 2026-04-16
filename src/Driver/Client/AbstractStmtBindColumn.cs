@@ -173,7 +173,7 @@ namespace TDengine.Driver.Client
                     else
                     {
                         throw new ArgumentException(
-                            $"BindIndex: {bindIndex}, field name: {field.name}, {TDengineConstant.GetFieldTypeName(field.type)} database type requires string[] or decimal[], but got an array of {elementType.Name}");
+                            $"BindIndex: {bindIndex}, field name: {field.name}, {TDengineConstant.GetFieldTypeName(field.type)} database type requires string[], decimal[] or decimal?[], but got an array of {elementType.Name}");
                     }
 
                     break;

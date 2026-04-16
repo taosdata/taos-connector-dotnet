@@ -155,7 +155,6 @@ namespace TDengine.Driver.Client
                                 throw new ArgumentException(
                                     $"BindIndex: {i}, field name: {fields[i].name}, bind param type decimal to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                             }
-                            obj[i] = ((decimal)obj[i]).ToString(System.Globalization.CultureInfo.InvariantCulture);
                             break;
                         default:
                             throw new ArgumentException(
@@ -185,7 +184,10 @@ namespace TDengine.Driver.Client
                 CheckRowValue(row, _colFields);
                 for (var i = 0; i < row.Length; i++)
                 {
-                    _currentTableInfo.Cols[i].Add(row[i]);
+                    var value = row[i] is decimal d
+                        ? d.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                        : row[i];
+                    _currentTableInfo.Cols[i].Add(value);
                 }
             }
             else
@@ -310,6 +312,13 @@ namespace TDengine.Driver.Client
                                 fields[i] = new TaosFieldE
                                 {
                                     type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BOOL,
+                                };
+                                break;
+                            case decimal d:
+                                _currentTableInfo.Cols[i].Add(d.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                                fields[i] = new TaosFieldE
+                                {
+                                    type = (sbyte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
                                 };
                                 break;
                             default:
