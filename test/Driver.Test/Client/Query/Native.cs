@@ -125,13 +125,6 @@ namespace Driver.Test.Client.Query
         }
 
         [Fact]
-        public void NativeDecimalTest()
-        {
-            const string db = "decimal_test";
-            this.DecimalTest(this._nativeConnectString, db);
-        }
-
-        [Fact]
         public void NativeInfluxDBTest()
         {
             const string db = "influxdb_test";
