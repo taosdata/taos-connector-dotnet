@@ -136,13 +136,26 @@ namespace TDengine.Driver.Client
                                 fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_JSONTAG &&
                                 fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_VARBINARY &&
                                 fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_NCHAR &&
-                                fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_BLOB
+                                fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_BLOB &&
+                                fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_DECIMAL &&
+                                fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_DECIMAL64
                             )
                             {
                                 throw new ArgumentException(
                                     $"BindIndex: {i}, field name: {fields[i].name}, bind param type string to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
                             }
 
+                            break;
+                        case decimal _:
+                            if (
+                                fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_DECIMAL &&
+                                fields[i].type != (int)TDengineDataType.TSDB_DATA_TYPE_DECIMAL64
+                            )
+                            {
+                                throw new ArgumentException(
+                                    $"BindIndex: {i}, field name: {fields[i].name}, bind param type decimal to {TDengineConstant.GetFieldTypeName(fields[i].type)} not supported");
+                            }
+                            obj[i] = ((decimal)obj[i]).ToString(System.Globalization.CultureInfo.InvariantCulture);
                             break;
                         default:
                             throw new ArgumentException(
