@@ -207,6 +207,7 @@ namespace TDengine.Driver.Client
                     throw new ArgumentException($"Expected non-empty arrays, but got empty array");
                 }
 
+                var localArrays = new Array[arrays.Length];
                 for (var i = 0; i < arrays.Length; i++)
                 {
                     if (arrays[i].Length != rowCount)
@@ -214,14 +215,14 @@ namespace TDengine.Driver.Client
                         throw new ArgumentException(
                             $"All arrays must have the same length. Expected length {rowCount}, but got array at index {i} with length {arrays[i].Length}");
                     }
-                    arrays[i] = CheckColumns(arrays[i], _colFields[i],i);
+                    localArrays[i] = CheckColumns(arrays[i], _colFields[i],i);
                 }
 
-                for (int i = 0; i < arrays.Length; i++)
+                for (int i = 0; i < localArrays.Length; i++)
                 {
-                    for (var j = 0; j < arrays[i].Length; j++)
+                    for (var j = 0; j < localArrays[i].Length; j++)
                     {
-                        _currentTableInfo.Cols[i].Add(arrays[i].GetValue(j));
+                        _currentTableInfo.Cols[i].Add(localArrays[i].GetValue(j));
                     }
                 }
 

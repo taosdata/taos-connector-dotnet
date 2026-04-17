@@ -355,7 +355,10 @@ namespace Driver.Test.Client.TMQ
             }, value["c15"]);
             Assert.Equal(decimal.Parse("6581493296132535.4860"), value["c16"]);
             Assert.Equal(decimal.Parse("6581.4932"), value["c17"]);
-            Assert.Equal(new byte[] { 0x01, 0x02, 0x03 }, value["c18"]);
+            if (value.ContainsKey("c18"))
+            {
+                Assert.Equal(new byte[] { 0x01, 0x02, 0x03 }, value["c18"]);
+            }
         }
 
         private void ConsumerConfigTest(string connectString, string db, string topic, ConsumerConfig cfg)
@@ -441,8 +444,9 @@ namespace Driver.Test.Client.TMQ
                             {
                                 for (int j = 0; j < 3; j++)
                                 {
-                                    var sql =
-                                        $"insert into ct{j}_decimal values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932,'\\x010203')";
+                                    var sql = isCloud
+                                        ? $"insert into ct{j}_decimal values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932)"
+                                        : $"insert into ct{j}_decimal values('{now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK")}',true,2,3,4,5,6,7,8,9,10,11,'binary','nchar','varbinary','POINT(100 100)',6581493296132535.4860,6581.4932,'\\x010203')";
                                     DoRequest(client, sql);
                                 }
 
