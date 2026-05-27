@@ -89,10 +89,20 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         public WSTMQSubscribeResp Subscribe(List<string> topics, TMQOptions options)
         {
-            return Subscribe(_GetReqId(), topics, options);
+            return Subscribe(_GetReqId(), topics, options, false);
+        }
+
+        public WSTMQSubscribeResp Subscribe(List<string> topics, TMQOptions options, bool listInstances)
+        {
+            return Subscribe(_GetReqId(), topics, options, listInstances);
         }
 
         public WSTMQSubscribeResp Subscribe(ulong reqId, List<string> topics, TMQOptions options)
+        {
+            return Subscribe(reqId, topics, options, false);
+        }
+
+        public WSTMQSubscribeResp Subscribe(ulong reqId, List<string> topics, TMQOptions options, bool listInstances)
         {
             return SendJsonBackJson<WSTMQSubscribeReq, WSTMQSubscribeResp>(WSTMQAction.TMQSubscribe,
                 new WSTMQSubscribeReq
@@ -110,7 +120,8 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                     WithTableName = options.MsgWithTableName,
                     SessionTimeoutMs = options.SessionTimeoutMs,
                     MaxPollIntervalMs = options.MaxPollIntervalMs,
-                    Config = options.GetOtherProperties()
+                    Config = options.GetOtherProperties(),
+                    ListInstances = listInstances ? true : (bool?)null
                 }, reqId);
         }
 
@@ -317,8 +328,10 @@ namespace TDengine.Driver.Impl.WebSocketMethods
         public string SessionTimeoutMs => Get("session.timeout.ms");
 
         public string MaxPollIntervalMs => Get("max.poll.interval.ms");
-        
+
         public string ConnectionTimezone => Get("connectionTimezone");
+
+        public string TDAdapterHA => Get("ws.adapterHA");
 
         public TMQOptions(IEnumerable<KeyValuePair<string, string>> config)
         {
@@ -421,6 +434,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods
             { "ws.autoReconnect", true },
             { "ws.reconnect.retry.count", true },
             { "ws.reconnect.interval.ms", true },
+            { "ws.adapterHA", true },
             { "session.timeout.ms", true },
             { "max.poll.interval.ms", true },
             { "connectionTimezone", true },

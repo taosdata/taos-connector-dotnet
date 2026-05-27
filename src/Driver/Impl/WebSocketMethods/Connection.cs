@@ -31,8 +31,13 @@ namespace TDengine.Driver.Impl.WebSocketMethods
 
         public void Connect()
         {
+            Connect(false);
+        }
+
+        public WSConnResp Connect(bool listInstances)
+        {
             var reqId = _GetReqId();
-            SendJsonBackJson<WSConnReq, WSConnResp>(WSAction.Conn, new WSConnReq
+            return SendJsonBackJson<WSConnReq, WSConnResp>(WSAction.Conn, new WSConnReq
             {
                 ReqId = reqId,
                 User = _user,
@@ -41,7 +46,8 @@ namespace TDengine.Driver.Impl.WebSocketMethods
                 Timezone = _timezone,
                 App = TDengineConstant.ProcessName,
                 Connector = TDengineConstant.WsConnectorInfo,
-                BearerToken = _bearerToken
+                BearerToken = _bearerToken,
+                ListInstances = listInstances ? true : (bool?)null
             }, reqId);
         }
 
