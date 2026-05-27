@@ -13,19 +13,30 @@ namespace TDengine.Driver.Client.Websocket
         private int _disposed;
         private readonly TimeZoneInfo _tz;
         private readonly ConnectionStringBuilder _builder;
-        private readonly IReadOnlyList<FailoverAddress> _failoverAddresses;
+        private List<FailoverAddress> _failoverAddresses;
         private readonly object _reconnectLock = new object();
+        private readonly object _addressLock = new object();
 
         internal bool AutoReconnect => _builder.AutoReconnect;
+        internal bool AdapterHA => _builder.AdapterHA;
 
         public WSClient(ConnectionStringBuilder builder)
         {
             Debug.Assert(builder.Protocol == TDengineConstant.ProtocolWebSocket);
             _builder = builder;
             _tz = builder.GetTimeZone();
-            _failoverAddresses = builder.GetFailoverAddresses();
+            var seedAddresses = builder.GetFailoverAddresses();
 
-            if (!FailoverConnector.TryOpen(_failoverAddresses, 1, 0, false, null, OpenWsConnection,
+            // If adapterHA is enabled, try to expand from known cluster before first connection
+            IReadOnlyList<FailoverAddress> initialAddresses = seedAddresses;
+            if (AdapterHA)
+            {
+                initialAddresses = AdapterClusterRegistry.ExpandIfKnown(seedAddresses);
+            }
+
+            _failoverAddresses = new List<FailoverAddress>(initialAddresses);
+
+            if (!FailoverConnector.TryOpen(GetFailoverAddresses(), 1, 0, false, null, OpenWsConnectionWithDiscovery,
                     out var connection, out var lease, out var lastException))
             {
                 if (lastException != null)
@@ -150,6 +161,73 @@ namespace TDengine.Driver.Client.Websocket
             }
         }
 
+        private Connection OpenWsConnectionWithDiscovery(FailoverAddress address)
+        {
+            Connection currentConnection = null;
+            try
+            {
+                currentConnection = CreateConnection(address);
+                var resp = currentConnection.Connect(AdapterHA);
+                if (AdapterHA && resp != null && resp.ListInstances != null && resp.ListInstances.Length > 0)
+                {
+                    MergeDiscoveredAddresses(resp.ListInstances);
+                }
+
+                return currentConnection;
+            }
+            catch
+            {
+                if (currentConnection != null)
+                {
+                    currentConnection.Close();
+                }
+
+                throw;
+            }
+        }
+
+        private IReadOnlyList<FailoverAddress> GetFailoverAddresses()
+        {
+            lock (_addressLock)
+            {
+                return _failoverAddresses.ToArray();
+            }
+        }
+
+        private void MergeDiscoveredAddresses(string[] instances)
+        {
+            var newAddresses = AdapterHAHelper.MergeDiscoveredAddresses(
+                GetFailoverAddresses(), instances,
+                TDengineConstant.ProtocolWebSocket, _builder.UseSSL);
+
+            if (newAddresses == null || newAddresses.Count == 0)
+            {
+                return;
+            }
+
+            lock (_addressLock)
+            {
+                // Re-check and merge under lock
+                var currentAddresses = _failoverAddresses;
+                var existingKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                for (var i = 0; i < currentAddresses.Count; i++)
+                {
+                    existingKeys.Add(currentAddresses[i].CacheKey);
+                }
+
+                for (var i = 0; i < newAddresses.Count; i++)
+                {
+                    if (existingKeys.Add(newAddresses[i].CacheKey))
+                    {
+                        currentAddresses.Add(newAddresses[i]);
+                    }
+                }
+            }
+
+            // Register the full cluster globally for other connections to discover
+            AdapterClusterRegistry.RegisterCluster(_builder.GetFailoverAddresses(), GetFailoverAddresses());
+        }
+
         private void Reconnect(bool force = false, Connection old = null)
         {
             if (!AutoReconnect)
@@ -185,7 +263,7 @@ namespace TDengine.Driver.Client.Websocket
                     preferredAddress = _addressLease == null ? null : _addressLease.Address;
                 }
 
-                if (!FailoverConnector.TryOpen(_failoverAddresses, _builder.ReconnectRetryCount,
+                if (!FailoverConnector.TryOpen(GetFailoverAddresses(), _builder.ReconnectRetryCount,
                         _builder.ReconnectIntervalMs, true, preferredAddress, OpenWsConnection,
                         out var connection, out var lease, out var lastException))
                 {
