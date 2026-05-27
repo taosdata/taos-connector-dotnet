@@ -26,6 +26,7 @@ namespace TDengine.Driver
         private const string ReconnectIntervalMsKey = "reconnectIntervalMs";
         private const string ConnectionTimezoneKey = "connectionTimezone";
         private const string BearerTokenKey = "bearerToken";
+        private const string AdapterHAKey = "adapterHA";
 
 
         private enum KeysEnum
@@ -48,6 +49,7 @@ namespace TDengine.Driver
             ReconnectIntervalMs,
             ConnectionTimezone,
             BearerToken,
+            AdapterHA,
             Total
         }
 
@@ -69,6 +71,7 @@ namespace TDengine.Driver
         private int _reconnectIntervalMs = 2000;
         private TimeZoneInfo _connectionTimezone = null;
         private string _bearerToken = string.Empty;
+        private bool _adapterHA = false;
 
         private static readonly IReadOnlyList<string> KeysList;
         private static readonly IReadOnlyDictionary<string, KeysEnum> KeysDict;
@@ -94,6 +97,7 @@ namespace TDengine.Driver
             list[(int)KeysEnum.ReconnectIntervalMs] = ReconnectIntervalMsKey;
             list[(int)KeysEnum.ConnectionTimezone] = ConnectionTimezoneKey;
             list[(int)KeysEnum.BearerToken] = BearerTokenKey;
+            list[(int)KeysEnum.AdapterHA] = AdapterHAKey;
             KeysList = list;
 
             KeysDict = new Dictionary<string, KeysEnum>((int)KeysEnum.Total, StringComparer.OrdinalIgnoreCase)
@@ -116,6 +120,7 @@ namespace TDengine.Driver
                 [ReconnectIntervalMsKey] = KeysEnum.ReconnectIntervalMs,
                 [ConnectionTimezoneKey] = KeysEnum.ConnectionTimezone,
                 [BearerTokenKey] = KeysEnum.BearerToken,
+                [AdapterHAKey] = KeysEnum.AdapterHA,
             };
         }
 
@@ -199,6 +204,9 @@ namespace TDengine.Driver
                                 break;
                             case KeysEnum.BearerToken:
                                 BearerToken = value;
+                                break;
+                            case KeysEnum.AdapterHA:
+                                AdapterHA = Convert.ToBoolean(value);
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException(nameof(index), index, "get value error");
@@ -371,6 +379,12 @@ namespace TDengine.Driver
             set => base[BearerTokenKey] = _bearerToken = value;
         }
 
+        public bool AdapterHA
+        {
+            get => _adapterHA;
+            set => base[AdapterHAKey] = _adapterHA = value;
+        }
+
 
         public override ICollection Keys => new ReadOnlyCollection<string>((string[])KeysList);
 
@@ -428,6 +442,8 @@ namespace TDengine.Driver
                     return ConnectionTimezone;
                 case KeysEnum.BearerToken:
                     return BearerToken;
+                case KeysEnum.AdapterHA:
+                    return AdapterHA;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(index), index, "get value error");
             }
@@ -504,6 +520,9 @@ namespace TDengine.Driver
                     return;
                 case KeysEnum.BearerToken:
                     _bearerToken = string.Empty;
+                    return;
+                case KeysEnum.AdapterHA:
+                    _adapterHA = false;
                     return;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(index), index, null);
