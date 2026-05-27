@@ -13,7 +13,9 @@ namespace TDengine.TMQ.WebSocket
         private volatile TMQConnection _connection;
         private volatile FailoverAddressLease _addressLease;
         private int _closed;
-        private readonly IReadOnlyList<FailoverAddress> _failoverAddresses;
+        private List<FailoverAddress> _failoverAddresses;
+        private readonly object _addressLock = new object();
+        private readonly bool _adapterHA;
         private readonly bool _autoCommit;
         private readonly int _autoCommitInterval;
         private DateTime _nextCommitTime;
@@ -57,7 +59,15 @@ namespace TDengine.TMQ.WebSocket
                 this.valueDeserializer = builder.ValueDeserializer;
             }
 
-            _failoverAddresses = _options.GetFailoverAddresses();
+            _adapterHA = _options.TDAdapterHA == "true";
+            var seedAddresses = _options.GetFailoverAddresses();
+            IReadOnlyList<FailoverAddress> initialAddresses = seedAddresses;
+            if (_adapterHA)
+            {
+                initialAddresses = AdapterClusterRegistry.ExpandIfKnown(seedAddresses);
+            }
+
+            _failoverAddresses = new List<FailoverAddress>(initialAddresses);
 
             if (_options.EnableAutoCommit == "true")
             {
@@ -95,8 +105,8 @@ namespace TDengine.TMQ.WebSocket
                     throw new ArgumentException($"Invalid connection timezone {_options.ConnectionTimezone}", e);
                 }
             }
-            if (!FailoverConnector.TryOpen(_failoverAddresses, 1, 0, false, null,
-                    address => OpenTmqConnection(address, false), out var connection, out var lease,
+            if (!FailoverConnector.TryOpen(GetFailoverAddressesCopy(), 1, 0, false, null,
+                    address => OpenTmqConnectionWithDiscovery(address, false), out var connection, out var lease,
                     out var lastException))
             {
                 if (lastException != null)
@@ -134,6 +144,81 @@ namespace TDengine.TMQ.WebSocket
 
                 throw;
             }
+        }
+
+        private TMQConnection OpenTmqConnectionWithDiscovery(FailoverAddress address, bool resubscribeTopics)
+        {
+            TMQConnection connection = null;
+            try
+            {
+                connection = new TMQConnection(_options, address);
+                if (resubscribeTopics && _topics != null)
+                {
+                    var resp = connection.Subscribe(_topics, _options, _adapterHA);
+                    if (_adapterHA && resp != null && resp.ListInstances != null && resp.ListInstances.Length > 0)
+                    {
+                        MergeDiscoveredAddresses(resp.ListInstances);
+                    }
+                }
+                else if (_adapterHA)
+                {
+                    // For initial connection without topics, we don't subscribe yet
+                    // Discovery will happen when Subscribe is called
+                }
+
+                return connection;
+            }
+            catch
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                }
+
+                throw;
+            }
+        }
+
+        private IReadOnlyList<FailoverAddress> GetFailoverAddressesCopy()
+        {
+            lock (_addressLock)
+            {
+                return _failoverAddresses.ToArray();
+            }
+        }
+
+        private void MergeDiscoveredAddresses(string[] instances)
+        {
+            var useSSL = _options.TDUseSSL == "true";
+            var newAddresses = AdapterHAHelper.MergeDiscoveredAddresses(
+                GetFailoverAddressesCopy(), instances,
+                TDengineConstant.ProtocolWebSocket, useSSL);
+
+            if (newAddresses == null || newAddresses.Count == 0)
+            {
+                return;
+            }
+
+            lock (_addressLock)
+            {
+                var currentAddresses = _failoverAddresses;
+                var existingKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                for (var i = 0; i < currentAddresses.Count; i++)
+                {
+                    existingKeys.Add(currentAddresses[i].CacheKey);
+                }
+
+                for (var i = 0; i < newAddresses.Count; i++)
+                {
+                    if (existingKeys.Add(newAddresses[i].CacheKey))
+                    {
+                        currentAddresses.Add(newAddresses[i]);
+                    }
+                }
+            }
+
+            // Register globally
+            AdapterClusterRegistry.RegisterCluster(_options.GetFailoverAddresses(), GetFailoverAddressesCopy());
         }
 
         private bool IsClosed()
@@ -264,8 +349,8 @@ namespace TDengine.TMQ.WebSocket
                     preferredAddress = _addressLease == null ? null : _addressLease.Address;
                 }
 
-                if (!FailoverConnector.TryOpen(_failoverAddresses, _reconnectRetryCount, _reconnectRetryIntervalMs,
-                        true, preferredAddress, address => OpenTmqConnection(address, true), out var connection,
+                if (!FailoverConnector.TryOpen(GetFailoverAddressesCopy(), _reconnectRetryCount, _reconnectRetryIntervalMs,
+                        true, preferredAddress, address => OpenTmqConnectionWithDiscovery(address, true), out var connection,
                         out var lease, out var lastException))
                 {
                     lock (_reconnectLock)
@@ -470,7 +555,12 @@ namespace TDengine.TMQ.WebSocket
             try
             {
                 var connection = GetConnectionOrThrowClosed();
-                connection.Subscribe(topics, _options);
+                var resp = connection.Subscribe(topics, _options, _adapterHA);
+                if (_adapterHA && resp != null && resp.ListInstances != null && resp.ListInstances.Length > 0)
+                {
+                    MergeDiscoveredAddresses(resp.ListInstances);
+                }
+
                 _topics = topics;
             }
             catch (Exception e)
@@ -484,7 +574,13 @@ namespace TDengine.TMQ.WebSocket
                 ThrowIfClosed();
                 Reconnect();
                 var newConnection = GetConnectionOrThrowClosed();
-                newConnection.Subscribe(topics, _options);
+                var retryResp = newConnection.Subscribe(topics, _options, _adapterHA);
+                if (_adapterHA && retryResp != null && retryResp.ListInstances != null &&
+                    retryResp.ListInstances.Length > 0)
+                {
+                    MergeDiscoveredAddresses(retryResp.ListInstances);
+                }
+
                 _topics = topics;
             }
         }
