@@ -141,26 +141,6 @@ namespace TDengine.Driver.Client.Websocket
             }
         }
 
-        private Connection OpenWsConnection(FailoverAddress address)
-        {
-            Connection currentConnection = null;
-            try
-            {
-                currentConnection = CreateConnection(address);
-                currentConnection.Connect();
-                return currentConnection;
-            }
-            catch
-            {
-                if (currentConnection != null)
-                {
-                    currentConnection.Close();
-                }
-
-                throw;
-            }
-        }
-
         private Connection OpenWsConnectionWithDiscovery(FailoverAddress address)
         {
             Connection currentConnection = null;
@@ -264,7 +244,7 @@ namespace TDengine.Driver.Client.Websocket
                 }
 
                 if (!FailoverConnector.TryOpen(GetFailoverAddresses(), _builder.ReconnectRetryCount,
-                        _builder.ReconnectIntervalMs, true, preferredAddress, OpenWsConnection,
+                        _builder.ReconnectIntervalMs, true, preferredAddress, OpenWsConnectionWithDiscovery,
                         out var connection, out var lease, out var lastException))
                 {
                     lock (_reconnectLock)
