@@ -192,5 +192,251 @@ namespace Driver.Test.Driver
             Assert.Single(newAddresses);
             Assert.Equal(6042, newAddresses[0].Port);
         }
+
+        #region AdapterClusterRegistry Guard Tests
+
+        [Fact]
+        public void RegisterClusterWithNullSeedsDoesNothing()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var fullCluster = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041")
+            };
+
+            AdapterClusterRegistry.RegisterCluster(null, fullCluster);
+
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041")
+            };
+            var result = AdapterClusterRegistry.ExpandIfKnown(seeds);
+            Assert.Same(seeds, result);
+
+            AdapterClusterRegistry.Clear();
+        }
+
+        [Fact]
+        public void RegisterClusterWithEmptySeedsDoesNothing()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var fullCluster = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041")
+            };
+
+            AdapterClusterRegistry.RegisterCluster(new List<FailoverAddress>(), fullCluster);
+
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041")
+            };
+            var result = AdapterClusterRegistry.ExpandIfKnown(seeds);
+            Assert.Same(seeds, result);
+
+            AdapterClusterRegistry.Clear();
+        }
+
+        [Fact]
+        public void RegisterClusterWithNullFullClusterDoesNothing()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041")
+            };
+
+            AdapterClusterRegistry.RegisterCluster(seeds, null);
+
+            var result = AdapterClusterRegistry.ExpandIfKnown(seeds);
+            Assert.Same(seeds, result);
+
+            AdapterClusterRegistry.Clear();
+        }
+
+        [Fact]
+        public void RegisterClusterWithEmptyFullClusterDoesNothing()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041")
+            };
+
+            AdapterClusterRegistry.RegisterCluster(seeds, new List<FailoverAddress>());
+
+            var result = AdapterClusterRegistry.ExpandIfKnown(seeds);
+            Assert.Same(seeds, result);
+
+            AdapterClusterRegistry.Clear();
+        }
+
+        [Fact]
+        public void RegisterClusterSkipsWhitespaceSeedCacheKey()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "  "),
+                new FailoverAddress("host2", 6041, "ws://host2:6041")
+            };
+
+            var fullCluster = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041"),
+                new FailoverAddress("host2", 6041, "ws://host2:6041"),
+                new FailoverAddress("host3", 6041, "ws://host3:6041")
+            };
+
+            AdapterClusterRegistry.RegisterCluster(seeds, fullCluster);
+
+            // Whitespace seed key should be skipped, host2 seed should still register
+            var lookup = new List<FailoverAddress>
+            {
+                new FailoverAddress("host2", 6041, "ws://host2:6041")
+            };
+            var expanded = AdapterClusterRegistry.ExpandIfKnown(lookup);
+            Assert.Equal(3, expanded.Count);
+
+            // Whitespace key should not have been registered
+            var whitespaceLookup = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "  ")
+            };
+            var result = AdapterClusterRegistry.ExpandIfKnown(whitespaceLookup);
+            Assert.Same(whitespaceLookup, result);
+
+            AdapterClusterRegistry.Clear();
+        }
+
+        [Fact]
+        public void RegisterClusterSkipsWhitespaceFullClusterCacheKey()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041")
+            };
+
+            var fullCluster = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041"),
+                new FailoverAddress("host2", 6041, "   "),
+                new FailoverAddress("host3", 6041, "ws://host3:6041")
+            };
+
+            AdapterClusterRegistry.RegisterCluster(seeds, fullCluster);
+
+            // host3 from fullCluster should be registered as a key
+            var host3Lookup = new List<FailoverAddress>
+            {
+                new FailoverAddress("host3", 6041, "ws://host3:6041")
+            };
+            var expanded = AdapterClusterRegistry.ExpandIfKnown(host3Lookup);
+            Assert.Equal(3, expanded.Count);
+
+            // Whitespace key in fullCluster should not be registered
+            var whitespaceLookup = new List<FailoverAddress>
+            {
+                new FailoverAddress("host2", 6041, "   ")
+            };
+            var result = AdapterClusterRegistry.ExpandIfKnown(whitespaceLookup);
+            Assert.Same(whitespaceLookup, result);
+
+            AdapterClusterRegistry.Clear();
+        }
+
+        [Fact]
+        public void ExpandIfKnownWithNullSeedsReturnsNull()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var result = AdapterClusterRegistry.ExpandIfKnown(null);
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void ExpandIfKnownWithEmptySeedsReturnsEmpty()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var empty = new List<FailoverAddress>();
+            var result = AdapterClusterRegistry.ExpandIfKnown(empty);
+            Assert.Same(empty, result);
+        }
+
+        [Fact]
+        public void ExpandIfKnownSkipsWhitespaceCacheKey()
+        {
+            AdapterClusterRegistry.Clear();
+
+            // Register a cluster under host1
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041")
+            };
+            var fullCluster = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041"),
+                new FailoverAddress("host2", 6041, "ws://host2:6041"),
+                new FailoverAddress("host3", 6041, "ws://host3:6041")
+            };
+            AdapterClusterRegistry.RegisterCluster(seeds, fullCluster);
+
+            // Try expand with first seed having whitespace key - should skip it
+            // and not find anything since the second key doesn't match
+            var lookupWithWhitespace = new List<FailoverAddress>
+            {
+                new FailoverAddress("x", 1, ""),
+                new FailoverAddress("y", 2, "  ")
+            };
+            var result = AdapterClusterRegistry.ExpandIfKnown(lookupWithWhitespace);
+            Assert.Same(lookupWithWhitespace, result);
+
+            AdapterClusterRegistry.Clear();
+        }
+
+        [Fact]
+        public void RegisterClusterDoesNotShrinkExistingCluster()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041")
+            };
+
+            var largeCluster = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041"),
+                new FailoverAddress("host2", 6041, "ws://host2:6041"),
+                new FailoverAddress("host3", 6041, "ws://host3:6041")
+            };
+
+            AdapterClusterRegistry.RegisterCluster(seeds, largeCluster);
+
+            // Now register a smaller cluster for the same seed
+            var smallerCluster = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041"),
+                new FailoverAddress("host2", 6041, "ws://host2:6041")
+            };
+
+            AdapterClusterRegistry.RegisterCluster(seeds, smallerCluster);
+
+            // Should still return the larger cluster
+            var expanded = AdapterClusterRegistry.ExpandIfKnown(seeds);
+            Assert.Equal(3, expanded.Count);
+
+            AdapterClusterRegistry.Clear();
+        }
+
+        #endregion
     }
 }

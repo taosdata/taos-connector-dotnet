@@ -583,6 +583,207 @@ namespace Driver.Test.Client.TMQ
             }
         }
 
+        #region TMQ Subscribe Overload Tests
+
+        [Fact]
+        public void TMQSubscribeNoListInstancesOverloadShouldNotSendFlag()
+        {
+            var port = GetFreePort();
+            bool? receivedListInstances = null;
+            bool subscribeReceived = false;
+
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        subscribeReceived = true;
+                        var subReq = JsonConvert.DeserializeObject<WSActionReq<WSTMQSubscribeReq>>(raw);
+                        receivedListInstances = subReq?.Args?.ListInstances;
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                server.Start();
+                var options = new TMQOptions(new Dictionary<string, string>
+                {
+                    { "td.connect.type", "WebSocket" },
+                    { "td.connect.ip", $"127.0.0.1:{port}" },
+                    { "td.connect.user", "root" },
+                    { "td.connect.pass", "taosdata" },
+                    { "group.id", "test_overload" },
+                    { "useSSL", "false" }
+                });
+                var addr = new FailoverAddress("127.0.0.1", port, $"ws://127.0.0.1:{port}");
+                var conn = new TMQConnection(options, addr, TimeSpan.FromSeconds(5));
+
+                // Call the 2-param overload: Subscribe(topics, options) which sets listInstances=false
+                conn.Subscribe(new List<string> { "test_topic" }, options);
+
+                Assert.True(subscribeReceived);
+                Assert.Null(receivedListInstances);
+            }
+            finally
+            {
+                server.Dispose();
+            }
+        }
+
+        [Fact]
+        public void TMQSubscribeWithReqIdOverloadShouldNotSendFlag()
+        {
+            var port = GetFreePort();
+            bool? receivedListInstances = null;
+            ulong? receivedReqId = null;
+            bool subscribeReceived = false;
+
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        subscribeReceived = true;
+                        var subReq = JsonConvert.DeserializeObject<WSActionReq<WSTMQSubscribeReq>>(raw);
+                        receivedListInstances = subReq?.Args?.ListInstances;
+                        receivedReqId = subReq?.Args?.ReqId;
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                server.Start();
+                var options = new TMQOptions(new Dictionary<string, string>
+                {
+                    { "td.connect.type", "WebSocket" },
+                    { "td.connect.ip", $"127.0.0.1:{port}" },
+                    { "td.connect.user", "root" },
+                    { "td.connect.pass", "taosdata" },
+                    { "group.id", "test_overload_reqid" },
+                    { "useSSL", "false" }
+                });
+                var addr = new FailoverAddress("127.0.0.1", port, $"ws://127.0.0.1:{port}");
+                var conn = new TMQConnection(options, addr, TimeSpan.FromSeconds(5));
+
+                // Call the 3-param overload: Subscribe(reqId, topics, options) which sets listInstances=false
+                ulong customReqId = 12345678;
+                conn.Subscribe(customReqId, new List<string> { "test_topic" }, options);
+
+                Assert.True(subscribeReceived);
+                Assert.Null(receivedListInstances);
+                Assert.Equal(customReqId, receivedReqId);
+            }
+            finally
+            {
+                server.Dispose();
+            }
+        }
+
+        [Fact]
+        public void TMQSubscribeWithListInstancesTrueShouldSendFlag()
+        {
+            var port = GetFreePort();
+            bool? receivedListInstances = null;
+            bool subscribeReceived = false;
+
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        subscribeReceived = true;
+                        var subReq = JsonConvert.DeserializeObject<WSActionReq<WSTMQSubscribeReq>>(raw);
+                        receivedListInstances = subReq?.Args?.ListInstances;
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            ListInstances = new[] { $"127.0.0.1:{port}", "192.168.1.1:6041" }
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                server.Start();
+                var options = new TMQOptions(new Dictionary<string, string>
+                {
+                    { "td.connect.type", "WebSocket" },
+                    { "td.connect.ip", $"127.0.0.1:{port}" },
+                    { "td.connect.user", "root" },
+                    { "td.connect.pass", "taosdata" },
+                    { "group.id", "test_overload_true" },
+                    { "useSSL", "false" }
+                });
+                var addr = new FailoverAddress("127.0.0.1", port, $"ws://127.0.0.1:{port}");
+                var conn = new TMQConnection(options, addr, TimeSpan.FromSeconds(5));
+
+                // Call the 3-param overload: Subscribe(topics, options, listInstances=true)
+                var resp = conn.Subscribe(new List<string> { "test_topic" }, options, true);
+
+                Assert.True(subscribeReceived);
+                Assert.NotNull(receivedListInstances);
+                Assert.True(receivedListInstances.Value);
+                Assert.NotNull(resp.ListInstances);
+                Assert.Equal(2, resp.ListInstances.Length);
+            }
+            finally
+            {
+                server.Dispose();
+            }
+        }
+
+        #endregion
+
         #region Helper Methods
 
         private class TestBaseReq

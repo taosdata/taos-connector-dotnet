@@ -530,6 +530,120 @@ namespace Driver.Test.Client.Query
             }
         }
 
+        #region Connection.Connect() Overload Tests
+
+        [Fact]
+        public void ConnectionConnectNoArgShouldNotSendListInstances()
+        {
+            var port = GetFreePort();
+            bool? receivedListInstances = null;
+            bool connReceived = false;
+
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var req = JsonConvert.DeserializeObject<WSActionReq<WSConnReq>>(raw);
+                if (req == null) return;
+
+                switch (req.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSAction.Conn:
+                        connReceived = true;
+                        receivedListInstances = req.Args?.ListInstances;
+                        SendResponse(webSocket, messageType, new WSConnResp
+                        {
+                            Code = 0, Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                server.Start();
+                var addr = $"ws://127.0.0.1:{port}/ws";
+                var conn = new TDengine.Driver.Impl.WebSocketMethods.Connection(
+                    addr, "root", "taosdata", null, null,
+                    TimeSpan.FromSeconds(5));
+                conn.Connect();
+
+                Assert.True(connReceived);
+                Assert.Null(receivedListInstances);
+            }
+            finally
+            {
+                server.Dispose();
+            }
+        }
+
+        [Fact]
+        public void ConnectionConnectWithListInstancesTrueShouldSendFlag()
+        {
+            var port = GetFreePort();
+            bool? receivedListInstances = null;
+            bool connReceived = false;
+
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var req = JsonConvert.DeserializeObject<WSActionReq<WSConnReq>>(raw);
+                if (req == null) return;
+
+                switch (req.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSAction.Conn:
+                        connReceived = true;
+                        receivedListInstances = req.Args?.ListInstances;
+                        SendResponse(webSocket, messageType, new WSConnResp
+                        {
+                            Code = 0, Action = req.Action,
+                            ReqId = req.Args == null ? 0 : req.Args.ReqId,
+                            ListInstances = new[] { $"127.0.0.1:{port}" }
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                server.Start();
+                var addr = $"ws://127.0.0.1:{port}/ws";
+                var conn = new TDengine.Driver.Impl.WebSocketMethods.Connection(
+                    addr, "root", "taosdata", null, null,
+                    TimeSpan.FromSeconds(5));
+                var resp = conn.Connect(true);
+
+                Assert.True(connReceived);
+                Assert.NotNull(receivedListInstances);
+                Assert.True(receivedListInstances.Value);
+                Assert.NotNull(resp.ListInstances);
+                Assert.Single(resp.ListInstances);
+            }
+            finally
+            {
+                server.Dispose();
+            }
+        }
+
+        #endregion
+
         #region Protocol Serialization Tests
 
         [Fact]
