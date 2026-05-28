@@ -29,7 +29,11 @@ namespace TDengine.Driver
                         continue;
                     }
 
-                    KnownClusters[seedKey] = clusterList;
+                    if (!KnownClusters.TryGetValue(seedKey, out var existing) ||
+                        clusterList.Count >= existing.Count)
+                    {
+                        KnownClusters[seedKey] = clusterList;
+                    }
                 }
 
                 // Also register all discovered addresses as keys pointing to the same cluster
@@ -41,7 +45,8 @@ namespace TDengine.Driver
                         continue;
                     }
 
-                    if (!KnownClusters.ContainsKey(key))
+                    if (!KnownClusters.TryGetValue(key, out var existing) ||
+                        clusterList.Count >= existing.Count)
                     {
                         KnownClusters[key] = clusterList;
                     }
