@@ -53,6 +53,32 @@ namespace Driver.Test.Client.Query
             {
                 throw new TimeoutException("mock websocket server failed to start listening in time");
             }
+
+            // Verify the listener is truly accepting connections (needed on Linux CI
+            // where HttpListener may not be ready even after GetContextAsync is issued)
+            WaitUntilPortAcceptsConnections();
+        }
+
+        private void WaitUntilPortAcceptsConnections()
+        {
+            var deadline = DateTime.UtcNow.AddSeconds(2);
+            while (DateTime.UtcNow < deadline)
+            {
+                try
+                {
+                    using (var tcp = new System.Net.Sockets.TcpClient())
+                    {
+                        tcp.Connect(IPAddress.Loopback, _port);
+                        return;
+                    }
+                }
+                catch (System.Net.Sockets.SocketException)
+                {
+                    Thread.Sleep(10);
+                }
+            }
+
+            throw new TimeoutException($"mock websocket server port {_port} not accepting connections");
         }
 
         private async Task RunServer(CancellationToken cancellationToken)
@@ -79,6 +105,10 @@ namespace Driver.Test.Client.Query
                 catch (Exception) when (cancellationToken.IsCancellationRequested)
                 {
                     break;
+                }
+                catch (HttpListenerException)
+                {
+                    // Client disconnected before sending a full request (e.g. TCP health probe)
                 }
             }
         }
