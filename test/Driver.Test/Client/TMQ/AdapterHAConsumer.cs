@@ -1,0 +1,656 @@
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
+using Driver.Test.Client.Query;
+using Newtonsoft.Json;
+using TDengine.Driver;
+using TDengine.Driver.Impl.WebSocketMethods;
+using TDengine.Driver.Impl.WebSocketMethods.Protocol;
+using TDengine.TMQ;
+using Xunit;
+
+namespace Driver.Test.Client.TMQ
+{
+    public class AdapterHAConsumer
+    {
+        [Fact]
+        public void TMQSubscribeShouldSendListInstancesWhenAdapterHAEnabled()
+        {
+            var port = GetFreePort();
+            bool? receivedListInstances = null;
+
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        var subReq = JsonConvert.DeserializeObject<WSActionReq<WSTMQSubscribeReq>>(raw);
+                        receivedListInstances = subReq?.Args?.ListInstances;
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            ListInstances = new[] { $"127.0.0.1:{port}" }
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                server.Start();
+                var cfg = BuildTmqConfig(port, true);
+                var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                try
+                {
+                    consumer.Subscribe("test_topic");
+                    Assert.NotNull(receivedListInstances);
+                    Assert.True(receivedListInstances.Value);
+                }
+                finally
+                {
+                    consumer.Close();
+                }
+            }
+            finally
+            {
+                server.Dispose();
+            }
+        }
+
+        [Fact]
+        public void TMQSubscribeShouldNotSendListInstancesWhenAdapterHADisabled()
+        {
+            var port = GetFreePort();
+            bool? receivedListInstances = null;
+            bool subscribeReceived = false;
+
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        subscribeReceived = true;
+                        var subReq = JsonConvert.DeserializeObject<WSActionReq<WSTMQSubscribeReq>>(raw);
+                        receivedListInstances = subReq?.Args?.ListInstances;
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                server.Start();
+                var cfg = BuildTmqConfig(port, false);
+                var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                try
+                {
+                    consumer.Subscribe("test_topic");
+                    Assert.True(subscribeReceived);
+                    Assert.Null(receivedListInstances);
+                }
+                finally
+                {
+                    consumer.Close();
+                }
+            }
+            finally
+            {
+                server.Dispose();
+            }
+        }
+
+        [Fact]
+        public void TMQSubscribeShouldExpandAddressesFromListInstances()
+        {
+            var firstPort = GetFreePort();
+            var secondPort = GetFreePort();
+            while (secondPort == firstPort) secondPort = GetFreePort();
+
+            AdapterClusterRegistry.Clear();
+
+            var server = new MockWSServer(firstPort, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            ListInstances = new[] { $"127.0.0.1:{firstPort}", $"127.0.0.1:{secondPort}" }
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                server.Start();
+                var cfg = BuildTmqConfig(firstPort, true);
+                var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                try
+                {
+                    consumer.Subscribe("test_topic");
+
+                    // Verify cluster was registered globally
+                    var seeds = new List<FailoverAddress>
+                    {
+                        new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}")
+                    };
+                    var expanded = AdapterClusterRegistry.ExpandIfKnown(seeds);
+                    Assert.True(expanded.Count >= 2,
+                        $"Expected at least 2 addresses in cluster, got {expanded.Count}");
+                }
+                finally
+                {
+                    consumer.Close();
+                }
+            }
+            finally
+            {
+                server.Dispose();
+                AdapterClusterRegistry.Clear();
+            }
+        }
+
+        [Fact]
+        public void TMQSubscribeWithOldAdapterShouldStillWork()
+        {
+            var port = GetFreePort();
+
+            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        // Old adapter: no list_instances in response
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            ListInstances = null
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                server.Start();
+                var cfg = BuildTmqConfig(port, true);
+                var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                try
+                {
+                    consumer.Subscribe("test_topic");
+                    // Should not throw - backward compatible
+                }
+                finally
+                {
+                    consumer.Close();
+                }
+            }
+            finally
+            {
+                server.Dispose();
+            }
+        }
+
+        [Fact]
+        public void TMQConsumerShouldExpandFromRegistryAtConstruction()
+        {
+            var firstPort = GetFreePort();
+            var secondPort = GetFreePort();
+            while (secondPort == firstPort) secondPort = GetFreePort();
+
+            AdapterClusterRegistry.Clear();
+
+            // Pre-register a cluster so the consumer expands at construction time
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}")
+            };
+            var fullCluster = new List<FailoverAddress>
+            {
+                new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}"),
+                new FailoverAddress("127.0.0.1", secondPort, $"ws://127.0.0.1:{secondPort}")
+            };
+            AdapterClusterRegistry.RegisterCluster(seeds, fullCluster);
+
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
+
+            var firstConnected = 0;
+            var secondConnected = 0;
+
+            var firstServer = new MockWSServer(firstPort, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        Interlocked.Increment(ref firstConnected);
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId
+                        });
+                        break;
+                }
+            });
+
+            var secondServer = new MockWSServer(secondPort, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        Interlocked.Increment(ref secondConnected);
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                firstServer.Start();
+                secondServer.Start();
+
+                // Only provide firstPort as seed, but registry has both
+                var cfg = BuildTmqConfig(firstPort, true);
+
+                // Open two consumers - with least-connections they should distribute
+                var consumer1 = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                var consumer2 = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                try
+                {
+                    // Both servers should receive connections due to registry expansion
+                    Assert.True(Volatile.Read(ref firstConnected) >= 1,
+                        "First server should have at least 1 connection");
+                    Assert.True(Volatile.Read(ref secondConnected) >= 1,
+                        "Second server should have at least 1 connection (expanded from registry)");
+                }
+                finally
+                {
+                    consumer1.Close();
+                    consumer2.Close();
+                }
+            }
+            finally
+            {
+                firstServer.Dispose();
+                secondServer.Dispose();
+                AdapterClusterRegistry.Clear();
+            }
+        }
+
+        [Fact]
+        public void TMQReconnectShouldUseDiscoveredAddresses()
+        {
+            var firstPort = GetFreePort();
+            var secondPort = GetFreePort();
+            while (secondPort == firstPort) secondPort = GetFreePort();
+
+            var firstUnavailable = 0;
+            var secondConnected = 0;
+
+            AdapterClusterRegistry.Clear();
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
+
+            // First server: responds normally initially, returns list_instances with second port,
+            // then goes unavailable when poll is called
+            var firstServer = new MockWSServer(firstPort, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                if (Volatile.Read(ref firstUnavailable) == 1)
+                {
+                    webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "unavailable",
+                        CancellationToken.None).GetAwaiter().GetResult();
+                    return;
+                }
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            ListInstances = new[] { $"127.0.0.1:{firstPort}", $"127.0.0.1:{secondPort}" }
+                        });
+                        break;
+                    case WSTMQAction.TMQPoll:
+                        // Mark as unavailable and close to trigger reconnect
+                        Interlocked.Exchange(ref firstUnavailable, 1);
+                        webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "going down",
+                            CancellationToken.None).GetAwaiter().GetResult();
+                        break;
+                }
+            });
+
+            // Second server: normal behavior
+            var secondServer = new MockWSServer(secondPort, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        Interlocked.Increment(ref secondConnected);
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId
+                        });
+                        break;
+                    case WSTMQAction.TMQPoll:
+                        SendResponse(webSocket, messageType, new WSTMQPollResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            HaveMessage = false,
+                            MessageId = 0
+                        });
+                        break;
+                }
+            });
+
+            try
+            {
+                firstServer.Start();
+                secondServer.Start();
+
+                // Only seed firstPort, adapterHA=true to discover second via subscribe
+                var cfg = BuildTmqConfig(firstPort, true);
+                cfg["ws.autoReconnect"] = "true";
+                cfg["ws.reconnect.retry.count"] = "5";
+                cfg["ws.reconnect.interval.ms"] = "100";
+
+                var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                try
+                {
+                    consumer.Subscribe("test_topic");
+
+                    // This poll triggers reconnect: first server closes, consumer reconnects to second
+                    var result = consumer.Consume(1000);
+
+                    // After reconnect, second server should have been connected
+                    Assert.True(Volatile.Read(ref secondConnected) >= 1,
+                        "Should have reconnected to second (discovered) server");
+                }
+                finally
+                {
+                    consumer.Close();
+                }
+            }
+            finally
+            {
+                firstServer.Dispose();
+                secondServer.Dispose();
+                AdapterClusterRegistry.Clear();
+            }
+        }
+
+        [Fact]
+        public void TMQDoSubscribeRetryShouldMergeDiscoveredAddresses()
+        {
+            var firstPort = GetFreePort();
+            var secondPort = GetFreePort();
+            while (secondPort == firstPort) secondPort = GetFreePort();
+
+            var subscribeCallCount = 0;
+
+            AdapterClusterRegistry.Clear();
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
+
+            // Server that fails on first subscribe, then succeeds on reconnect subscribe
+            var firstServer = new MockWSServer(firstPort, (webSocket, messageType, message) =>
+            {
+                var raw = Encoding.UTF8.GetString(message);
+                var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
+                if (baseReq == null) return;
+
+                switch (baseReq.Action)
+                {
+                    case WSAction.Version:
+                        SendResponse(webSocket, messageType, new WSVersionResp
+                        {
+                            Code = 0, Action = baseReq.Action,
+                            ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                            Version = "3.3.6.0"
+                        });
+                        break;
+                    case WSTMQAction.TMQSubscribe:
+                        var count = Interlocked.Increment(ref subscribeCallCount);
+                        if (count == 1)
+                        {
+                            // First subscribe fails to trigger reconnect path
+                            webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "subscribe failed",
+                                CancellationToken.None).GetAwaiter().GetResult();
+                        }
+                        else
+                        {
+                            // Retry subscribe succeeds with list_instances
+                            SendResponse(webSocket, messageType, new WSTMQSubscribeResp
+                            {
+                                Code = 0, Action = baseReq.Action,
+                                ReqId = baseReq.Args == null ? 0 : baseReq.Args.ReqId,
+                                ListInstances = new[] { $"127.0.0.1:{firstPort}", $"127.0.0.1:{secondPort}" }
+                            });
+                        }
+                        break;
+                }
+            });
+
+            try
+            {
+                firstServer.Start();
+
+                var cfg = BuildTmqConfig(firstPort, true);
+                cfg["ws.autoReconnect"] = "true";
+                cfg["ws.reconnect.retry.count"] = "5";
+                cfg["ws.reconnect.interval.ms"] = "100";
+
+                var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
+                try
+                {
+                    // Subscribe should fail first time, reconnect, then succeed
+                    consumer.Subscribe("test_topic");
+
+                    // After retry, cluster should have been expanded
+                    var seeds = new List<FailoverAddress>
+                    {
+                        new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}")
+                    };
+                    var expanded = AdapterClusterRegistry.ExpandIfKnown(seeds);
+                    Assert.True(expanded.Count >= 2,
+                        $"Expected at least 2 addresses after retry discovery, got {expanded.Count}");
+                }
+                finally
+                {
+                    consumer.Close();
+                }
+            }
+            finally
+            {
+                firstServer.Dispose();
+                AdapterClusterRegistry.Clear();
+            }
+        }
+
+        #region Helper Methods
+
+        private class TestBaseReq
+        {
+            [JsonProperty("req_id")] public ulong ReqId { get; set; }
+        }
+
+        private static Dictionary<string, string> BuildTmqConfig(int port, bool adapterHA)
+        {
+            var cfg = new Dictionary<string, string>
+            {
+                { "td.connect.type", "WebSocket" },
+                { "group.id", $"test_adapter_ha_{Guid.NewGuid():N}" },
+                { "auto.offset.reset", "earliest" },
+                { "td.connect.ip", $"127.0.0.1:{port}" },
+                { "td.connect.user", "root" },
+                { "td.connect.pass", "taosdata" },
+                { "client.id", $"test_ha_client_{Guid.NewGuid():N}" },
+                { "enable.auto.commit", "false" },
+                { "msg.with.table.name", "true" },
+                { "useSSL", "false" }
+            };
+
+            if (adapterHA)
+            {
+                cfg["ws.adapterHA"] = "true";
+            }
+
+            return cfg;
+        }
+
+        private static void SendResponse(WebSocket webSocket, WebSocketMessageType messageType, object response)
+        {
+            var respStr = JsonConvert.SerializeObject(response);
+            var data = new ArraySegment<byte>(Encoding.UTF8.GetBytes(respStr));
+            webSocket.SendAsync(data, messageType, true, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        private static int GetFreePort()
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            var endpoint = (IPEndPoint)listener.LocalEndpoint;
+            listener.Stop();
+            return endpoint.Port;
+        }
+
+        private static void ResetFailoverCacheConnectionCount(string cacheKey)
+        {
+            var cacheType = typeof(FailoverAddress).Assembly.GetType("TDengine.Driver.FailoverAddressCache");
+            if (cacheType == null) return;
+
+            var syncLockField = cacheType.GetField("SyncLock",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            var countsField = cacheType.GetField("ConnectionCountByAddress",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            if (syncLockField == null || countsField == null) return;
+
+            var syncLock = syncLockField.GetValue(null);
+            var counts = countsField.GetValue(null) as Dictionary<string, int>;
+            if (syncLock == null || counts == null) return;
+
+            lock (syncLock)
+            {
+                counts[cacheKey] = 0;
+            }
+        }
+
+        #endregion
+    }
+}
