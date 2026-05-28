@@ -53,6 +53,8 @@ namespace Driver.Test.Client.Query
             {
                 throw new TimeoutException("mock websocket server failed to start listening in time");
             }
+            // Allow the OS TCP listener to fully bind before clients connect (prevents race on Linux CI)
+            Thread.Sleep(100);
         }
 
         private async Task RunServer(CancellationToken cancellationToken)
