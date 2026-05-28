@@ -122,30 +122,6 @@ namespace TDengine.TMQ.WebSocket
             _addressLease = lease;
         }
 
-        private TMQConnection OpenTmqConnection(FailoverAddress address, bool resubscribeTopics)
-        {
-            TMQConnection connection = null;
-            try
-            {
-                connection = new TMQConnection(_options, address);
-                if (resubscribeTopics && _topics != null)
-                {
-                    connection.Subscribe(_topics, _options);
-                }
-
-                return connection;
-            }
-            catch
-            {
-                if (connection != null)
-                {
-                    connection.Close();
-                }
-
-                throw;
-            }
-        }
-
         private TMQConnection OpenTmqConnectionWithDiscovery(FailoverAddress address, bool resubscribeTopics)
         {
             TMQConnection connection = null;
