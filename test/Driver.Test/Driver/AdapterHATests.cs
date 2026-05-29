@@ -5,6 +5,7 @@ using Xunit;
 
 namespace Driver.Test.Driver
 {
+    [Collection("AdapterHA")]
     public class AdapterHATests
     {
         [Fact]

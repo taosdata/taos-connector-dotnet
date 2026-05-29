@@ -30,6 +30,7 @@ namespace Driver.Test.Client.Query
         /// <summary>
         /// Creates a MockWSServer on an OS-assigned free port, eliminating TOCTOU race.
         /// The port is held by a TcpListener guard until Start() is called.
+        /// IMPORTANT: Read Port only AFTER calling Start(), as Start() may reallocate the port on retry.
         /// </summary>
         public static MockWSServer CreateOnFreePort(Action<WebSocket, WebSocketMessageType, byte[]> onMessage)
         {
@@ -40,6 +41,19 @@ namespace Driver.Test.Client.Query
             var server = new MockWSServer(port, onMessage);
             server._portGuard = guard;
             return server;
+        }
+
+        /// <summary>
+        /// Allocates a free port that is guaranteed to be CLOSED (not listening).
+        /// Use this for "unavailable" endpoints in tests that expect connection refused.
+        /// </summary>
+        public static int AllocateUnavailablePort()
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener.Stop();
+            return port;
         }
 
         public void Start()

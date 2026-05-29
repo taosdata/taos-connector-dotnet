@@ -235,7 +235,7 @@ namespace Driver.Test.Client.Query
 
             var servedServer = MockWSServer.CreateOnFreePort(
                 CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref servedConnCount); }));
-            var unavailableServer = MockWSServer.CreateOnFreePort(CreateHandshakeMessageHandler(() => { }));
+            var unavailablePort = MockWSServer.AllocateUnavailablePort();
             try
             {
                 servedServer.Start();
@@ -250,7 +250,7 @@ namespace Driver.Test.Client.Query
                 using (var servedClient = DbDriver.Open(new ConnectionStringBuilder(servedConnStr)))
                 {
                     var unavailableConnStr = "protocol=WebSocket;" +
-                                             $"host=127.0.0.1:{unavailableServer.Port};" +
+                                             $"host=127.0.0.1:{unavailablePort};" +
                                              "useSSL=false;" +
                                              "username=root;" +
                                              "password=taosdata;" +
@@ -267,7 +267,6 @@ namespace Driver.Test.Client.Query
             finally
             {
                 servedServer.Dispose();
-                unavailableServer.Dispose();
             }
 
             Assert.Equal(1, Volatile.Read(ref servedConnCount));

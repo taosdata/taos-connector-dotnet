@@ -14,6 +14,7 @@ using Xunit;
 
 namespace Driver.Test.Client.TMQ
 {
+    [Collection("AdapterHA")]
     public class AdapterHAConsumer
     {
         [Fact]
@@ -50,11 +51,10 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
-            port = server.Port;
-
             try
             {
                 server.Start();
+                port = server.Port;
                 var cfg = BuildTmqConfig(port, true);
                 var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
                 try
@@ -108,11 +108,10 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
-            var port = server.Port;
-
             try
             {
                 server.Start();
+                var port = server.Port;
                 var cfg = BuildTmqConfig(port, false);
                 var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
                 try
@@ -166,12 +165,11 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
-            firstPort = server.Port;
-            secondPort = firstPort + 1;
-
             try
             {
                 server.Start();
+                firstPort = server.Port;
+                secondPort = firstPort + 1;
                 var cfg = BuildTmqConfig(firstPort, true);
                 var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
                 try
@@ -229,11 +227,10 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
-            var port = server.Port;
-
             try
             {
                 server.Start();
+                var port = server.Port;
                 var cfg = BuildTmqConfig(port, true);
                 var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
                 try
@@ -314,28 +311,28 @@ namespace Driver.Test.Client.TMQ
                 }
             });
 
-            var firstPort = firstServer.Port;
-            var secondPort = secondServer.Port;
-
-            // Pre-register a cluster so the consumer expands at construction time
-            var seeds = new List<FailoverAddress>
-            {
-                new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}")
-            };
-            var fullCluster = new List<FailoverAddress>
-            {
-                new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}"),
-                new FailoverAddress("127.0.0.1", secondPort, $"ws://127.0.0.1:{secondPort}")
-            };
-            AdapterClusterRegistry.RegisterCluster(seeds, fullCluster);
-
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
-
             try
             {
                 firstServer.Start();
                 secondServer.Start();
+
+                var firstPort = firstServer.Port;
+                var secondPort = secondServer.Port;
+
+                // Pre-register a cluster so the consumer expands at construction time
+                var seeds = new List<FailoverAddress>
+                {
+                    new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}")
+                };
+                var fullCluster = new List<FailoverAddress>
+                {
+                    new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}"),
+                    new FailoverAddress("127.0.0.1", secondPort, $"ws://127.0.0.1:{secondPort}")
+                };
+                AdapterClusterRegistry.RegisterCluster(seeds, fullCluster);
+
+                ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+                ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
                 // Only provide firstPort as seed, but registry has both
                 var cfg = BuildTmqConfig(firstPort, true);
@@ -455,16 +452,15 @@ namespace Driver.Test.Client.TMQ
                 }
             });
 
-            firstPort = firstServer.Port;
-            secondPort = secondServer.Port;
-
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
-
             try
             {
                 firstServer.Start();
                 secondServer.Start();
+                firstPort = firstServer.Port;
+                secondPort = secondServer.Port;
+
+                ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+                ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
                 // Only seed firstPort, adapterHA=true to discover second via subscribe
                 var cfg = BuildTmqConfig(firstPort, true);
@@ -545,15 +541,15 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
-            firstPort = firstServer.Port;
-            secondPort = firstPort + 1;
-
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
             try
             {
                 firstServer.Start();
+                firstPort = firstServer.Port;
+                secondPort = firstPort + 1;
+
+                ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+                ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
                 var cfg = BuildTmqConfig(firstPort, true);
                 cfg["ws.autoReconnect"] = "true";
@@ -623,11 +619,10 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
-            var port = server.Port;
-
             try
             {
                 server.Start();
+                var port = server.Port;
                 var options = new TMQOptions(new Dictionary<string, string>
                 {
                     { "td.connect.type", "WebSocket" },
@@ -688,11 +683,10 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
-            var port = server.Port;
-
             try
             {
                 server.Start();
+                var port = server.Port;
                 var options = new TMQOptions(new Dictionary<string, string>
                 {
                     { "td.connect.type", "WebSocket" },
@@ -755,11 +749,10 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
-            port = server.Port;
-
             try
             {
                 server.Start();
+                port = server.Port;
                 var options = new TMQOptions(new Dictionary<string, string>
                 {
                     { "td.connect.type", "WebSocket" },

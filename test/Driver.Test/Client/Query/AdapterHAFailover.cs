@@ -49,11 +49,10 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
-            port = server.Port;
-
             try
             {
                 server.Start();
+                port = server.Port;
                 var connStr = "protocol=WebSocket;" +
                               $"host=127.0.0.1:{port};" +
                               "useSSL=false;" +
@@ -109,11 +108,10 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
-            port = server.Port;
-
             try
             {
                 server.Start();
+                port = server.Port;
                 var connStr = "protocol=WebSocket;" +
                               $"host=127.0.0.1:{port};" +
                               "useSSL=false;" +
@@ -170,12 +168,12 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
-            firstPort = server.Port;
-            secondPort = firstPort + 1; // Just a different port number for list_instances response
 
             try
             {
                 server.Start();
+                firstPort = server.Port;
+                secondPort = firstPort + 1; // Just a different port number for list_instances response
                 var connStr = "protocol=WebSocket;" +
                               $"host=127.0.0.1:{firstPort};" +
                               "useSSL=false;" +
@@ -307,16 +305,16 @@ namespace Driver.Test.Client.Query
 
             var firstServer = MockWSServer.CreateOnFreePort(firstHandler);
             var secondServer = MockWSServer.CreateOnFreePort(secondHandler);
-            firstPort = firstServer.Port;
-            secondPort = secondServer.Port;
-
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
             try
             {
                 firstServer.Start();
                 secondServer.Start();
+                firstPort = firstServer.Port;
+                secondPort = secondServer.Port;
+
+                ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+                ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
                 // Connect with adapterHA=true + autoReconnect, only seed is firstPort
                 var connStr = "protocol=WebSocket;" +
@@ -386,11 +384,10 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
-            var port = server.Port;
-
             try
             {
                 server.Start();
+                var port = server.Port;
                 var connStr = "protocol=WebSocket;" +
                               $"host=127.0.0.1:{port};" +
                               "useSSL=false;" +
@@ -439,11 +436,10 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
-            var port = server.Port;
-
             try
             {
                 server.Start();
+                var port = server.Port;
                 var connStr = "protocol=WebSocket;" +
                               $"host=127.0.0.1:{port};" +
                               "useSSL=false;" +
@@ -477,28 +473,28 @@ namespace Driver.Test.Client.Query
             var secondServer = MockWSServer.CreateOnFreePort(
                 CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref secondConnCount); }));
 
-            var firstPort = firstServer.Port;
-            var secondPort = secondServer.Port;
-
-            // Pre-register cluster so new connections expand from registry
-            var seeds = new List<FailoverAddress>
-            {
-                new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}")
-            };
-            var fullCluster = new List<FailoverAddress>
-            {
-                new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}"),
-                new FailoverAddress("127.0.0.1", secondPort, $"ws://127.0.0.1:{secondPort}")
-            };
-            AdapterClusterRegistry.RegisterCluster(seeds, fullCluster);
-
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
-
             try
             {
                 firstServer.Start();
                 secondServer.Start();
+
+                var firstPort = firstServer.Port;
+                var secondPort = secondServer.Port;
+
+                // Pre-register cluster so new connections expand from registry
+                var seeds = new List<FailoverAddress>
+                {
+                    new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}")
+                };
+                var fullCluster = new List<FailoverAddress>
+                {
+                    new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}"),
+                    new FailoverAddress("127.0.0.1", secondPort, $"ws://127.0.0.1:{secondPort}")
+                };
+                AdapterClusterRegistry.RegisterCluster(seeds, fullCluster);
+
+                ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+                ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
                 // Only seed firstPort in connection string, but cluster is already known
                 var connStr = "protocol=WebSocket;" +
@@ -566,11 +562,10 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
-            var port = server.Port;
-
             try
             {
                 server.Start();
+                var port = server.Port;
                 var addr = $"ws://127.0.0.1:{port}/ws";
                 var conn = new TDengine.Driver.Impl.WebSocketMethods.Connection(
                     addr, "root", "taosdata", null, null,
@@ -621,11 +616,10 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
-            port = server.Port;
-
             try
             {
                 server.Start();
+                port = server.Port;
                 var addr = $"ws://127.0.0.1:{port}/ws";
                 var conn = new TDengine.Driver.Impl.WebSocketMethods.Connection(
                     addr, "root", "taosdata", null, null,
