@@ -21,6 +21,8 @@ namespace TDengine.Driver
             lock (SyncLock)
             {
                 var clusterList = new List<FailoverAddress>(fullCluster);
+
+                // Always update: list_instances from taosd is the authoritative source
                 for (var i = 0; i < seedAddresses.Count; i++)
                 {
                     var seedKey = seedAddresses[i].CacheKey;
@@ -29,14 +31,9 @@ namespace TDengine.Driver
                         continue;
                     }
 
-                    if (!KnownClusters.TryGetValue(seedKey, out var existing) ||
-                        clusterList.Count >= existing.Count)
-                    {
-                        KnownClusters[seedKey] = clusterList;
-                    }
+                    KnownClusters[seedKey] = clusterList;
                 }
 
-                // Also register all discovered addresses as keys pointing to the same cluster
                 for (var i = 0; i < fullCluster.Count; i++)
                 {
                     var key = fullCluster[i].CacheKey;
@@ -45,11 +42,7 @@ namespace TDengine.Driver
                         continue;
                     }
 
-                    if (!KnownClusters.TryGetValue(key, out var existing) ||
-                        clusterList.Count >= existing.Count)
-                    {
-                        KnownClusters[key] = clusterList;
-                    }
+                    KnownClusters[key] = clusterList;
                 }
             }
         }
@@ -71,7 +64,7 @@ namespace TDengine.Driver
                         continue;
                     }
 
-                    if (KnownClusters.TryGetValue(key, out var cluster) && cluster.Count > seeds.Count)
+                    if (KnownClusters.TryGetValue(key, out var cluster) && HasNewMembers(cluster, seeds))
                     {
                         return cluster;
                     }
@@ -79,6 +72,29 @@ namespace TDengine.Driver
             }
 
             return seeds;
+        }
+
+        private static bool HasNewMembers(List<FailoverAddress> cluster, IReadOnlyList<FailoverAddress> seeds)
+        {
+            // Check if cluster contains any address not already in seeds
+            var seedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (var i = 0; i < seeds.Count; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(seeds[i].CacheKey))
+                {
+                    seedKeys.Add(seeds[i].CacheKey);
+                }
+            }
+
+            for (var i = 0; i < cluster.Count; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(cluster[i].CacheKey) && !seedKeys.Contains(cluster[i].CacheKey))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // For testing purposes

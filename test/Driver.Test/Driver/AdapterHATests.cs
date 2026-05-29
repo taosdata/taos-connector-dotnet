@@ -403,7 +403,7 @@ namespace Driver.Test.Driver
         }
 
         [Fact]
-        public void RegisterClusterDoesNotShrinkExistingCluster()
+        public void RegisterClusterAlwaysUpdatesToAuthoritativeList()
         {
             AdapterClusterRegistry.Clear();
 
@@ -421,7 +421,7 @@ namespace Driver.Test.Driver
 
             AdapterClusterRegistry.RegisterCluster(seeds, largeCluster);
 
-            // Now register a smaller cluster for the same seed
+            // Register a smaller cluster (e.g. node decommissioned) — should be accepted
             var smallerCluster = new List<FailoverAddress>
             {
                 new FailoverAddress("host1", 6041, "ws://host1:6041"),
@@ -430,9 +430,9 @@ namespace Driver.Test.Driver
 
             AdapterClusterRegistry.RegisterCluster(seeds, smallerCluster);
 
-            // Should still return the larger cluster
+            // Should return the updated (smaller) authoritative cluster
             var expanded = AdapterClusterRegistry.ExpandIfKnown(seeds);
-            Assert.Equal(3, expanded.Count);
+            Assert.Equal(2, expanded.Count);
 
             AdapterClusterRegistry.Clear();
         }

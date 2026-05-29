@@ -875,12 +875,42 @@ namespace Driver.Test.Client.Query
                 new FailoverAddress("host2", 6041, "ws://host2:6041")
             };
 
-            // Register cluster same size as seeds
+            // Register cluster same size as seeds with identical members
             AdapterClusterRegistry.RegisterCluster(seeds, seeds);
 
             var result = AdapterClusterRegistry.ExpandIfKnown(seeds);
-            // Should return original since cluster is not larger
+            // Should return original since cluster has no new members
             Assert.Same(seeds, result);
+
+            AdapterClusterRegistry.Clear();
+        }
+
+        [Fact]
+        public void AdapterClusterRegistryExpandsWhenClusterHasDifferentMembersOfSameSize()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041"),
+                new FailoverAddress("stale-x", 6041, "ws://stale-x:6041")
+            };
+
+            // Registry knows [host1, host2] — same count as seeds but different member
+            var cluster = new List<FailoverAddress>
+            {
+                new FailoverAddress("host1", 6041, "ws://host1:6041"),
+                new FailoverAddress("host2", 6041, "ws://host2:6041")
+            };
+
+            AdapterClusterRegistry.RegisterCluster(
+                new List<FailoverAddress> { new FailoverAddress("host1", 6041, "ws://host1:6041") },
+                cluster);
+
+            var result = AdapterClusterRegistry.ExpandIfKnown(seeds);
+            // Should expand because cluster has host2 which is not in seeds
+            Assert.NotSame(seeds, result);
+            Assert.Equal(2, result.Count);
 
             AdapterClusterRegistry.Clear();
         }
