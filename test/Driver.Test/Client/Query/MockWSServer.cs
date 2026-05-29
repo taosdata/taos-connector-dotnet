@@ -11,7 +11,6 @@ namespace Driver.Test.Client.Query
     {
         private readonly HttpListener _httpListener;
         private readonly CancellationTokenSource _cts;
-        private readonly TaskCompletionSource<bool> _ready;
         private Task _serverTask;
 
         private readonly int _port;
@@ -27,7 +26,6 @@ namespace Driver.Test.Client.Query
             TryAddPrefix(Url);
             TryAddPrefix($"http://localhost:{_port}/");
             _cts = new CancellationTokenSource();
-            _ready = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         private void TryAddPrefix(string prefix)
@@ -47,17 +45,11 @@ namespace Driver.Test.Client.Query
         public void Start()
         {
             _httpListener.Start();
+            // After Start(), the OS socket is in LISTEN state and TCP backlog is active.
+            // Client connections are queued in the backlog immediately; the background task
+            // dequeues and processes them via GetContextAsync. No sleep needed.
             _serverTask = Task.Factory.StartNew(() => RunServer(_cts.Token), _cts.Token, TaskCreationOptions.LongRunning,
                 TaskScheduler.Default).Unwrap();
-            if (!_ready.Task.Wait(TimeSpan.FromSeconds(2)))
-            {
-                throw new TimeoutException("mock websocket server failed to start listening in time");
-            }
-            // Brief yield to ensure the async GetContextAsync has been fully registered in the kernel.
-            // On heavily-loaded Linux CI runners, the task may have set _ready but the kernel accept
-            // registration completes asynchronously. This is cheaper than a TCP probe which consumes
-            // an accept cycle and can itself cause the next real connection to be missed.
-            Thread.Sleep(50);
         }
 
         private async Task RunServer(CancellationToken cancellationToken)
@@ -66,9 +58,7 @@ namespace Driver.Test.Client.Query
             {
                 try
                 {
-                    var pendingAccept = _httpListener.GetContextAsync();
-                    _ready.TrySetResult(true);
-                    var context = await pendingAccept;
+                    var context = await _httpListener.GetContextAsync();
                     if (context.Request.IsWebSocketRequest)
                     {
                         var webSocketContext = await context.AcceptWebSocketAsync(null);
