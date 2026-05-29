@@ -79,50 +79,19 @@ namespace Driver.Test.Client.Query
                 try
                 {
                     _httpListener.Start();
+                    // If Start() succeeds, the port is bound and ready.
+                    break;
                 }
                 catch (Exception)
                 {
                     // Bind failed - port was stolen between guard release and Start()
                     if (attempt == maxAttempts - 1) throw;
                     ReallocatePort();
-                    continue;
                 }
-
-                // Verify the socket is actually listening by probing TCP connect.
-                // This catches edge cases where Start() appears to succeed but the
-                // port isn't reachable (e.g. SO_REUSEADDR conflicts on Linux).
-                if (VerifyListening())
-                {
-                    break;
-                }
-
-                // Not reachable - clean up and retry
-                try { _httpListener.Stop(); } catch { }
-                try { _httpListener.Close(); } catch { }
-                if (attempt == maxAttempts - 1)
-                    throw new InvalidOperationException(
-                        $"MockWSServer: port {Port} not reachable after {maxAttempts} attempts");
-                ReallocatePort();
             }
 
             _serverTask = Task.Factory.StartNew(() => RunServer(_cts.Token), _cts.Token, TaskCreationOptions.LongRunning,
                 TaskScheduler.Default).Unwrap();
-        }
-
-        private bool VerifyListening()
-        {
-            try
-            {
-                using (var probe = new TcpClient())
-                {
-                    probe.Connect(IPAddress.Loopback, Port);
-                }
-                return true;
-            }
-            catch (SocketException)
-            {
-                return false;
-            }
         }
 
         private void ReallocatePort()
