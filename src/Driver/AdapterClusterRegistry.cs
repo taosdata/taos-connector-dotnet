@@ -20,28 +20,59 @@ namespace TDengine.Driver
 
             lock (SyncLock)
             {
-                var clusterList = new List<FailoverAddress>(fullCluster);
-
-                // Always update: list_instances from taosd is the authoritative source
+                // Find the old cluster reference (if any) via seed keys
+                List<FailoverAddress> oldCluster = null;
                 for (var i = 0; i < seedAddresses.Count; i++)
                 {
                     var seedKey = seedAddresses[i].CacheKey;
-                    if (string.IsNullOrWhiteSpace(seedKey))
+                    if (!string.IsNullOrWhiteSpace(seedKey) &&
+                        KnownClusters.TryGetValue(seedKey, out oldCluster))
                     {
-                        continue;
+                        break;
                     }
+                }
 
-                    KnownClusters[seedKey] = clusterList;
+                // Build the set of keys that should exist after this update
+                var newKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                for (var i = 0; i < seedAddresses.Count; i++)
+                {
+                    if (!string.IsNullOrWhiteSpace(seedAddresses[i].CacheKey))
+                    {
+                        newKeys.Add(seedAddresses[i].CacheKey);
+                    }
                 }
 
                 for (var i = 0; i < fullCluster.Count; i++)
                 {
-                    var key = fullCluster[i].CacheKey;
-                    if (string.IsNullOrWhiteSpace(key))
+                    if (!string.IsNullOrWhiteSpace(fullCluster[i].CacheKey))
                     {
-                        continue;
+                        newKeys.Add(fullCluster[i].CacheKey);
+                    }
+                }
+
+                // Remove stale keys: entries that pointed to the old cluster
+                // but are not members of the new cluster
+                if (oldCluster != null)
+                {
+                    var staleKeys = new List<string>();
+                    foreach (var kvp in KnownClusters)
+                    {
+                        if (ReferenceEquals(kvp.Value, oldCluster) && !newKeys.Contains(kvp.Key))
+                        {
+                            staleKeys.Add(kvp.Key);
+                        }
                     }
 
+                    for (var i = 0; i < staleKeys.Count; i++)
+                    {
+                        KnownClusters.Remove(staleKeys[i]);
+                    }
+                }
+
+                // Write new mappings — all keys point to the same list instance
+                var clusterList = new List<FailoverAddress>(fullCluster);
+                foreach (var key in newKeys)
+                {
                     KnownClusters[key] = clusterList;
                 }
             }

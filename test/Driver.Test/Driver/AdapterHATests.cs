@@ -434,7 +434,107 @@ namespace Driver.Test.Driver
             var expanded = AdapterClusterRegistry.ExpandIfKnown(seeds);
             Assert.Equal(2, expanded.Count);
 
+            // Stale key (host3) should have been cleaned up — looking up via
+            // the removed node should NOT return the old 3-node cluster.
+            var staleLookup = new List<FailoverAddress>
+            {
+                new FailoverAddress("host3", 6041, "ws://host3:6041")
+            };
+            var staleResult = AdapterClusterRegistry.ExpandIfKnown(staleLookup);
+            // host3 is no longer in any cluster, so ExpandIfKnown returns seeds unchanged
+            Assert.Single(staleResult);
+            Assert.Equal("ws://host3:6041", staleResult[0].CacheKey);
+
             AdapterClusterRegistry.Clear();
+        }
+
+        [Fact]
+        public void RegisterClusterRemovesStaleMemberMappings()
+        {
+            AdapterClusterRegistry.Clear();
+
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("hostA", 6041, "ws://hostA:6041")
+            };
+
+            // Initial cluster: A, B, C
+            var clusterABC = new List<FailoverAddress>
+            {
+                new FailoverAddress("hostA", 6041, "ws://hostA:6041"),
+                new FailoverAddress("hostB", 6041, "ws://hostB:6041"),
+                new FailoverAddress("hostC", 6041, "ws://hostC:6041")
+            };
+            AdapterClusterRegistry.RegisterCluster(seeds, clusterABC);
+
+            // All three keys should resolve to the cluster
+            foreach (var addr in clusterABC)
+            {
+                var lookup = new List<FailoverAddress> { addr };
+                var result = AdapterClusterRegistry.ExpandIfKnown(lookup);
+                Assert.Equal(3, result.Count);
+            }
+
+            // Cluster shrinks to A, B
+            var clusterAB = new List<FailoverAddress>
+            {
+                new FailoverAddress("hostA", 6041, "ws://hostA:6041"),
+                new FailoverAddress("hostB", 6041, "ws://hostB:6041")
+            };
+            AdapterClusterRegistry.RegisterCluster(seeds, clusterAB);
+
+            // A and B should resolve to the 2-node cluster
+            var lookupA = new List<FailoverAddress>
+            {
+                new FailoverAddress("hostA", 6041, "ws://hostA:6041")
+            };
+            var resultA = AdapterClusterRegistry.ExpandIfKnown(lookupA);
+            Assert.Equal(2, resultA.Count);
+
+            // C's key should be removed — it should NOT expand
+            var lookupC = new List<FailoverAddress>
+            {
+                new FailoverAddress("hostC", 6041, "ws://hostC:6041")
+            };
+            var resultC = AdapterClusterRegistry.ExpandIfKnown(lookupC);
+            Assert.Single(resultC);
+            Assert.Equal("ws://hostC:6041", resultC[0].CacheKey);
+
+            AdapterClusterRegistry.Clear();
+        }
+
+        [Fact]
+        public void ParseInstancesReturnsAllValidInstances()
+        {
+            var instances = new[] { "host1:6041", "host2:6042", "", "host3:6043" };
+            var result = AdapterHAHelper.ParseInstances(instances, "WebSocket", false);
+
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Count);
+            Assert.Equal("host1", result[0].Host);
+            Assert.Equal(6041, result[0].Port);
+            Assert.Equal("host2", result[1].Host);
+            Assert.Equal(6042, result[1].Port);
+            Assert.Equal("host3", result[2].Host);
+            Assert.Equal(6043, result[2].Port);
+        }
+
+        [Fact]
+        public void ParseInstancesDeduplicates()
+        {
+            var instances = new[] { "host1:6041", "host1:6041", "host2:6042" };
+            var result = AdapterHAHelper.ParseInstances(instances, "WebSocket", false);
+
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+        }
+
+        [Fact]
+        public void ParseInstancesReturnsNullForNullOrEmptyInput()
+        {
+            Assert.Null(AdapterHAHelper.ParseInstances(null, "WebSocket", false));
+            Assert.Null(AdapterHAHelper.ParseInstances(new string[0], "WebSocket", false));
+            Assert.Null(AdapterHAHelper.ParseInstances(new[] { "", " " }, "WebSocket", false));
         }
 
         #endregion

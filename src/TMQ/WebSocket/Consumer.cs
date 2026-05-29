@@ -133,7 +133,7 @@ namespace TDengine.TMQ.WebSocket
                     var resp = connection.Subscribe(_topics, _options, _adapterHA);
                     if (_adapterHA && resp != null && resp.ListInstances != null && resp.ListInstances.Length > 0)
                     {
-                        MergeDiscoveredAddresses(resp.ListInstances);
+                        SyncDiscoveredAddresses(resp.ListInstances);
                     }
                 }
                 else if (_adapterHA)
@@ -163,34 +163,41 @@ namespace TDengine.TMQ.WebSocket
             }
         }
 
-        private void MergeDiscoveredAddresses(string[] instances)
+        private void SyncDiscoveredAddresses(string[] instances)
         {
             var useSSL = _options.TDUseSSL == "true";
-            var newAddresses = AdapterHAHelper.MergeDiscoveredAddresses(
-                GetFailoverAddressesCopy(), instances,
-                TDengineConstant.ProtocolWebSocket, useSSL);
-
-            if (newAddresses == null || newAddresses.Count == 0)
+            var discovered = AdapterHAHelper.ParseInstances(
+                instances, TDengineConstant.ProtocolWebSocket, useSSL);
+            if (discovered == null)
             {
                 return;
             }
 
             lock (_addressLock)
             {
-                var currentAddresses = _failoverAddresses;
-                var existingKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                for (var i = 0; i < currentAddresses.Count; i++)
-                {
-                    existingKeys.Add(currentAddresses[i].CacheKey);
-                }
+                // Rebuild: user-configured seeds UNION authoritative discovered list.
+                // This naturally adds new instances and drops stale ones.
+                var seeds = _options.GetFailoverAddresses();
+                var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var merged = new List<FailoverAddress>();
 
-                for (var i = 0; i < newAddresses.Count; i++)
+                for (var i = 0; i < seeds.Count; i++)
                 {
-                    if (existingKeys.Add(newAddresses[i].CacheKey))
+                    if (keys.Add(seeds[i].CacheKey))
                     {
-                        currentAddresses.Add(newAddresses[i]);
+                        merged.Add(seeds[i]);
                     }
                 }
+
+                for (var i = 0; i < discovered.Count; i++)
+                {
+                    if (keys.Add(discovered[i].CacheKey))
+                    {
+                        merged.Add(discovered[i]);
+                    }
+                }
+
+                _failoverAddresses = merged;
             }
 
             // Register globally
@@ -534,7 +541,7 @@ namespace TDengine.TMQ.WebSocket
                 var resp = connection.Subscribe(topics, _options, _adapterHA);
                 if (_adapterHA && resp != null && resp.ListInstances != null && resp.ListInstances.Length > 0)
                 {
-                    MergeDiscoveredAddresses(resp.ListInstances);
+                    SyncDiscoveredAddresses(resp.ListInstances);
                 }
 
                 _topics = topics;
@@ -554,7 +561,7 @@ namespace TDengine.TMQ.WebSocket
                 if (_adapterHA && retryResp != null && retryResp.ListInstances != null &&
                     retryResp.ListInstances.Length > 0)
                 {
-                    MergeDiscoveredAddresses(retryResp.ListInstances);
+                    SyncDiscoveredAddresses(retryResp.ListInstances);
                 }
 
                 _topics = topics;
