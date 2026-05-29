@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -20,10 +19,10 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void TMQSubscribeShouldSendListInstancesWhenAdapterHAEnabled()
         {
-            var port = GetFreePort();
+            int port = 0;
             bool? receivedListInstances = null;
 
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -51,6 +50,7 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
+            port = server.Port;
 
             try
             {
@@ -77,11 +77,10 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void TMQSubscribeShouldNotSendListInstancesWhenAdapterHADisabled()
         {
-            var port = GetFreePort();
             bool? receivedListInstances = null;
             bool subscribeReceived = false;
 
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -109,6 +108,7 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
+            var port = server.Port;
 
             try
             {
@@ -135,13 +135,12 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void TMQSubscribeShouldExpandAddressesFromListInstances()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort) secondPort = GetFreePort();
+            int firstPort = 0;
+            int secondPort = 0;
 
             AdapterClusterRegistry.Clear();
 
-            var server = new MockWSServer(firstPort, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -167,6 +166,8 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
+            firstPort = server.Port;
+            secondPort = firstPort + 1;
 
             try
             {
@@ -201,9 +202,7 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void TMQSubscribeWithOldAdapterShouldStillWork()
         {
-            var port = GetFreePort();
-
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -230,6 +229,7 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
+            var port = server.Port;
 
             try
             {
@@ -255,31 +255,12 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void TMQConsumerShouldExpandFromRegistryAtConstruction()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort) secondPort = GetFreePort();
-
             AdapterClusterRegistry.Clear();
-
-            // Pre-register a cluster so the consumer expands at construction time
-            var seeds = new List<FailoverAddress>
-            {
-                new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}")
-            };
-            var fullCluster = new List<FailoverAddress>
-            {
-                new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}"),
-                new FailoverAddress("127.0.0.1", secondPort, $"ws://127.0.0.1:{secondPort}")
-            };
-            AdapterClusterRegistry.RegisterCluster(seeds, fullCluster);
-
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
             var firstConnected = 0;
             var secondConnected = 0;
 
-            var firstServer = new MockWSServer(firstPort, (webSocket, messageType, message) =>
+            var firstServer = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -306,7 +287,7 @@ namespace Driver.Test.Client.TMQ
                 }
             });
 
-            var secondServer = new MockWSServer(secondPort, (webSocket, messageType, message) =>
+            var secondServer = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -332,6 +313,24 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
+
+            var firstPort = firstServer.Port;
+            var secondPort = secondServer.Port;
+
+            // Pre-register a cluster so the consumer expands at construction time
+            var seeds = new List<FailoverAddress>
+            {
+                new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}")
+            };
+            var fullCluster = new List<FailoverAddress>
+            {
+                new FailoverAddress("127.0.0.1", firstPort, $"ws://127.0.0.1:{firstPort}"),
+                new FailoverAddress("127.0.0.1", secondPort, $"ws://127.0.0.1:{secondPort}")
+            };
+            AdapterClusterRegistry.RegisterCluster(seeds, fullCluster);
+
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
             try
             {
@@ -369,20 +368,17 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void TMQReconnectShouldUseDiscoveredAddresses()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort) secondPort = GetFreePort();
+            int firstPort = 0;
+            int secondPort = 0;
 
             var firstUnavailable = 0;
             var secondConnected = 0;
 
             AdapterClusterRegistry.Clear();
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
             // First server: responds normally initially, returns list_instances with second port,
             // then goes unavailable when poll is called
-            var firstServer = new MockWSServer(firstPort, (webSocket, messageType, message) =>
+            var firstServer = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -423,7 +419,7 @@ namespace Driver.Test.Client.TMQ
             });
 
             // Second server: normal behavior
-            var secondServer = new MockWSServer(secondPort, (webSocket, messageType, message) =>
+            var secondServer = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -458,6 +454,12 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
+
+            firstPort = firstServer.Port;
+            secondPort = secondServer.Port;
+
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
             try
             {
@@ -498,18 +500,15 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void TMQDoSubscribeRetryShouldMergeDiscoveredAddresses()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort) secondPort = GetFreePort();
+            int firstPort = 0;
+            int secondPort = 0;
 
             var subscribeCallCount = 0;
 
             AdapterClusterRegistry.Clear();
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
             // Server that fails on first subscribe, then succeeds on reconnect subscribe
-            var firstServer = new MockWSServer(firstPort, (webSocket, messageType, message) =>
+            var firstServer = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -546,6 +545,11 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
+            firstPort = firstServer.Port;
+            secondPort = firstPort + 1;
+
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
             try
             {
@@ -588,11 +592,10 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void TMQSubscribeNoListInstancesOverloadShouldNotSendFlag()
         {
-            var port = GetFreePort();
             bool? receivedListInstances = null;
             bool subscribeReceived = false;
 
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort( (webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -620,6 +623,7 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
+            var port = server.Port;
 
             try
             {
@@ -651,12 +655,11 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void TMQSubscribeWithReqIdOverloadShouldNotSendFlag()
         {
-            var port = GetFreePort();
             bool? receivedListInstances = null;
             ulong? receivedReqId = null;
             bool subscribeReceived = false;
 
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort( (webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -685,6 +688,7 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
+            var port = server.Port;
 
             try
             {
@@ -718,11 +722,11 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void TMQSubscribeWithListInstancesTrueShouldSendFlag()
         {
-            var port = GetFreePort();
+            int port = 0;
             bool? receivedListInstances = null;
             bool subscribeReceived = false;
 
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort( (webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -751,6 +755,7 @@ namespace Driver.Test.Client.TMQ
                         break;
                 }
             });
+            port = server.Port;
 
             try
             {
@@ -822,16 +827,7 @@ namespace Driver.Test.Client.TMQ
             webSocket.SendAsync(data, messageType, true, CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        private static int GetFreePort()
-        {
-            var listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            var endpoint = (IPEndPoint)listener.LocalEndpoint;
-            listener.Stop();
-            return endpoint.Port;
-        }
-
-        private static void ResetFailoverCacheConnectionCount(string cacheKey)
+private static void ResetFailoverCacheConnectionCount(string cacheKey)
         {
             var cacheType = typeof(FailoverAddress).Assembly.GetType("TDengine.Driver.FailoverAddressCache");
             if (cacheType == null) return;

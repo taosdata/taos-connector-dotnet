@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -9,23 +10,55 @@ namespace Driver.Test.Client.Query
 {
     public class MockWSServer
     {
-        private readonly HttpListener _httpListener;
+        private HttpListener _httpListener;
         private readonly CancellationTokenSource _cts;
         private Task _serverTask;
+        private TcpListener _portGuard;
 
-        private readonly int _port;
-        private string Url => $"http://127.0.0.1:{_port}/";
+        public int Port { get; private set; }
+        private string Url => $"http://127.0.0.1:{Port}/";
 
         private Action<WebSocket, WebSocketMessageType, byte[]> _onMessage;
 
         public MockWSServer(int port, Action<WebSocket, WebSocketMessageType, byte[]> onMessage)
         {
-            _port = port;
+            Port = port;
             _onMessage = onMessage;
+            _cts = new CancellationTokenSource();
+        }
+
+        /// <summary>
+        /// Creates a MockWSServer on an OS-assigned free port, eliminating TOCTOU race.
+        /// The port is held by a TcpListener guard until Start() is called.
+        /// </summary>
+        public static MockWSServer CreateOnFreePort(Action<WebSocket, WebSocketMessageType, byte[]> onMessage)
+        {
+            var guard = new TcpListener(IPAddress.Loopback, 0);
+            guard.Start();
+            var port = ((IPEndPoint)guard.LocalEndpoint).Port;
+
+            var server = new MockWSServer(port, onMessage);
+            server._portGuard = guard;
+            return server;
+        }
+
+        public void Start()
+        {
+            // Release the port guard immediately before HttpListener binds.
+            // This minimizes the TOCTOU window to near-zero (same thread, no yield).
+            if (_portGuard != null)
+            {
+                _portGuard.Stop();
+                _portGuard = null;
+            }
+
             _httpListener = new HttpListener();
             TryAddPrefix(Url);
-            TryAddPrefix($"http://localhost:{_port}/");
-            _cts = new CancellationTokenSource();
+            TryAddPrefix($"http://localhost:{Port}/");
+            _httpListener.Start();
+
+            _serverTask = Task.Factory.StartNew(() => RunServer(_cts.Token), _cts.Token, TaskCreationOptions.LongRunning,
+                TaskScheduler.Default).Unwrap();
         }
 
         private void TryAddPrefix(string prefix)
@@ -40,16 +73,6 @@ namespace Driver.Test.Client.Query
             catch (PlatformNotSupportedException)
             {
             }
-        }
-
-        public void Start()
-        {
-            _httpListener.Start();
-            // After Start(), the OS socket is in LISTEN state and TCP backlog is active.
-            // Client connections are queued in the backlog immediately; the background task
-            // dequeues and processes them via GetContextAsync. No sleep needed.
-            _serverTask = Task.Factory.StartNew(() => RunServer(_cts.Token), _cts.Token, TaskCreationOptions.LongRunning,
-                TaskScheduler.Default).Unwrap();
         }
 
         private async Task RunServer(CancellationToken cancellationToken)
@@ -77,7 +100,7 @@ namespace Driver.Test.Client.Query
                 }
                 catch (HttpListenerException)
                 {
-                    // Client disconnected before sending a full request (e.g. TCP health probe)
+                    // Listener stopped or client disconnected prematurely
                 }
             }
         }
@@ -127,21 +150,23 @@ namespace Driver.Test.Client.Query
         {
             _cts?.Cancel();
 
-            // Give the server task a chance to complete gracefully
+            if (_portGuard != null)
+            {
+                try { _portGuard.Stop(); }
+                catch (SocketException) { }
+                _portGuard = null;
+            }
+
             if (_serverTask != null)
             {
                 try
                 {
-                    // Wait a bit for graceful shutdown
                     if (!_serverTask.Wait(TimeSpan.FromSeconds(2)))
                     {
-                        // If it doesn't complete in time, we'll stop the listener anyway
-                        // This might throw, but we'll catch it
                     }
                 }
                 catch (AggregateException ae) when (ae.InnerException is OperationCanceledException)
                 {
-                    // Expected when task is cancelled
                 }
             }
 
@@ -157,11 +182,9 @@ namespace Driver.Test.Client.Query
                 }
                 catch (ObjectDisposedException)
                 {
-                    // Already disposed, ignore
                 }
                 catch (HttpListenerException)
                 {
-                    // Handle other HTTP listener exceptions
                 }
             }
         }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Text;
@@ -20,10 +19,10 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void AdapterHAEnabledShouldSendListInstancesInConnReq()
         {
-            var port = GetFreePort();
+            int port = 0;
             bool? receivedListInstances = null;
 
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var req = JsonConvert.DeserializeObject<WSActionReq<WSConnReq>>(raw);
@@ -50,6 +49,7 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
+            port = server.Port;
 
             try
             {
@@ -78,11 +78,11 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void AdapterHADisabledShouldNotSendListInstancesInConnReq()
         {
-            var port = GetFreePort();
+            int port = 0;
             bool? receivedListInstances = null;
             bool connReceived = false;
 
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var req = JsonConvert.DeserializeObject<WSActionReq<WSConnReq>>(raw);
@@ -109,6 +109,7 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
+            port = server.Port;
 
             try
             {
@@ -138,13 +139,12 @@ namespace Driver.Test.Client.Query
         public void AdapterHAShouldExpandFailoverAddressesFromListInstances()
         {
             // Start only one server but have it return a second address in list_instances
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort) secondPort = GetFreePort();
+            int firstPort = 0;
+            int secondPort = 0;
 
             AdapterClusterRegistry.Clear();
 
-            var server = new MockWSServer(firstPort, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var req = JsonConvert.DeserializeObject<WSActionReq<WSConnReq>>(raw);
@@ -170,6 +170,8 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
+            firstPort = server.Port;
+            secondPort = firstPort + 1; // Just a different port number for list_instances response
 
             try
             {
@@ -216,9 +218,8 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void AdapterHAShouldFailoverToDiscoveredAddress()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort) secondPort = GetFreePort();
+            int firstPort = 0;
+            int secondPort = 0;
 
             var firstConnCount = 0;
             var secondConnCount = 0;
@@ -226,8 +227,6 @@ namespace Driver.Test.Client.Query
             ulong stmtId = 0;
 
             AdapterClusterRegistry.Clear();
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
-            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
             // First server returns list_instances including second port, then goes unavailable on stmt2_init
             Action<WebSocket, WebSocketMessageType, byte[]> firstHandler = (webSocket, messageType, message) =>
@@ -306,8 +305,13 @@ namespace Driver.Test.Client.Query
                 }
             };
 
-            var firstServer = new MockWSServer(firstPort, firstHandler);
-            var secondServer = new MockWSServer(secondPort, secondHandler);
+            var firstServer = MockWSServer.CreateOnFreePort(firstHandler);
+            var secondServer = MockWSServer.CreateOnFreePort(secondHandler);
+            firstPort = firstServer.Port;
+            secondPort = secondServer.Port;
+
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
+            ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
 
             try
             {
@@ -355,9 +359,7 @@ namespace Driver.Test.Client.Query
         public void AdapterHAOldAdapterWithoutListInstancesShouldStillConnect()
         {
             // Simulate old adapter that doesn't return list_instances
-            var port = GetFreePort();
-
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var req = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -384,6 +386,7 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
+            var port = server.Port;
 
             try
             {
@@ -410,9 +413,7 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void AdapterHAEmptyListInstancesShouldStillConnect()
         {
-            var port = GetFreePort();
-
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var req = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(raw);
@@ -438,6 +439,7 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
+            var port = server.Port;
 
             try
             {
@@ -464,14 +466,19 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void AdapterHANewConnectionExpandsFromGlobalRegistry()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort) secondPort = GetFreePort();
-
             AdapterClusterRegistry.Clear();
 
             var firstConnCount = 0;
             var secondConnCount = 0;
+
+            // Both servers respond normally
+            var firstServer = MockWSServer.CreateOnFreePort(
+                CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref firstConnCount); }));
+            var secondServer = MockWSServer.CreateOnFreePort(
+                CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref secondConnCount); }));
+
+            var firstPort = firstServer.Port;
+            var secondPort = secondServer.Port;
 
             // Pre-register cluster so new connections expand from registry
             var seeds = new List<FailoverAddress>
@@ -487,12 +494,6 @@ namespace Driver.Test.Client.Query
 
             ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
             ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");
-
-            // Both servers respond normally
-            var firstServer = new MockWSServer(firstPort,
-                CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref firstConnCount); }));
-            var secondServer = new MockWSServer(secondPort,
-                CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref secondConnCount); }));
 
             try
             {
@@ -535,11 +536,10 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void ConnectionConnectNoArgShouldNotSendListInstances()
         {
-            var port = GetFreePort();
             bool? receivedListInstances = null;
             bool connReceived = false;
 
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var req = JsonConvert.DeserializeObject<WSActionReq<WSConnReq>>(raw);
@@ -566,6 +566,7 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
+            var port = server.Port;
 
             try
             {
@@ -588,11 +589,11 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void ConnectionConnectWithListInstancesTrueShouldSendFlag()
         {
-            var port = GetFreePort();
+            int port = 0;
             bool? receivedListInstances = null;
             bool connReceived = false;
 
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var raw = Encoding.UTF8.GetString(message);
                 var req = JsonConvert.DeserializeObject<WSActionReq<WSConnReq>>(raw);
@@ -620,6 +621,7 @@ namespace Driver.Test.Client.Query
                         break;
                 }
             });
+            port = server.Port;
 
             try
             {
@@ -960,15 +962,6 @@ namespace Driver.Test.Client.Query
             var respStr = JsonConvert.SerializeObject(response);
             var data = new ArraySegment<byte>(Encoding.UTF8.GetBytes(respStr));
             webSocket.SendAsync(data, messageType, true, CancellationToken.None).GetAwaiter().GetResult();
-        }
-
-        private static int GetFreePort()
-        {
-            var listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            var endpoint = (IPEndPoint)listener.LocalEndpoint;
-            listener.Stop();
-            return endpoint.Port;
         }
 
         private static void ResetFailoverCacheConnectionCount(string cacheKey)
