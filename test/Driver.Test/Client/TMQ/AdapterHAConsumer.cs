@@ -169,7 +169,7 @@ namespace Driver.Test.Client.TMQ
             {
                 server.Start();
                 firstPort = server.Port;
-                secondPort = firstPort + 1;
+                secondPort = MockWSServer.AllocateUnavailablePort();
                 var cfg = BuildTmqConfig(firstPort, true);
                 var consumer = new ConsumerBuilder<Dictionary<string, object>>(cfg).Build();
                 try
@@ -546,7 +546,7 @@ namespace Driver.Test.Client.TMQ
             {
                 firstServer.Start();
                 firstPort = firstServer.Port;
-                secondPort = firstPort + 1;
+                secondPort = MockWSServer.AllocateUnavailablePort();
 
                 ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{firstPort}");
                 ResetFailoverCacheConnectionCount($"ws://127.0.0.1:{secondPort}");

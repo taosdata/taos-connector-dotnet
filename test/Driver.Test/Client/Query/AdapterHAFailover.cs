@@ -14,6 +14,7 @@ using Xunit;
 
 namespace Driver.Test.Client.Query
 {
+    [Collection("AdapterHA")]
     public class AdapterHAFailover
     {
         [Fact]
@@ -173,7 +174,7 @@ namespace Driver.Test.Client.Query
             {
                 server.Start();
                 firstPort = server.Port;
-                secondPort = firstPort + 1; // Just a different port number for list_instances response
+                secondPort = MockWSServer.AllocateUnavailablePort();
                 var connStr = "protocol=WebSocket;" +
                               $"host=127.0.0.1:{firstPort};" +
                               "useSSL=false;" +
