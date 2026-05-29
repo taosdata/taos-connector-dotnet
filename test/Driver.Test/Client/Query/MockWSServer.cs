@@ -53,32 +53,11 @@ namespace Driver.Test.Client.Query
             {
                 throw new TimeoutException("mock websocket server failed to start listening in time");
             }
-
-            // Verify the listener is truly accepting connections (needed on Linux CI
-            // where HttpListener may not be ready even after GetContextAsync is issued)
-            WaitUntilPortAcceptsConnections();
-        }
-
-        private void WaitUntilPortAcceptsConnections()
-        {
-            var deadline = DateTime.UtcNow.AddSeconds(2);
-            while (DateTime.UtcNow < deadline)
-            {
-                try
-                {
-                    using (var tcp = new System.Net.Sockets.TcpClient())
-                    {
-                        tcp.Connect(IPAddress.Loopback, _port);
-                        return;
-                    }
-                }
-                catch (System.Net.Sockets.SocketException)
-                {
-                    Thread.Sleep(10);
-                }
-            }
-
-            throw new TimeoutException($"mock websocket server port {_port} not accepting connections");
+            // Brief yield to ensure the async GetContextAsync has been fully registered in the kernel.
+            // On heavily-loaded Linux CI runners, the task may have set _ready but the kernel accept
+            // registration completes asynchronously. This is cheaper than a TCP probe which consumes
+            // an accept cycle and can itself cause the next real connection to be missed.
+            Thread.Sleep(50);
         }
 
         private async Task RunServer(CancellationToken cancellationToken)
