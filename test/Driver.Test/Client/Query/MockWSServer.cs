@@ -58,7 +58,7 @@ namespace Driver.Test.Client.Query
 
         public void Start()
         {
-            StartWithRetry(3);
+            StartWithRetry(5);
         }
 
         private void StartWithRetry(int maxAttempts)
@@ -73,13 +73,12 @@ namespace Driver.Test.Client.Query
                 }
 
                 _httpListener = new HttpListener();
-                TryAddPrefix($"http://127.0.0.1:{Port}/");
-                TryAddPrefix($"http://localhost:{Port}/");
+                // Only bind 127.0.0.1 — avoid localhost which may resolve to ::1 on some Linux systems
+                _httpListener.Prefixes.Add($"http://127.0.0.1:{Port}/");
 
                 try
                 {
                     _httpListener.Start();
-                    // If Start() succeeds, the port is bound and ready.
                     break;
                 }
                 catch (Exception)
@@ -90,8 +89,13 @@ namespace Driver.Test.Client.Query
                 }
             }
 
-            _serverTask = Task.Factory.StartNew(() => RunServer(_cts.Token), _cts.Token, TaskCreationOptions.LongRunning,
-                TaskScheduler.Default).Unwrap();
+            var ready = new ManualResetEventSlim(false);
+            _serverTask = Task.Factory.StartNew(() =>
+            {
+                ready.Set();
+                return RunServer(_cts.Token);
+            }, _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+            ready.Wait(5000);
         }
 
         private void ReallocatePort()
@@ -142,6 +146,15 @@ namespace Driver.Test.Client.Query
                 catch (HttpListenerException)
                 {
                     // Listener stopped or client disconnected prematurely
+                }
+                catch (ObjectDisposedException)
+                {
+                    break;
+                }
+                catch (Exception)
+                {
+                    // Unexpected error — continue accepting to avoid silent task fault
+                    if (cancellationToken.IsCancellationRequested) break;
                 }
             }
         }
