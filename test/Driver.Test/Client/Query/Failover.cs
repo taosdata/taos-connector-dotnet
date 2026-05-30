@@ -2,8 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Text;
@@ -22,18 +20,12 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void MultiAddressConnectShouldSelectLeastConnectionAddress()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort)
-            {
-                secondPort = GetFreePort();
-            }
             var firstConnCount = 0;
             var secondConnCount = 0;
 
-            var firstServer = new MockWSServer(firstPort,
+            var firstServer = MockWSServer.CreateOnFreePort(
                 CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref firstConnCount); }));
-            var secondServer = new MockWSServer(secondPort,
+            var secondServer = MockWSServer.CreateOnFreePort(
                 CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref secondConnCount); }));
             try
             {
@@ -41,7 +33,7 @@ namespace Driver.Test.Client.Query
                 secondServer.Start();
 
                 var connStr = "protocol=WebSocket;" +
-                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
+                              $"host=127.0.0.1:{firstServer.Port},127.0.0.1:{secondServer.Port};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
@@ -71,26 +63,14 @@ namespace Driver.Test.Client.Query
         {
             const int addressCount = 2;
             const int clientCount = 20;
-            var ports = new List<int>(addressCount);
-            while (ports.Count < addressCount)
-            {
-                var candidate = GetFreePort();
-                if (ports.Contains(candidate))
-                {
-                    continue;
-                }
-
-                ports.Add(candidate);
-            }
-
             var connCounts = new int[addressCount];
             var servers = new List<MockWSServer>(addressCount);
             for (var i = 0; i < addressCount; i++)
             {
-                ResetFailoverCacheConnectionCount(BuildWsCacheKey(ports[i]));
                 var index = i;
-                servers.Add(new MockWSServer(ports[i],
-                    CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref connCounts[index]); })));
+                var server = MockWSServer.CreateOnFreePort(
+                    CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref connCounts[index]); }));
+                servers.Add(server);
             }
 
             var clients = new ConcurrentBag<ITDengineClient>();
@@ -103,9 +83,12 @@ namespace Driver.Test.Client.Query
                     servers[i].Start();
                 }
 
-                Thread.Sleep(200);
+                for (var i = 0; i < servers.Count; i++)
+                {
+                    ResetFailoverCacheConnectionCount(BuildWsCacheKey(servers[i].Port));
+                }
 
-                var hostList = string.Join(",", ports.Select(p => $"127.0.0.1:{p}"));
+                var hostList = string.Join(",", servers.Select(server => $"127.0.0.1:{server.Port}"));
                 var connStr = "protocol=WebSocket;" +
                               $"host={hostList};" +
                               "useSSL=false;" +
@@ -175,26 +158,14 @@ namespace Driver.Test.Client.Query
         {
             const int addressCount = 2;
             const int clientCount = 10;
-            var ports = new List<int>(addressCount);
-            while (ports.Count < addressCount)
-            {
-                var candidate = GetFreePort();
-                if (ports.Contains(candidate))
-                {
-                    continue;
-                }
-
-                ports.Add(candidate);
-            }
-
             var connCounts = new int[addressCount];
             var servers = new List<MockWSServer>(addressCount);
             for (var i = 0; i < addressCount; i++)
             {
-                ResetFailoverCacheConnectionCount(BuildWsCacheKey(ports[i]));
                 var index = i;
-                servers.Add(new MockWSServer(ports[i],
-                    CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref connCounts[index]); })));
+                var server = MockWSServer.CreateOnFreePort(
+                    CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref connCounts[index]); }));
+                servers.Add(server);
             }
 
             var clients = new ConcurrentBag<ITDengineClient>();
@@ -207,9 +178,12 @@ namespace Driver.Test.Client.Query
                     servers[i].Start();
                 }
 
-                Thread.Sleep(200);
+                for (var i = 0; i < servers.Count; i++)
+                {
+                    ResetFailoverCacheConnectionCount(BuildWsCacheKey(servers[i].Port));
+                }
 
-                var hostList = string.Join(",", ports.Select(p => $"127.0.0.1:{p}"));
+                var hostList = string.Join(",", servers.Select(server => $"127.0.0.1:{server.Port}"));
                 var connStr = "protocol=WebSocket;" +
                               $"host={hostList};" +
                               "useSSL=false;" +
@@ -265,22 +239,17 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void MultiAddressConnectShouldNotUseAddressFromOtherConnection()
         {
-            var servedPort = GetFreePort();
-            var unavailablePort = GetFreePort();
-            while (unavailablePort == servedPort)
-            {
-                unavailablePort = GetFreePort();
-            }
             var servedConnCount = 0;
 
-            var servedServer = new MockWSServer(servedPort,
+            var servedServer = MockWSServer.CreateOnFreePort(
                 CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref servedConnCount); }));
+            var unavailablePort = MockWSServer.AllocateUnavailablePort();
             try
             {
                 servedServer.Start();
 
                 var servedConnStr = "protocol=WebSocket;" +
-                                    $"host=127.0.0.1:{servedPort};" +
+                                    $"host=127.0.0.1:{servedServer.Port};" +
                                     "useSSL=false;" +
                                     "username=root;" +
                                     "password=taosdata;" +
@@ -314,17 +283,6 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void MultiAddressReconnectShouldPreferPreviousAddressForTransientDisconnect()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort)
-            {
-                secondPort = GetFreePort();
-            }
-            var firstCacheKey = BuildWsCacheKey(firstPort);
-            var secondCacheKey = BuildWsCacheKey(secondPort);
-            ResetFailoverCacheConnectionCount(firstCacheKey);
-            ResetFailoverCacheConnectionCount(secondCacheKey);
-
             var firstConnCount = 0;
             var secondConnCount = 0;
             var firstStmtInitClosed = 0;
@@ -438,15 +396,18 @@ namespace Driver.Test.Client.Query
                 }
             };
 
-            var firstServer = new MockWSServer(firstPort, firstHandler);
-            var secondServer = new MockWSServer(secondPort, secondHandler);
+            var firstServer = MockWSServer.CreateOnFreePort(firstHandler);
+            var secondServer = MockWSServer.CreateOnFreePort(secondHandler);
             try
             {
                 firstServer.Start();
                 secondServer.Start();
 
+                ResetFailoverCacheConnectionCount(BuildWsCacheKey(firstServer.Port));
+                ResetFailoverCacheConnectionCount(BuildWsCacheKey(secondServer.Port));
+
                 var connStr = "protocol=WebSocket;" +
-                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
+                              $"host=127.0.0.1:{firstServer.Port},127.0.0.1:{secondServer.Port};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
@@ -482,13 +443,6 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void ReconnectShouldReleaseOldLeaseAfterFailoverSuccess()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort)
-            {
-                secondPort = GetFreePort();
-            }
-
             var firstConnCount = 0;
             var secondConnCount = 0;
             var firstUnavailable = 0;
@@ -604,17 +558,21 @@ namespace Driver.Test.Client.Query
                 }
             };
 
-            var firstServer = new MockWSServer(firstPort, firstHandler);
-            var secondServer = new MockWSServer(secondPort, secondHandler);
-            var firstCacheKey = BuildWsCacheKey(firstPort);
-            var secondCacheKey = BuildWsCacheKey(secondPort);
+            var firstServer = MockWSServer.CreateOnFreePort(firstHandler);
+            var secondServer = MockWSServer.CreateOnFreePort(secondHandler);
+            string firstCacheKey = null, secondCacheKey = null;
             try
             {
                 firstServer.Start();
                 secondServer.Start();
 
+                firstCacheKey = BuildWsCacheKey(firstServer.Port);
+                secondCacheKey = BuildWsCacheKey(secondServer.Port);
+                ResetFailoverCacheConnectionCount(firstCacheKey);
+                ResetFailoverCacheConnectionCount(secondCacheKey);
+
                 var connStr = "protocol=WebSocket;" +
-                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
+                              $"host=127.0.0.1:{firstServer.Port},127.0.0.1:{secondServer.Port};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
@@ -652,13 +610,6 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void DisposeAndReconnectRaceShouldReleaseBothLeases()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort)
-            {
-                secondPort = GetFreePort();
-            }
-
             var firstUnavailable = 0;
             var secondConnEntered = new ManualResetEventSlim(false);
             var releaseSecondConn = new ManualResetEventSlim(false);
@@ -778,20 +729,24 @@ namespace Driver.Test.Client.Query
                 }
             };
 
-            var firstServer = new MockWSServer(firstPort, firstHandler);
-            var secondServer = new MockWSServer(secondPort, secondHandler);
-            var firstCacheKey = BuildWsCacheKey(firstPort);
-            var secondCacheKey = BuildWsCacheKey(secondPort);
+            var firstServer = MockWSServer.CreateOnFreePort(firstHandler);
+            var secondServer = MockWSServer.CreateOnFreePort(secondHandler);
 
             ITDengineClient client = null;
             Exception stmtException = null;
+            string firstCacheKey = null, secondCacheKey = null;
             try
             {
                 firstServer.Start();
                 secondServer.Start();
 
+                firstCacheKey = BuildWsCacheKey(firstServer.Port);
+                secondCacheKey = BuildWsCacheKey(secondServer.Port);
+                ResetFailoverCacheConnectionCount(firstCacheKey);
+                ResetFailoverCacheConnectionCount(secondCacheKey);
+
                 var connStr = "protocol=WebSocket;" +
-                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
+                              $"host=127.0.0.1:{firstServer.Port},127.0.0.1:{secondServer.Port};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
@@ -858,19 +813,12 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void MultiAddressDisposeShouldReleaseConnectionCountAndRebalance()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort)
-            {
-                secondPort = GetFreePort();
-            }
-
             var firstConnCount = 0;
             var secondConnCount = 0;
 
-            var firstServer = new MockWSServer(firstPort,
+            var firstServer = MockWSServer.CreateOnFreePort(
                 CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref firstConnCount); }));
-            var secondServer = new MockWSServer(secondPort,
+            var secondServer = MockWSServer.CreateOnFreePort(
                 CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref secondConnCount); }));
             try
             {
@@ -878,7 +826,7 @@ namespace Driver.Test.Client.Query
                 secondServer.Start();
 
                 var connStr = "protocol=WebSocket;" +
-                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
+                              $"host=127.0.0.1:{firstServer.Port},127.0.0.1:{secondServer.Port};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
@@ -914,9 +862,8 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void MethodsShouldThrowObjectDisposedExceptionAfterDispose()
         {
-            var port = GetFreePort();
             var connected = 0;
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var req = JsonConvert.DeserializeObject<WSActionReq<TestBaseReq>>(Encoding.UTF8.GetString(message));
                 if (req == null)
@@ -958,7 +905,7 @@ namespace Driver.Test.Client.Query
             {
                 server.Start();
                 var connStr = "protocol=WebSocket;" +
-                              $"host=127.0.0.1:{port};" +
+                              $"host=127.0.0.1:{server.Port};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +
@@ -1042,15 +989,6 @@ namespace Driver.Test.Client.Query
             webSocket.SendAsync(data, messageType, true, CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        private static int GetFreePort()
-        {
-            var listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            var endpoint = (IPEndPoint)listener.LocalEndpoint;
-            listener.Stop();
-            return endpoint.Port;
-        }
-
         private static string BuildWsCacheKey(int port)
         {
             return $"ws://127.0.0.1:{port}";
@@ -1108,18 +1046,6 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void SendAsyncShouldBeCancelledQuicklyWhenConnectionCloses()
         {
-            var firstPort = GetFreePort();
-            var secondPort = GetFreePort();
-            while (secondPort == firstPort)
-            {
-                secondPort = GetFreePort();
-            }
-
-            var firstCacheKey = BuildWsCacheKey(firstPort);
-            var secondCacheKey = BuildWsCacheKey(secondPort);
-            ResetFailoverCacheConnectionCount(firstCacheKey);
-            ResetFailoverCacheConnectionCount(secondCacheKey);
-
             var firstConnCount = 0;
             var secondConnCount = 0;
             ulong stmtId = 0;
@@ -1166,7 +1092,6 @@ namespace Driver.Test.Client.Query
                     {
                         // Mark first server as permanently unavailable, then close.
                         Interlocked.Exchange(ref firstUnavailable, 1);
-                        Thread.Sleep(200);
                         webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "",
                             CancellationToken.None).GetAwaiter().GetResult();
                         break;
@@ -1214,17 +1139,20 @@ namespace Driver.Test.Client.Query
                 }
             };
 
-            var firstServer = new MockWSServer(firstPort, firstHandler);
-            var secondServer = new MockWSServer(secondPort, secondHandler);
+            var firstServer = MockWSServer.CreateOnFreePort(firstHandler);
+            var secondServer = MockWSServer.CreateOnFreePort(secondHandler);
             try
             {
                 firstServer.Start();
                 secondServer.Start();
 
-                // Use a long writeTimeout (30s) to make the test meaningful —
+                ResetFailoverCacheConnectionCount(BuildWsCacheKey(firstServer.Port));
+                ResetFailoverCacheConnectionCount(BuildWsCacheKey(secondServer.Port));
+
+                // Use a long writeTimeout (30s) to make the test meaningful �?
                 // before the fix, a blocked SendAsync would wait the full writeTimeout.
                 var connStr = "protocol=WebSocket;" +
-                              $"host=127.0.0.1:{firstPort},127.0.0.1:{secondPort};" +
+                              $"host=127.0.0.1:{firstServer.Port},127.0.0.1:{secondServer.Port};" +
                               "useSSL=false;" +
                               "username=root;" +
                               "password=taosdata;" +

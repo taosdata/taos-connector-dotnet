@@ -13,5 +13,7 @@ namespace TDengine.Driver.Impl.WebSocketMethods.Protocol
         [JsonProperty("req_id")] public ulong ReqId { get; set; }
 
         [JsonProperty("timing")] public long Timing { get; set; }
+
+        [JsonProperty("list_instances")] public string[] ListInstances { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -9,25 +10,100 @@ namespace Driver.Test.Client.Query
 {
     public class MockWSServer
     {
-        private readonly HttpListener _httpListener;
+        private HttpListener _httpListener;
         private readonly CancellationTokenSource _cts;
-        private readonly TaskCompletionSource<bool> _ready;
         private Task _serverTask;
+        private TcpListener _portGuard;
 
-        private readonly int _port;
-        private string Url => $"http://127.0.0.1:{_port}/";
+        public int Port { get; private set; }
+        private string Url => $"http://127.0.0.1:{Port}/";
 
         private Action<WebSocket, WebSocketMessageType, byte[]> _onMessage;
 
         public MockWSServer(int port, Action<WebSocket, WebSocketMessageType, byte[]> onMessage)
         {
-            _port = port;
+            Port = port;
             _onMessage = onMessage;
-            _httpListener = new HttpListener();
-            TryAddPrefix(Url);
-            TryAddPrefix($"http://localhost:{_port}/");
             _cts = new CancellationTokenSource();
-            _ready = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        /// <summary>
+        /// Creates a MockWSServer on an OS-assigned free port, eliminating TOCTOU race.
+        /// The port is held by a TcpListener guard until Start() is called.
+        /// IMPORTANT: Read Port only AFTER calling Start(), as Start() may reallocate the port on retry.
+        /// </summary>
+        public static MockWSServer CreateOnFreePort(Action<WebSocket, WebSocketMessageType, byte[]> onMessage)
+        {
+            var guard = new TcpListener(IPAddress.Loopback, 0);
+            guard.Start();
+            var port = ((IPEndPoint)guard.LocalEndpoint).Port;
+
+            var server = new MockWSServer(port, onMessage);
+            server._portGuard = guard;
+            return server;
+        }
+
+        /// <summary>
+        /// Allocates a free port that is guaranteed to be CLOSED (not listening).
+        /// Use this for "unavailable" endpoints in tests that expect connection refused.
+        /// </summary>
+        public static int AllocateUnavailablePort()
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener.Stop();
+            return port;
+        }
+
+        public void Start()
+        {
+            StartWithRetry(5);
+        }
+
+        private void StartWithRetry(int maxAttempts)
+        {
+            for (int attempt = 0; attempt < maxAttempts; attempt++)
+            {
+                // Release the port guard immediately before HttpListener binds.
+                if (_portGuard != null)
+                {
+                    _portGuard.Stop();
+                    _portGuard = null;
+                }
+
+                _httpListener = new HttpListener();
+                _httpListener.Prefixes.Add($"http://127.0.0.1:{Port}/");
+                _httpListener.Prefixes.Add($"http://localhost:{Port}/");
+
+                try
+                {
+                    _httpListener.Start();
+                    break;
+                }
+                catch (Exception)
+                {
+                    // Bind failed - port was stolen between guard release and Start()
+                    if (attempt == maxAttempts - 1) throw;
+                    ReallocatePort();
+                }
+            }
+
+            var ready = new ManualResetEventSlim(false);
+            _serverTask = Task.Factory.StartNew(() =>
+            {
+                ready.Set();
+                return RunServer(_cts.Token);
+            }, _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+            ready.Wait(5000);
+        }
+
+        private void ReallocatePort()
+        {
+            var guard = new TcpListener(IPAddress.Loopback, 0);
+            guard.Start();
+            Port = ((IPEndPoint)guard.LocalEndpoint).Port;
+            _portGuard = guard;
         }
 
         private void TryAddPrefix(string prefix)
@@ -44,20 +120,8 @@ namespace Driver.Test.Client.Query
             }
         }
 
-        public void Start()
-        {
-            _httpListener.Start();
-            _serverTask = Task.Factory.StartNew(() => RunServer(_cts.Token), _cts.Token, TaskCreationOptions.LongRunning,
-                TaskScheduler.Default).Unwrap();
-            if (!_ready.Task.Wait(TimeSpan.FromSeconds(2)))
-            {
-                throw new TimeoutException("mock websocket server failed to start listening in time");
-            }
-        }
-
         private async Task RunServer(CancellationToken cancellationToken)
         {
-            _ready.TrySetResult(true);
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -78,6 +142,19 @@ namespace Driver.Test.Client.Query
                 catch (Exception) when (cancellationToken.IsCancellationRequested)
                 {
                     break;
+                }
+                catch (HttpListenerException)
+                {
+                    // Listener stopped or client disconnected prematurely
+                }
+                catch (ObjectDisposedException)
+                {
+                    break;
+                }
+                catch (Exception)
+                {
+                    // Unexpected error — continue accepting to avoid silent task fault
+                    if (cancellationToken.IsCancellationRequested) break;
                 }
             }
         }
@@ -127,7 +204,13 @@ namespace Driver.Test.Client.Query
         {
             _cts?.Cancel();
 
-            // Give the server task a chance to complete gracefully
+            if (_portGuard != null)
+            {
+                try { _portGuard.Stop(); }
+                catch (SocketException) { }
+                _portGuard = null;
+            }
+
             if (_serverTask != null)
             {
                 try

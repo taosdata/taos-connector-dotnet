@@ -38,5 +38,8 @@ namespace TDengine.Driver.Impl.WebSocketMethods.Protocol
 
         // other config
         [JsonProperty("config")] public Dictionary<string, string> Config { get; set; }
+
+        [JsonProperty("list_instances", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? ListInstances { get; set; }
     }
 }

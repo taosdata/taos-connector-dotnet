@@ -144,7 +144,6 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void StmtPrepareReconnect()
         {
-            var port = GetFreePort();
             var prepareFail = true;
             var prepareClose = false;
             ulong stmtId = 0;
@@ -259,8 +258,9 @@ namespace Driver.Test.Client.Query
                         }
                     }
                 };
-            var mockServer = new MockWSServer(port, messageHandler);
+            var mockServer = MockWSServer.CreateOnFreePort(messageHandler);
             mockServer.Start();
+            var port = mockServer.Port;
             var connStr =
                 $"protocol=WebSocket;host=localhost;port={port};useSSL=false;username=root;password=taosdata;enableCompression=true;autoReconnect=true;";
 
@@ -294,7 +294,6 @@ namespace Driver.Test.Client.Query
         [Fact]
         public void StmtExecReconnect()
         {
-            var port = GetFreePort();
             var bindFail = false;
             var bindClose = false;
             var execFail = false;
@@ -478,8 +477,9 @@ namespace Driver.Test.Client.Query
                         }
                     }
                 };
-            var mockServer = new MockWSServer(port, messageHandler);
+            var mockServer = MockWSServer.CreateOnFreePort(messageHandler);
             mockServer.Start();
+            var port = mockServer.Port;
             var connStr =
                 $"protocol=WebSocket;host=localhost;port={port};useSSL=false;username=root;password=taosdata;enableCompression=true;autoReconnect=true;";
 

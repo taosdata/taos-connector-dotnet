@@ -18,11 +18,10 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void CommitBatchShouldNotBlockCloseAndShouldStillFinish()
         {
-            var port = GetFreePort();
             var firstCommitStarted = new ManualResetEventSlim(false);
             var releaseFirstCommit = new ManualResetEventSlim(false);
             var commitCount = 0;
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var payload = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
@@ -92,7 +91,7 @@ namespace Driver.Test.Client.TMQ
             try
             {
                 server.Start();
-                consumer = new ConsumerBuilder<Dictionary<string, object>>(BuildMockWsConfig(port)).Build();
+                consumer = new ConsumerBuilder<Dictionary<string, object>>(BuildMockWsConfig(server.Port)).Build();
                 consumer.Subscribe("tmq_commit_close_race");
 
                 var offsets = new[]
@@ -143,11 +142,10 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void AutoCommitShouldNotBlockCloseOrDuplicateInFlightCommits()
         {
-            var port = GetFreePort();
             var firstCommitStarted = new ManualResetEventSlim(false);
             var releaseFirstCommit = new ManualResetEventSlim(false);
             var commitCount = 0;
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var payload = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
@@ -198,7 +196,7 @@ namespace Driver.Test.Client.TMQ
             {
                 server.Start();
                 consumer = Assert.IsType<TDengine.TMQ.WebSocket.Consumer<Dictionary<string, object>>>(
-                    new ConsumerBuilder<Dictionary<string, object>>(BuildMockWsConfig(port, true)).Build());
+                    new ConsumerBuilder<Dictionary<string, object>>(BuildMockWsConfig(server.Port, true)).Build());
 
                 var autoCommitMethod = consumer.GetType()
                     .GetMethod("AutoCommitIfNeeded", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -245,10 +243,9 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void ConsumeShouldIgnoreAutoCommitFailuresAndAvoidTightRetry()
         {
-            var port = GetFreePort();
             var commitCount = 0;
             var pollCount = 0;
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var payload = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
@@ -305,7 +302,7 @@ namespace Driver.Test.Client.TMQ
             try
             {
                 server.Start();
-                var config = BuildMockWsConfig(port, enableAutoCommit: true);
+                var config = BuildMockWsConfig(server.Port, enableAutoCommit: true);
                 config["auto.commit.interval.ms"] = "1000";
                 consumer = new ConsumerBuilder<Dictionary<string, object>>(config).Build();
 
@@ -334,9 +331,8 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void AutoCommitShouldScheduleFromCompletionTime()
         {
-            var port = GetFreePort();
             var commitCount = 0;
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var payload = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
@@ -383,7 +379,7 @@ namespace Driver.Test.Client.TMQ
             try
             {
                 server.Start();
-                var config = BuildMockWsConfig(port, enableAutoCommit: true);
+                var config = BuildMockWsConfig(server.Port, enableAutoCommit: true);
                 config["auto.commit.interval.ms"] = "100";
                 consumer = Assert.IsType<TDengine.TMQ.WebSocket.Consumer<Dictionary<string, object>>>(
                     new ConsumerBuilder<Dictionary<string, object>>(config).Build());
@@ -417,11 +413,10 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void ConsumeShouldReconnectAfterAutoCommitDisconnect()
         {
-            var port = GetFreePort();
             var versionCount = 0;
             var pollCount = 0;
             var disconnectedOnCommit = 0;
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var payload = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
@@ -485,7 +480,7 @@ namespace Driver.Test.Client.TMQ
             try
             {
                 server.Start();
-                var config = BuildMockWsConfig(port, enableAutoCommit: true, enableReconnect: true);
+                var config = BuildMockWsConfig(server.Port, enableAutoCommit: true, enableReconnect: true);
                 config["auto.commit.interval.ms"] = "0";
                 consumer = new ConsumerBuilder<Dictionary<string, object>>(config).Build();
 
@@ -513,11 +508,10 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void SubscribeReconnectShouldPersistTopicsForFutureReconnects()
         {
-            var port = GetFreePort();
             var subscribeCount = 0;
             var pollCount = 0;
             var topic = "tmq_reconnect_topics";
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var payload = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
@@ -590,7 +584,7 @@ namespace Driver.Test.Client.TMQ
             {
                 server.Start();
                 consumer = Assert.IsType<TDengine.TMQ.WebSocket.Consumer<Dictionary<string, object>>>(
-                    new ConsumerBuilder<Dictionary<string, object>>(BuildMockWsConfig(port, enableReconnect: true))
+                    new ConsumerBuilder<Dictionary<string, object>>(BuildMockWsConfig(server.Port, enableReconnect: true))
                         .Build());
 
                 consumer.Subscribe(topic);
@@ -623,8 +617,7 @@ namespace Driver.Test.Client.TMQ
         [Fact]
         public void MethodsShouldThrowObjectDisposedExceptionAfterClose()
         {
-            var port = GetFreePort();
-            var server = new MockWSServer(port, (webSocket, messageType, message) =>
+            var server = MockWSServer.CreateOnFreePort((webSocket, messageType, message) =>
             {
                 var payload = Encoding.UTF8.GetString(message);
                 var baseReq = JsonConvert.DeserializeObject<WSActionReq<MockRequestBase>>(payload);
@@ -655,7 +648,7 @@ namespace Driver.Test.Client.TMQ
             try
             {
                 server.Start();
-                var config = BuildMockWsConfig(port);
+                var config = BuildMockWsConfig(server.Port);
                 consumer = new ConsumerBuilder<Dictionary<string, object>>(config).Build();
                 consumer.Close();
 

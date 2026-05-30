@@ -15,5 +15,8 @@ namespace TDengine.Driver.Impl.WebSocketMethods.Protocol
         [JsonProperty("connector")] public string Connector { get; set; }
         // bearer_token
         [JsonProperty("bearer_token")] public string BearerToken { get; set; }
+
+        [JsonProperty("list_instances", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? ListInstances { get; set; }
     }
 }
