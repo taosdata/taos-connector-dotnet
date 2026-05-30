@@ -73,8 +73,8 @@ namespace Driver.Test.Client.Query
                 }
 
                 _httpListener = new HttpListener();
-                // Only bind 127.0.0.1 — avoid localhost which may resolve to ::1 on some Linux systems
                 _httpListener.Prefixes.Add($"http://127.0.0.1:{Port}/");
+                _httpListener.Prefixes.Add($"http://localhost:{Port}/");
 
                 try
                 {

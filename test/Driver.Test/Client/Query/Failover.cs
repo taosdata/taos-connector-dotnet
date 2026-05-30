@@ -70,7 +70,6 @@ namespace Driver.Test.Client.Query
                 var index = i;
                 var server = MockWSServer.CreateOnFreePort(
                     CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref connCounts[index]); }));
-                ResetFailoverCacheConnectionCount(BuildWsCacheKey(server.Port));
                 servers.Add(server);
             }
 
@@ -82,6 +81,11 @@ namespace Driver.Test.Client.Query
                 for (var i = 0; i < servers.Count; i++)
                 {
                     servers[i].Start();
+                }
+
+                for (var i = 0; i < servers.Count; i++)
+                {
+                    ResetFailoverCacheConnectionCount(BuildWsCacheKey(servers[i].Port));
                 }
 
                 var hostList = string.Join(",", servers.Select(server => $"127.0.0.1:{server.Port}"));
@@ -161,7 +165,6 @@ namespace Driver.Test.Client.Query
                 var index = i;
                 var server = MockWSServer.CreateOnFreePort(
                     CreateHandshakeMessageHandler(() => { Interlocked.Increment(ref connCounts[index]); }));
-                ResetFailoverCacheConnectionCount(BuildWsCacheKey(server.Port));
                 servers.Add(server);
             }
 
@@ -173,6 +176,11 @@ namespace Driver.Test.Client.Query
                 for (var i = 0; i < servers.Count; i++)
                 {
                     servers[i].Start();
+                }
+
+                for (var i = 0; i < servers.Count; i++)
+                {
+                    ResetFailoverCacheConnectionCount(BuildWsCacheKey(servers[i].Port));
                 }
 
                 var hostList = string.Join(",", servers.Select(server => $"127.0.0.1:{server.Port}"));
@@ -390,14 +398,13 @@ namespace Driver.Test.Client.Query
 
             var firstServer = MockWSServer.CreateOnFreePort(firstHandler);
             var secondServer = MockWSServer.CreateOnFreePort(secondHandler);
-            var firstCacheKey = BuildWsCacheKey(firstServer.Port);
-            var secondCacheKey = BuildWsCacheKey(secondServer.Port);
-            ResetFailoverCacheConnectionCount(firstCacheKey);
-            ResetFailoverCacheConnectionCount(secondCacheKey);
             try
             {
                 firstServer.Start();
                 secondServer.Start();
+
+                ResetFailoverCacheConnectionCount(BuildWsCacheKey(firstServer.Port));
+                ResetFailoverCacheConnectionCount(BuildWsCacheKey(secondServer.Port));
 
                 var connStr = "protocol=WebSocket;" +
                               $"host=127.0.0.1:{firstServer.Port},127.0.0.1:{secondServer.Port};" +
@@ -553,14 +560,16 @@ namespace Driver.Test.Client.Query
 
             var firstServer = MockWSServer.CreateOnFreePort(firstHandler);
             var secondServer = MockWSServer.CreateOnFreePort(secondHandler);
-            var firstCacheKey = BuildWsCacheKey(firstServer.Port);
-            var secondCacheKey = BuildWsCacheKey(secondServer.Port);
-            ResetFailoverCacheConnectionCount(firstCacheKey);
-            ResetFailoverCacheConnectionCount(secondCacheKey);
+            string firstCacheKey = null, secondCacheKey = null;
             try
             {
                 firstServer.Start();
                 secondServer.Start();
+
+                firstCacheKey = BuildWsCacheKey(firstServer.Port);
+                secondCacheKey = BuildWsCacheKey(secondServer.Port);
+                ResetFailoverCacheConnectionCount(firstCacheKey);
+                ResetFailoverCacheConnectionCount(secondCacheKey);
 
                 var connStr = "protocol=WebSocket;" +
                               $"host=127.0.0.1:{firstServer.Port},127.0.0.1:{secondServer.Port};" +
@@ -722,17 +731,19 @@ namespace Driver.Test.Client.Query
 
             var firstServer = MockWSServer.CreateOnFreePort(firstHandler);
             var secondServer = MockWSServer.CreateOnFreePort(secondHandler);
-            var firstCacheKey = BuildWsCacheKey(firstServer.Port);
-            var secondCacheKey = BuildWsCacheKey(secondServer.Port);
-            ResetFailoverCacheConnectionCount(firstCacheKey);
-            ResetFailoverCacheConnectionCount(secondCacheKey);
 
             ITDengineClient client = null;
             Exception stmtException = null;
+            string firstCacheKey = null, secondCacheKey = null;
             try
             {
                 firstServer.Start();
                 secondServer.Start();
+
+                firstCacheKey = BuildWsCacheKey(firstServer.Port);
+                secondCacheKey = BuildWsCacheKey(secondServer.Port);
+                ResetFailoverCacheConnectionCount(firstCacheKey);
+                ResetFailoverCacheConnectionCount(secondCacheKey);
 
                 var connStr = "protocol=WebSocket;" +
                               $"host=127.0.0.1:{firstServer.Port},127.0.0.1:{secondServer.Port};" +
@@ -1130,16 +1141,15 @@ namespace Driver.Test.Client.Query
 
             var firstServer = MockWSServer.CreateOnFreePort(firstHandler);
             var secondServer = MockWSServer.CreateOnFreePort(secondHandler);
-            var firstCacheKey = BuildWsCacheKey(firstServer.Port);
-            var secondCacheKey = BuildWsCacheKey(secondServer.Port);
-            ResetFailoverCacheConnectionCount(firstCacheKey);
-            ResetFailoverCacheConnectionCount(secondCacheKey);
             try
             {
                 firstServer.Start();
                 secondServer.Start();
 
-                // Use a long writeTimeout (30s) to make the test meaningful —
+                ResetFailoverCacheConnectionCount(BuildWsCacheKey(firstServer.Port));
+                ResetFailoverCacheConnectionCount(BuildWsCacheKey(secondServer.Port));
+
+                // Use a long writeTimeout (30s) to make the test meaningful �?
                 // before the fix, a blocked SendAsync would wait the full writeTimeout.
                 var connStr = "protocol=WebSocket;" +
                               $"host=127.0.0.1:{firstServer.Port},127.0.0.1:{secondServer.Port};" +
